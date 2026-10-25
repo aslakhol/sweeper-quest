@@ -22,7 +22,13 @@ npm run format
 npm run preview    # Serve the most recent dist/ build
 ```
 
-GitHub Actions runs the checks and browser tests on pushes and pull requests. This folder has a local Git repository; no remote or hosting account has been configured.
+GitHub Actions runs the checks and browser tests on pushes and pull requests.
+
+## Deployment
+
+Play at [sweeper-quest.aslak.io](https://sweeper-quest.aslak.io). The public repository is [aslakhol/sweeper-quest](https://github.com/aslakhol/sweeper-quest).
+
+Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` account. Pushes to `main` deploy to production; pull requests get preview deployments. Vercel detects Vite and serves the `dist` build. No environment variables are required. Vercel also manages DNS and HTTPS for the custom domain.
 
 ## Play
 
