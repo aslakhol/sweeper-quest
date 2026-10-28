@@ -89,12 +89,12 @@ h1 {
 .health {
   margin-right: auto;
   display: flex;
-  gap: 5px;
+  gap: 2px;
   align-items: center;
 }
 .heart {
   color: #53604d;
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1;
 }
 .heart.full {
@@ -123,12 +123,6 @@ h1 {
   letter-spacing: 1.3px;
   text-transform: uppercase;
   color: #aebda0;
-}
-.here {
-  color: #e0cb91;
-  letter-spacing: 0;
-  font-size: 12px;
-  text-transform: none;
 }
 .board-wrap {
   padding: 7px;

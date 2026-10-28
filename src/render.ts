@@ -1,12 +1,15 @@
 import { type Game, type Monster, numberAt, type Point, same } from './game/game';
 
 export const TILE_SIZE = 48;
-export type Effect = {
-  at: Point;
-  text: string;
-  color: string;
-  started: number;
-};
+export type Effect =
+  | { kind: 'text'; at: Point; text: string; color: string; started: number }
+  | { kind: 'fight'; from: Point; at: Point; monster: Monster; started: number }
+  | { kind: 'pulse'; at: Point; started: number };
+export const effectDuration = { text: 1100, fight: 420, pulse: 700 } as const;
+// Fight timeline: the hero lunges and the monster flashes, then it pops and the hero steps in.
+const hitEnd = 200;
+const popEnd = 340;
+const stepStart = 260;
 export type View = { path: Point[]; flash?: Point; effects: Effect[]; time: number };
 const colors = ['#687b73', '#88c8b1', '#e2c477', '#ed9b78', '#ce9bdb', '#ed7382'];
 
@@ -78,45 +81,60 @@ const monsterColors = {
   goblin: { alive: '#d3ae79', dead: '#b0a394' },
 };
 
+const white = { g: '#fff', d: '#fff', l: '#fff', h: '#fff', r: '#fff', b: '#fff' };
+
 function drawMonster(
   ctx: CanvasRenderingContext2D,
   monster: Monster,
-  clue: number,
   x: number,
   y: number,
+  { remains = false, flash = false, scale = 1, alpha = 1 } = {},
 ) {
   const rows = monsterSprites[monster.kind];
   ctx.save();
   ctx.translate(x + 24, y + 23);
-  if (!monster.alive) {
+  ctx.scale(scale, scale);
+  ctx.globalAlpha = alpha;
+  if (remains) {
     ctx.rotate(Math.PI / 2);
-    ctx.globalAlpha = 0.8;
+    ctx.globalAlpha = 0.22;
   }
+  const state = remains ? 'dead' : 'alive';
   sprite(
     ctx,
     rows,
-    {
-      g: monsterColors[monster.kind][monster.alive ? 'alive' : 'dead'],
-      d: monster.alive ? '#23352c' : '#303831',
-      l: monster.alive ? '#e7e8b9' : '#c8c8bb',
-      h: monster.alive ? '#6e945d' : '#818879',
-      r: monster.alive ? '#f08e75' : '#b9a39d',
-      b: monster.alive ? '#86694f' : '#8e877d',
-    },
+    flash
+      ? white
+      : {
+          g: monsterColors[monster.kind][state],
+          d: remains ? '#303831' : '#23352c',
+          l: remains ? '#c8c8bb' : '#e7e8b9',
+          h: remains ? '#818879' : '#6e945d',
+          r: remains ? '#b9a39d' : '#f08e75',
+          b: remains ? '#8e877d' : '#86694f',
+        },
     -13.5,
     -rows.length * 1.5,
   );
-  ctx.restore();
-  ctx.fillStyle = '#efd4a0';
-  ctx.font = 'bold 12px monospace';
-  ctx.fillText(String(clue), x + 40, y + 39);
   if (monster.goal) {
-    ctx.fillStyle = monster.alive ? '#e1bf76' : '#b3ab96';
-    ctx.fillRect(x + 17, y + 3, 15, 3);
-    ctx.fillRect(x + 17, y, 3, 5);
-    ctx.fillRect(x + 23, y, 3, 5);
-    ctx.fillRect(x + 29, y, 3, 5);
+    ctx.fillStyle = remains ? '#b3ab96' : '#e1bf76';
+    ctx.fillRect(-7, -20, 15, 3);
+    ctx.fillRect(-7, -23, 3, 5);
+    ctx.fillRect(-1, -23, 3, 5);
+    ctx.fillRect(5, -23, 3, 5);
   }
+  ctx.restore();
+}
+
+function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number) {
+  sprite(
+    ctx,
+    hero,
+    { g: '#adc984', f: '#e3c399', d: '#29362a', b: '#678879', s: '#e4e7c8', t: '#b99a65' },
+    x + 15,
+    y + 23,
+    2,
+  );
 }
 
 export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
@@ -177,25 +195,22 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
       }
       continue;
     }
-    if (same(tile, game.start)) {
-      ctx.strokeStyle = '#76896a';
-      ctx.beginPath();
-      ctx.arc(x + 24, y + 25, 15, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.fillStyle = '#667a59';
-      ctx.fillRect(x + 22, y + 12, 4, 5);
-    }
     if (tile.monster?.alive) {
-      drawMonster(ctx, tile.monster, numberAt(game, tile), x, y);
+      drawMonster(ctx, tile.monster, x, y);
+      if (tile.monster.level > game.power) {
+        ctx.strokeStyle = '#e4867599';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(x + 3, y + 3, 42, 42);
+      }
       continue;
     }
-    if (!same(tile, game.player)) {
-      const number = numberAt(game, tile);
-      if (number) {
-        ctx.fillStyle = colors[Math.min(number, 5)];
-        ctx.font = '600 20px monospace';
-        ctx.fillText(String(number), x + 24, y + 25);
-      }
+    if (tile.monster) drawMonster(ctx, tile.monster, x, y, { remains: true });
+    const number = numberAt(game, tile);
+    if (number) {
+      ctx.fillStyle = colors[Math.min(number, 5)];
+      ctx.font = '600 20px monospace';
+      // The player's own clue sits above the hero.
+      ctx.fillText(String(number), x + 24, same(tile, game.player) ? y + 13 : y + 25);
     }
   }
   for (const point of view.path) {
@@ -204,29 +219,51 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
     ctx.arc(point.x * TILE_SIZE + 24, point.y * TILE_SIZE + 24, 3, 0, Math.PI * 2);
     ctx.fill();
   }
+  const fight = view.effects.find((effect) => effect.kind === 'fight');
   const px = game.player.x * TILE_SIZE;
   const py = game.player.y * TILE_SIZE;
   ctx.strokeStyle = '#d6c28a';
   ctx.lineWidth = 2;
   ctx.strokeRect(px + 2, py + 2, 44, 44);
-  sprite(
-    ctx,
-    hero,
-    { g: '#adc984', f: '#e3c399', d: '#29362a', b: '#678879', s: '#e4e7c8', t: '#b99a65' },
-    px + 10,
-    py + 4,
-  );
-  ctx.fillStyle = '#e7d6a5';
-  ctx.fillRect(px + 32, py + 31, 15, 16);
-  ctx.fillStyle = '#26372d';
-  ctx.font = 'bold 12px monospace';
-  ctx.fillText(String(numberAt(game, game.player)), px + 39.5, py + 39.5);
+  if (fight) {
+    const t = view.time - fight.started;
+    const fx = fight.from.x * TILE_SIZE;
+    const fy = fight.from.y * TILE_SIZE;
+    const ax = fight.at.x * TILE_SIZE;
+    const ay = fight.at.y * TILE_SIZE;
+    if (t < hitEnd) {
+      const shake = t > 80 ? Math.sin(t / 8) * 2 : 0;
+      drawMonster(ctx, fight.monster, ax + shake, ay, { flash: t > 80 && t < 160 });
+    } else if (t < popEnd) {
+      const pop = (t - hitEnd) / (popEnd - hitEnd);
+      drawMonster(ctx, fight.monster, ax, ay, { scale: 1 + pop * 0.6, alpha: 1 - pop });
+    }
+    const reach = t < hitEnd ? 0.4 * Math.sin((Math.PI * t) / hitEnd) : 0;
+    const enter = Math.min(1, Math.max(0, (t - stepStart) / (effectDuration.fight - stepStart)));
+    const along = Math.max(reach, enter);
+    drawHero(ctx, fx + (ax - fx) * along, fy + (ay - fy) * along);
+  } else {
+    drawHero(ctx, px, py);
+  }
   if (view.flash) {
     ctx.fillStyle = '#e4867577';
     ctx.fillRect(view.flash.x * TILE_SIZE + 1, view.flash.y * TILE_SIZE + 1, 46, 46);
   }
   for (const effect of view.effects) {
-    const progress = (view.time - effect.started) / 1100;
+    const progress = (view.time - effect.started) / effectDuration[effect.kind];
+    if (effect.kind === 'pulse') {
+      ctx.globalAlpha = Math.max(0, 1 - progress);
+      ctx.strokeStyle = '#f3d794';
+      ctx.lineWidth = 2;
+      const inset = 2 + progress * 6;
+      ctx.strokeRect(
+        effect.at.x * TILE_SIZE + inset,
+        effect.at.y * TILE_SIZE + inset,
+        TILE_SIZE - inset * 2,
+        TILE_SIZE - inset * 2,
+      );
+    }
+    if (effect.kind !== 'text') continue;
     ctx.globalAlpha = Math.max(0, 1 - progress);
     ctx.font = 'bold 15px monospace';
     ctx.strokeStyle = '#16231f';

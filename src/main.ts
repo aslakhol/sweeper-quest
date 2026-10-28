@@ -5,6 +5,7 @@ import {
   distance,
   type GameEvent,
   type Note,
+  neighbors,
   numberAt,
   type Point,
   planWalk,
@@ -15,7 +16,7 @@ import {
   tileAt,
 } from './game/game';
 import map from './maps/training.txt?raw';
-import { draw, type Effect } from './render';
+import { draw, type Effect, effectDuration } from './render';
 
 const app = document.querySelector<HTMLElement>('#app');
 if (!app) throw new Error('Missing app element.');
@@ -27,7 +28,7 @@ app.innerHTML = `
     <div class="stat" id="power" aria-label="Power"><span class="stat-icon" aria-hidden="true">⚔</span><span id="power-value">1</span></div>
     <div class="stat" id="xp" aria-label="Experience"><span class="stat-icon" aria-hidden="true">✦</span><span id="xp-value">0/10</span></div>
   </section>
-  <div class="board-top"><span>The old clearing</span><span class="here" id="here">Here: 0</span></div>
+  <div class="board-top"><span>The old clearing</span></div>
   <div class="board-wrap"><canvas tabindex="0" aria-label="Game board. Move with arrow keys or WASD. Use Q, E, Z, C for diagonals." aria-describedby="status"></canvas></div>
   <section class="notes" aria-label="Tile notes">
     <div class="notes-heading"><span>Mark a tile</span><span id="note-mode">Tap to move</span></div>
@@ -62,7 +63,6 @@ const board = element<HTMLDivElement>('.board-wrap');
 const status = element<HTMLParagraphElement>('#status');
 const hearts = element<HTMLDivElement>('#hearts');
 const power = element<HTMLSpanElement>('#power-value');
-const here = element<HTMLSpanElement>('#here');
 const objective = element<HTMLDivElement>('#objective');
 const noteMode = element<HTMLSpanElement>('#note-mode');
 const noteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-note]')];
@@ -102,7 +102,6 @@ function updateHud(): void {
   hearts.setAttribute('aria-label', `${game.health} of ${game.maxHealth} hearts`);
   power.textContent = String(game.power);
   element('#power').setAttribute('aria-label', `Power ${game.power}`);
-  here.textContent = `Here: ${numberAt(game, game.player)}`;
   const next = powerThresholds[game.power];
   element('#xp-value').textContent = next === undefined ? String(game.xp) : `${game.xp}/${next}`;
   element('#xp').setAttribute(
@@ -137,8 +136,17 @@ function handleEvents(events: GameEvent[]): void {
     switch (event.type) {
       case 'fight':
         animate(event.damage ? 'hurt' : 'hit');
+        if (!game.lost)
+          effects.push({
+            kind: 'fight',
+            from: event.from,
+            at: event.at,
+            monster: event.monster,
+            started: performance.now(),
+          });
         if (event.damage)
           effects.push({
+            kind: 'text',
             at: event.at,
             text: `−${event.damage} ♥`,
             color: '#f0a18c',
@@ -150,6 +158,7 @@ function handleEvents(events: GameEvent[]): void {
         break;
       case 'levelUp':
         effects.push({
+          kind: 'text',
           at: event.at,
           text: `Power ${event.power}!`,
           color: '#f3d794',
@@ -171,7 +180,11 @@ function handleEvents(events: GameEvent[]): void {
 }
 function move(target: Point): boolean {
   const before = game.player;
+  // Clues already on screen around a kill drop; point them out.
+  const clues = neighbors(game, target).filter((tile) => tile.revealed && tile.terrain === 'floor');
   const events = step(game, target);
+  if (events.some((event) => event.type === 'fight') && !game.lost)
+    for (const at of clues) effects.push({ kind: 'pulse', at, started: performance.now() });
   if (same(before, game.player) && !events.length) feedback(target);
   handleEvents(events);
   updateHud();
@@ -377,7 +390,7 @@ function frame(time: number): void {
     if (next && !move(next)) path = [];
     lastWalk = time;
   }
-  effects = effects.filter((effect) => time - effect.started < 1100);
+  effects = effects.filter((effect) => time - effect.started < effectDuration[effect.kind]);
   if (time > flashUntil) flash = undefined;
   draw(canvas, game, { path, flash, effects, time });
   requestAnimationFrame(frame);
