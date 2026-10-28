@@ -29,7 +29,6 @@ export type Game = {
   shards: number;
   coins: number;
   won: boolean;
-  floodZeros: boolean;
 };
 export type GameEvent =
   | { type: 'hit'; at: Point; loot: number }
@@ -46,7 +45,7 @@ const monsters = {
   G: { kind: 'goblin', level: 3, damage: 4, loot: 3, goal: true },
 } as const;
 
-export function createGame(source: string, floodZeros = false): Game {
+export function createGame(source: string): Game {
   const rows = source
     .trim()
     .split('\n')
@@ -88,7 +87,6 @@ export function createGame(source: string, floodZeros = false): Game {
     shards: 0,
     coins: 0,
     won: false,
-    floodZeros,
   };
   revealStep(game, start);
   return game;
@@ -147,14 +145,9 @@ function revealStep(game: Game, point: Point): void {
       visited.add(neighbor);
       neighbor.revealed = true;
       delete neighbor.note;
-      // Traverse previously revealed zeros too, including after changing modes.
-      if (game.floodZeros && numberAt(game, neighbor) === 0) pending.push(neighbor);
+      if (numberAt(game, neighbor) === 0) pending.push(neighbor);
     }
   }
-}
-export function setFloodZeros(game: Game, enabled: boolean): void {
-  game.floodZeros = enabled;
-  if (enabled) revealStep(game, game.player);
 }
 export function setNote(game: Game, point: Point, note: Note | undefined): void {
   const tile = tileAt(game, point);

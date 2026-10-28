@@ -150,30 +150,6 @@ test('note tool stays selected and a long press marks without moving', async ({
   await expect(page.getByRole('status')).toHaveText('Column 5, row 8: marked 5.');
 });
 
-test('flood toggle opens a longer route and keeps its setting when starting over', async ({
-  page,
-  isMobile,
-}) => {
-  const toggle = page.getByRole('switch', { name: 'Flood connected zeros' });
-  await expect(toggle).not.toBeChecked();
-  await toggle.check();
-  await tap(page, 2, 9, isMobile);
-  await position(page, 2, 9);
-  await page.getByRole('button', { name: 'Start over ↻' }).click();
-  await page.locator('#confirm-restart').click();
-  await expect(toggle).toBeChecked();
-  await tap(page, 2, 9, isMobile);
-  await position(page, 2, 9);
-  await toggle.uncheck();
-  await page.getByRole('button', { name: 'Start over ↻' }).click();
-  await page.locator('#confirm-restart').click();
-  await expect(toggle).not.toBeChecked();
-  await tap(page, 2, 9, isMobile);
-  await position(page, 3, 9);
-  await page.waitForTimeout(250);
-  await position(page, 3, 9);
-});
-
 test('monster and corpse corner badges show tile clues that update after neighboring kills', async ({
   page,
   isMobile,

@@ -10,7 +10,6 @@ import {
   type Point,
   planWalk,
   same,
-  setFloodZeros,
   setNote,
   step,
   tileAt,
@@ -39,11 +38,10 @@ app.innerHTML = `
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin</span></div>
   <div class="objective"><span class="objective-icon" aria-hidden="true">◇</span><div><div class="objective-label">Your quest</div><div id="objective">Find the first shard bundle</div></div></div>
   <p id="status" role="status" aria-live="polite">Numbers sum nearby levels. Notes mark suspected monsters.</p>
-  <label class="test-setting" for="flood-zeros"><span>Flood connected zeros <small>Test option</small></span><input id="flood-zeros" type="checkbox" role="switch" /></label>
   <footer><span>02 / THE CLEARING</span><button class="reset" id="restart">Start over ↻</button></footer>
   <dialog id="help-dialog"><h2>How to play</h2><ul>
     <li>Tap a neighboring tile to move or fight. Tile numbers, including the small badges on monsters and corpses, sum living monster levels in the eight neighboring tiles. They exclude the monster on the tile itself.</li>
-    <li>A zero reveals just its neighbors by default. Turn on Flood connected zeros to reveal its entire connected zero area and bordering numbers. Switching off keeps explored tiles open; start over for a fresh comparison. Monsters stay hidden until you try their tile.</li>
+    <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. Tap again when next to hidden ground to enter it.</li>
     <li>Choose a note, then tap hidden tiles. Choose it again to move. Hold or right-click a tile to cycle 1–5.</li>
     <li>Power beats equal or weaker monsters. Corpses stay visible. Tap one to see its clue, then tap the clue to walk there and collect coins.</li>
@@ -372,23 +370,13 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 element('#help').addEventListener('click', () => openDialog('#help-dialog'));
-const floodZerosToggle = element<HTMLInputElement>('#flood-zeros');
-floodZerosToggle.addEventListener('change', () => {
-  stop();
-  cancelPress();
-  setFloodZeros(game, floodZerosToggle.checked);
-  status.textContent = game.floodZeros
-    ? 'Flood reveal on. Connected zeros and their bordering numbers open together.'
-    : 'One-ring reveal on. Explored tiles stay open; start over to compare.';
-  updateHud();
-});
 element('#restart').addEventListener('click', () => openDialog('#restart-dialog'));
 for (const button of document.querySelectorAll('[data-close]'))
   button.addEventListener('click', () => button.closest('dialog')?.close());
 element('#confirm-restart').addEventListener('click', () => {
   stop();
   cancelPress();
-  game = createGame(map, game.floodZeros);
+  game = createGame(map);
   effects = [];
   flash = undefined;
   selectNote(null);

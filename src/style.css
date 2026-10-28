@@ -397,26 +397,3 @@ footer {
   color: #81957d;
   letter-spacing: 0;
 }
-
-.test-setting {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  min-height: 44px;
-  font-size: 12px;
-  color: #c2cfb8;
-  cursor: pointer;
-  padding: 4px;
-}
-.test-setting small {
-  margin-left: 6px;
-  color: #81957d;
-  font-size: 10px;
-}
-.test-setting input {
-  width: 20px;
-  height: 20px;
-  accent-color: #d4bd86;
-  cursor: pointer;
-}

@@ -8,7 +8,6 @@ import {
   numberAt,
   planWalk,
   same,
-  setFloodZeros,
   setNote,
   step,
   tileAt,
@@ -35,17 +34,8 @@ describe('map and clues', () => {
     step(game, p(0, 0));
     expect(numberAt(game, game.player)).toBe(5);
   });
-  it('reveals only one ring around a zero and does not chain through neighboring zeros', () => {
-    const game = createGame('@ . . .\n. . . .\n. . . s');
-    expect(tileAt(game, p(1, 1))?.revealed).toBe(true);
-    expect(tileAt(game, p(2, 0))?.revealed).toBe(false);
-    step(game, p(1, 0));
-    expect(tileAt(game, p(2, 0))?.revealed).toBe(true);
-    expect(tileAt(game, p(3, 0))?.revealed).toBe(false);
-    expect(tileAt(game, p(3, 2))?.revealed).toBe(false);
-  });
   it('floods connected zeros and their numbered border, but stops at clues and monsters', () => {
-    const game = createGame('@ . . s . . .\n. . . . . . .\n. . . s . . .', true);
+    const game = createGame('@ . . s . . .\n. . . . . . .\n. . . s . . .');
     expect(tileAt(game, p(1, 2))?.revealed).toBe(true);
     expect(tileAt(game, p(2, 1))?.revealed).toBe(true);
     expect(numberAt(game, p(2, 1))).toBe(2);
@@ -54,29 +44,9 @@ describe('map and clues', () => {
     expect(game.tiles.filter((tile) => tile.monster).every((tile) => !tile.revealed)).toBe(true);
   });
   it('does not flood through walls or water into another area', () => {
-    const game = createGame('@ . # .\n. . ~ .\n. . # P', true);
+    const game = createGame('@ . # .\n. . ~ .\n. . # P');
     expect(tileAt(game, p(1, 2))?.revealed).toBe(true);
     expect(tileAt(game, p(3, 2))?.revealed).toBe(false);
-  });
-  it('can expand existing revealed zeros without moving or collecting a distant shard', () => {
-    const game = createGame('@ . . . P');
-    setNote(game, p(3, 0), 5);
-    setFloodZeros(game, true);
-    expect(game.tiles.every((tile) => tile.revealed)).toBe(true);
-    expect(tileAt(game, p(3, 0))?.note).toBeUndefined();
-    expect(tileAt(game, p(4, 0))?.shards).toBe(2);
-    expect(game.player).toEqual(game.start);
-    expect(game.shards).toBe(0);
-    setFloodZeros(game, false);
-    expect(game.tiles.every((tile) => tile.revealed)).toBe(true);
-  });
-  it('uses one-ring revealing on later steps after flood mode is disabled', () => {
-    const game = createGame('@ s . . .', true);
-    step(game, p(1, 0));
-    setFloodZeros(game, false);
-    step(game, p(1, 0));
-    expect(tileAt(game, p(2, 0))?.revealed).toBe(true);
-    expect(tileAt(game, p(3, 0))?.revealed).toBe(false);
   });
   it('shows walls and water from the start and blocks their corners', () => {
     const game = createGame('@ # .\n~ . .\n. . .');
@@ -167,7 +137,7 @@ describe('combat and progression', () => {
 
 describe('routes and notes', () => {
   it('walks along revealed tiles and leaves the hidden destination for a separate action', () => {
-    const game = createGame('@ . . . .');
+    const game = createGame('@ . s . .');
     expect(planWalk(game, p(4, 0))).toEqual([p(1, 0)]);
     const route = planWalk(game, p(4, 0)) ?? [];
     for (const tile of route) step(game, tile);
@@ -191,12 +161,12 @@ describe('routes and notes', () => {
     expect(planWalk(game, p(1, 0))).toBeNull();
   });
   it('does not use hidden monster locations to choose a route', () => {
-    const empty = createGame('@ . . .');
-    const monster = createGame('@ . . s');
-    expect(planWalk(empty, p(3, 0))).toEqual(planWalk(monster, p(3, 0)));
+    const empty = createGame('@ . s . . .');
+    const monster = createGame('@ . s . . s');
+    expect(planWalk(empty, p(5, 0))).toEqual(planWalk(monster, p(5, 0)));
   });
   it('cycles notes, allows danger and erasing, and refuses notes on revealed tiles', () => {
-    const game = createGame('@ . .');
+    const game = createGame('@ s .');
     const target = p(2, 0);
     for (const value of [1, 2, 3, 4, 5, undefined]) {
       cycleNote(game, target);

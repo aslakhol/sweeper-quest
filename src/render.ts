@@ -212,9 +212,11 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
       ctx.fillText(`+${tile.shards}`, x + 37, y + 39);
     } else if (!same(tile, game.player)) {
       const number = numberAt(game, tile);
-      ctx.fillStyle = colors[Math.min(number, 5)];
-      ctx.font = `${number ? '600' : '400'} ${number ? 20 : 14}px monospace`;
-      ctx.fillText(String(number), x + 24, y + 25);
+      if (number) {
+        ctx.fillStyle = colors[Math.min(number, 5)];
+        ctx.font = '600 20px monospace';
+        ctx.fillText(String(number), x + 24, y + 25);
+      }
     }
   }
   for (const point of view.path) {
