@@ -45,8 +45,12 @@ This answers roadmap decisions 1 (progression) and 2 (boss combat).
 - **Note tools.** Revisit once the board plays like a real deduction puzzle.
 - **Tapping a distant hidden tile.** Today it walks to the closest revealed tile in a straight line, which may not border the target. Later it should walk only when a revealed neighbor of the target is reachable.
 
-## Open questions
+## First tuning
 
-- **Damage formula** for fighting a stronger monster. Start with damage scaling with the level difference, and tune it against a full-health budget for the demo.
-- **XP values per monster and level thresholds.**
-- **Demo map.** It needs rebuilding so the player spends most of the run weaker than most monsters around them, with level-ups found by deduction.
+Starting values, to be changed after playing:
+
+- **Damage** for a monster above your power is its level times the gap. A bat costs 2 hearts at power 1; a goblin costs 6 at power 1 and 3 at power 2; the chief costs 4 at power 3.
+- **Health** is 10 whole hearts.
+- **XP** per kill equals the monster's level. Power 2 at 10 XP, power 3 at 26 XP.
+- **The chief** is level 4 and visible from the start, so the goal has a place on the map.
+- **The demo map** has 16 slimes, 10 bats and 5 goblins (51 XP). It was picked from generated candidates using a solver that only uses visible clues. The solver wins with 2 forced guesses and 4 hearts left, spending 35 actions at power 1, 30 at power 2 and 11 at power 3. At each level-up, 7 and then 5 weaker monsters are still alive.

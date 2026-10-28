@@ -2,7 +2,7 @@
 
 ## Phase 1: core loop
 
-The expanded 11×15 demo adds open southern and eastern meadows with larger connected zero areas. It has 19 monsters across levels 1–3 and two shard bundles. Clues distinguish the safer western opening from stronger eastern threats. A map test reaches both bundles and wins using only visible clue bounds without damage. Monsters and corpses show their tile clue in a small badge. Corpses retain their monster sprite; tapping one enlarges its clue, and tapping again walks onto it. Browser tests cover this interaction, both power-ups, and the crowned goblin at power 3.
+The 11×15 demo hides 31 monsters at levels 1–3 around a visible level-4 chief. Kills earn XP that raises power; fights always resolve and cost hearts when the monster is stronger; running out of hearts is game over. Zeros flood open. A map test plays it with a solver that only uses visible clues. See [decisions.md](decisions.md) for the reasoning and first tuning values.
 
 This phase does not include rooms, tall grass, a shop, inventory items, dungeons, or saved games.
 
@@ -22,8 +22,8 @@ Build the overworld and room/reset rules first, then the shop and items, then th
 
 ## Decisions before Phase 2
 
-1. **Progression.** Three meadow shards plus one dungeon shard are fewer than the five needed for power 3 if each grants one. The current demo uses `P` for two shards and `Q` for three. Decide bundle values and thresholds for powers 4 and 5, including whether repeat dungeon chests can be farmed.
-2. **Boss combat.** Current rules do no damage to a monster above player power. More hearts cannot beat the boss under those rules. Either require power 5 or introduce explicit attrition combat.
+1. **Progression.** Decided: XP from kills, with areas gated by visible strong monsters ([decisions.md](decisions.md)). Phase 2 still needs XP curves for powers 4 and 5 and a replacement for the shard spots and dungeon chest rewards.
+2. **Boss combat.** Decided: fights always resolve and cost hearts by level gap, so a boss can be beaten below its level with enough hearts.
 3. **Multi-tile clues.** Agree whether each boss tile shows the boss's own level as an adjacent threat, and how a single corpse and pickup occupy its footprint.
 4. **Resets.** Decide which pickups are permanent in grass/dungeons and whether a reset clears notes. Retaining notes against regenerated layouts can mislead players.
 5. **Mobile camera.** The Phase 1 board fits across the screen. The larger overworld needs a player-following viewport and a way to pan without accidentally walking or placing notes.
