@@ -58,18 +58,12 @@ describe('map and clues', () => {
 });
 
 describe('combat and progression', () => {
-  it('kills a slime without moving or paying loot, then collects loot exactly once', () => {
+  it('kills a slime without moving', () => {
     const game = createGame('@ s .');
-    expect(step(game, p(1, 0))).toEqual([{ type: 'hit', at: p(1, 0), loot: 1 }]);
+    expect(step(game, p(1, 0))).toEqual([{ type: 'hit', at: p(1, 0) }]);
     expect(game.player).toEqual(p(0, 0));
     expect(game.health).toBe(12);
-    expect(game.coins).toBe(0);
-    expect(tileAt(game, p(1, 0))?.monster).toMatchObject({ alive: false, looted: false });
-    expect(step(game, p(1, 0))).toEqual([{ type: 'coins', at: p(1, 0), amount: 1 }]);
-    step(game, p(0, 0));
-    step(game, p(1, 0));
-    expect(game.coins).toBe(1);
-    expect(tileAt(game, p(1, 0))?.monster?.looted).toBe(true);
+    expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(false);
   });
   it('needs both shard bundles to defeat the level-3 chief', () => {
     const game = createGame('@ G\nP Q');
@@ -89,10 +83,10 @@ describe('combat and progression', () => {
     const game = createGame('@ g\nP Q');
     step(game, p(0, 1));
     step(game, p(1, 1));
-    expect(step(game, p(1, 0))).toEqual([{ type: 'hit', at: p(1, 0), loot: 3 }]);
+    expect(step(game, p(1, 0))).toEqual([{ type: 'hit', at: p(1, 0) }]);
     expect(game.won).toBe(false);
   });
-  it('inspects a corpse without moving or collecting and restores its sprite after leaving', () => {
+  it('inspects a corpse without moving and restores its sprite after leaving', () => {
     const game = createGame('@ s b');
     expect(inspectCorpse(game, p(1, 0))).toBe(false);
     step(game, p(1, 0));
@@ -101,16 +95,14 @@ describe('combat and progression', () => {
     expect(corpse?.showCorpseClue).toBe(true);
     expect(numberAt(game, p(1, 0))).toBe(2);
     expect(game.player).toEqual(game.start);
-    expect(game.coins).toBe(0);
     expect(inspectCorpse(game, p(1, 0))).toBe(false);
     step(game, p(1, 0));
     step(game, p(0, 0));
     expect(corpse?.showCorpseClue).toBeUndefined();
-    expect(corpse?.monster).toMatchObject({ kind: 'slime', alive: false, looted: true });
-    expect(game.coins).toBe(1);
+    expect(corpse?.monster).toMatchObject({ kind: 'slime', alive: false });
     expect(inspectCorpse(game, p(1, 0))).toBe(true);
   });
-  it('respawns with full hearts, retaining loot, shards, dead monsters, and revealed tiles', () => {
+  it('respawns with full hearts, retaining shards, dead monsters, and revealed tiles', () => {
     const game = createGame('@ s P G');
     step(game, p(1, 0));
     step(game, p(1, 0));
@@ -123,7 +115,7 @@ describe('combat and progression', () => {
     expect(step(game, p(3, 0))).toContainEqual({ type: 'respawn' });
     expect(game.player).toEqual(game.start);
     expect(game.health).toBe(12);
-    expect([game.coins, game.shards, game.power]).toEqual([1, 2, 2]);
+    expect([game.shards, game.power]).toEqual([2, 2]);
     expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(false);
     expect(tileAt(game, p(3, 0))?.revealed).toBe(true);
   });

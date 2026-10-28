@@ -18,7 +18,7 @@ it('can finish the demo using only visible clue bounds, without blind attacks or
     const reachable = game.tiles.filter(
       (tile) => tile.revealed && !tile.monster?.alive && planWalk(game, tile) !== null,
     );
-    const pickup = reachable.find((tile) => tile.shards || (tile.monster && !tile.monster.looted));
+    const pickup = reachable.find((tile) => tile.shards);
     const actions = reachable
       .flatMap((from) =>
         neighbors(game, from)

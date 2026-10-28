@@ -2,7 +2,7 @@ import { type Game, type Monster, numberAt, type Point, same } from './game/game
 
 export const TILE_SIZE = 48;
 export type Effect = {
-  kind: 'hit' | 'damage' | 'coins' | 'shard';
+  kind: 'hit' | 'damage' | 'shard';
   at: Point;
   text: string;
   color: string;
@@ -189,12 +189,6 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
     if (tile.monster) {
       if (tile.monster.alive || !tile.showCorpseClue) {
         drawMonster(ctx, tile.monster, numberAt(game, tile), x, y);
-      }
-      if (!tile.monster.alive && !tile.monster.looted) {
-        ctx.fillStyle = '#eac777';
-        ctx.fillRect(x + 6, y + 34, 7, 9);
-        ctx.fillStyle = '#fff0b8';
-        ctx.fillRect(x + 7, y + 35, 2, 5);
       }
       if (tile.monster.alive || !tile.showCorpseClue) continue;
     }

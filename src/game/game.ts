@@ -4,9 +4,7 @@ export type Monster = {
   kind: 'slime' | 'bat' | 'goblin';
   level: number;
   damage: number;
-  loot: number;
   alive: boolean;
-  looted: boolean;
   goal: boolean;
 };
 export type Tile = Point & {
@@ -27,22 +25,20 @@ export type Game = {
   maxHealth: number;
   power: number;
   shards: number;
-  coins: number;
   won: boolean;
 };
 export type GameEvent =
-  | { type: 'hit'; at: Point; loot: number }
+  | { type: 'hit'; at: Point }
   | { type: 'damage'; at: Point; amount: number }
-  | { type: 'coins'; at: Point; amount: number }
   | { type: 'shard'; at: Point }
   | { type: 'respawn' }
   | { type: 'win' };
 
 const monsters = {
-  s: { kind: 'slime', level: 1, damage: 1, loot: 1, goal: false },
-  b: { kind: 'bat', level: 2, damage: 2, loot: 2, goal: false },
-  g: { kind: 'goblin', level: 3, damage: 4, loot: 3, goal: false },
-  G: { kind: 'goblin', level: 3, damage: 4, loot: 3, goal: true },
+  s: { kind: 'slime', level: 1, damage: 1, goal: false },
+  b: { kind: 'bat', level: 2, damage: 2, goal: false },
+  g: { kind: 'goblin', level: 3, damage: 4, goal: false },
+  G: { kind: 'goblin', level: 3, damage: 4, goal: true },
 } as const;
 
 export function createGame(source: string): Game {
@@ -65,7 +61,7 @@ export function createGame(source: string): Game {
         shards: symbol === 'P' ? 2 : symbol === 'Q' ? 3 : 0,
         monster:
           symbol === 's' || symbol === 'b' || symbol === 'g' || symbol === 'G'
-            ? { ...monsters[symbol], alive: true, looted: false }
+            ? { ...monsters[symbol], alive: true }
             : undefined,
       };
     }),
@@ -85,7 +81,6 @@ export function createGame(source: string): Game {
     maxHealth: 12,
     power: 1,
     shards: 0,
-    coins: 0,
     won: false,
   };
   revealStep(game, start);
@@ -177,7 +172,7 @@ export function step(game: Game, target: Point): GameEvent[] {
     delete tile.note;
     if (tile.monster.level <= game.power) {
       tile.monster.alive = false;
-      events.push({ type: 'hit', at: target, loot: tile.monster.loot });
+      events.push({ type: 'hit', at: target });
       if (tile.monster.goal && !game.won) {
         game.won = true;
         events.push({ type: 'win' });
@@ -199,11 +194,6 @@ export function step(game: Game, target: Point): GameEvent[] {
   if (previous) delete previous.showCorpseClue;
   game.player = { x: target.x, y: target.y };
   revealStep(game, target);
-  if (tile.monster && !tile.monster.looted) {
-    game.coins += tile.monster.loot;
-    tile.monster.looted = true;
-    events.push({ type: 'coins', at: target, amount: tile.monster.loot });
-  }
   if (tile.shards) {
     game.shards += tile.shards;
     game.power = game.shards >= 5 ? 3 : game.shards >= 2 ? 2 : 1;

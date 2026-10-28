@@ -25,7 +25,6 @@ app.innerHTML = `
   <section aria-label="Player stats" class="stats">
     <div class="health" id="hearts" role="img"></div>
     <div class="stat" id="power" aria-label="Power"><span class="stat-icon" aria-hidden="true">⚔</span><span id="power-value">1</span></div>
-    <div class="stat" id="coins" aria-label="Coins"><span class="stat-icon" aria-hidden="true">◈</span><span id="coins-value">0</span></div>
   </section>
   <div class="board-top"><span>The old clearing <span id="slain"></span></span><span class="here" id="here">Here: 0</span></div>
   <div class="board-wrap"><canvas tabindex="0" aria-label="Game board. Move with arrow keys or WASD. Use Q, E, Z, C for diagonals." aria-describedby="status"></canvas></div>
@@ -44,12 +43,12 @@ app.innerHTML = `
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. Tap again when next to hidden ground to enter it.</li>
     <li>Choose a note, then tap hidden tiles. Choose it again to move. Hold or right-click a tile to cycle 1–5.</li>
-    <li>Power beats equal or weaker monsters. Corpses stay visible. Tap one to see its clue, then tap the clue to walk there and collect coins.</li>
+    <li>Power beats equal or weaker monsters. Corpses stay visible. Tap one to see its clue, then tap the clue to walk there.</li>
     <li>Slimes are level 1, bats level 2, and goblins level 3. Find both shard bundles to reach power 3, then defeat the crowned goblin.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
   </ul><button data-close>Back to the clearing</button></dialog>
   <dialog id="win-dialog"><div class="eyebrow">Quest complete</div><h2>Goblin chief defeated</h2><p>Power <span id="win-power">2</span>.</p><button data-close>Keep exploring</button></dialog>
-  <dialog id="restart-dialog"><h2>Start a new quest?</h2><p>This clears your coins, power, and explored tiles.</p><div class="dialog-actions"><button class="secondary" data-close>Keep playing</button><button id="confirm-restart">Start over</button></div></dialog>
+  <dialog id="restart-dialog"><h2>Start a new quest?</h2><p>This clears your power and explored tiles.</p><div class="dialog-actions"><button class="secondary" data-close>Keep playing</button><button id="confirm-restart">Start over</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
   const value = document.querySelector<T>(selector);
@@ -61,7 +60,6 @@ const board = element<HTMLDivElement>('.board-wrap');
 const status = element<HTMLParagraphElement>('#status');
 const hearts = element<HTMLDivElement>('#hearts');
 const power = element<HTMLSpanElement>('#power-value');
-const coins = element<HTMLSpanElement>('#coins-value');
 const here = element<HTMLSpanElement>('#here');
 const objective = element<HTMLDivElement>('#objective');
 const noteMode = element<HTMLSpanElement>('#note-mode');
@@ -103,8 +101,6 @@ function updateHud(): void {
   hearts.setAttribute('aria-label', `${game.health / 4} of ${game.maxHealth / 4} hearts`);
   power.textContent = String(game.power);
   element('#power').setAttribute('aria-label', `Power ${game.power}`);
-  coins.textContent = String(game.coins);
-  element('#coins').setAttribute('aria-label', `${game.coins} coins`);
   here.textContent = `Here: ${numberAt(game, game.player)}`;
   objective.textContent = game.won
     ? 'Goblin chief defeated'
@@ -148,12 +144,10 @@ function handleEvents(events: GameEvent[]): void {
         color: event.type === 'damage' ? '#f0a18c' : '#f3d794',
         text:
           event.type === 'hit'
-            ? `+${event.loot} coin loot`
-            : event.type === 'coins'
-              ? `+${event.amount} coin`
-              : event.type === 'damage'
-                ? `−${event.amount / 4} ♥`
-                : `Power ${game.power}!`,
+            ? 'Defeated'
+            : event.type === 'damage'
+              ? `−${event.amount / 4} ♥`
+              : `Power ${game.power}!`,
       });
     }
     switch (event.type) {
@@ -165,14 +159,11 @@ function handleEvents(events: GameEvent[]): void {
         animate('hurt');
         status.textContent = `Lost ${event.amount / 4} heart. You need more power.`;
         break;
-      case 'coins':
-        status.textContent = `Collected ${event.amount} coin${event.amount === 1 ? '' : 's'}.`;
-        break;
       case 'shard':
         status.textContent = `Sword shard found. Power ${game.power}!`;
         break;
       case 'respawn':
-        status.textContent = 'Back at the start. Your coins, power, and explored tiles are kept.';
+        status.textContent = 'Back at the start. Your power and explored tiles are kept.';
         break;
       case 'win':
         element('#win-power').textContent = String(game.power);

@@ -37,13 +37,10 @@ test('inspect corpses, collect both bundles, and beat the chief', async ({ page,
   await tap(page, 3, 8, isMobile);
   await tap(page, 2, 7, isMobile);
   await position(page, 3, 8);
-  await expect(page.locator('#coins-value')).toHaveText('0');
   await tap(page, 2, 7, isMobile);
   await position(page, 3, 8);
   await expect(page.getByRole('status')).toHaveText('Corpse clue: 2. Tap again to walk here.');
-  await expect(page.locator('#coins-value')).toHaveText('0');
   await tap(page, 2, 7, isMobile);
-  await expect(page.locator('#coins-value')).toHaveText('1');
   await tap(page, 1, 7, isMobile);
   // The corpse can be inspected again after leaving, even after its loot is gone.
   await tap(page, 2, 7, isMobile);
@@ -96,7 +93,6 @@ test('an early bat survives an underpowered attack and costs half a heart', asyn
   await tap(page, 5, 7, isMobile);
   await position(page, 4, 8);
   await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '2.5 of 3 hearts');
-  await expect(page.locator('#coins-value')).toHaveText('0');
   await expect(page.locator('#slain')).toHaveText('· 0/19');
 });
 
