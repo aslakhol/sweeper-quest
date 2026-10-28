@@ -4,7 +4,6 @@ import {
   cycleNote,
   distance,
   type GameEvent,
-  inspectCorpse,
   type Note,
   numberAt,
   type Point,
@@ -39,16 +38,17 @@ app.innerHTML = `
   <p id="status" role="status" aria-live="polite">Numbers sum nearby levels. Notes mark suspected monsters.</p>
   <footer><span>02 / THE CLEARING</span><button class="reset" id="restart">Start over ↻</button></footer>
   <dialog id="help-dialog"><h2>How to play</h2><ul>
-    <li>Tap a neighboring tile to move or fight. Tile numbers, including the small badges on monsters and corpses, sum living monster levels in the eight neighboring tiles. They exclude the monster on the tile itself.</li>
+    <li>Tap a neighboring tile to move or fight. Numbers sum the levels of living monsters in the eight neighboring tiles.</li>
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. Tap again when next to hidden ground to enter it.</li>
     <li>Choose a note, then tap hidden tiles. Choose it again to move. Hold or right-click a tile to cycle 1–5.</li>
-    <li>Power beats equal or weaker monsters. Corpses stay visible. Tap one to see its clue, then tap the clue to walk there.</li>
+    <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
     <li>Slimes are level 1, bats level 2, and goblins level 3. Find both shard bundles to reach power 3, then defeat the crowned goblin.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
   </ul><button data-close>Back to the clearing</button></dialog>
   <dialog id="win-dialog"><div class="eyebrow">Quest complete</div><h2>Goblin chief defeated</h2><p>Power <span id="win-power">2</span>.</p><button data-close>Keep exploring</button></dialog>
-  <dialog id="restart-dialog"><h2>Start a new quest?</h2><p>This clears your power and explored tiles.</p><div class="dialog-actions"><button class="secondary" data-close>Keep playing</button><button id="confirm-restart">Start over</button></div></dialog>
+  <dialog id="death-dialog"><div class="eyebrow">Game over</div><h2>You fell in the clearing</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
+  <dialog id="restart-dialog"><h2>Start a new quest?</h2><p>This clears your power and explored tiles.</p><div class="dialog-actions"><button class="secondary" data-close>Keep playing</button><button data-restart>Start over</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
   const value = document.querySelector<T>(selector);
@@ -94,11 +94,10 @@ function updateHud(): void {
     `Clearing. Player column ${game.player.x + 1}, row ${game.player.y + 1}. Here: ${numberAt(game, game.player)}. Use arrows or WASD to move.`,
   );
   hearts.innerHTML = Array.from(
-    { length: game.maxHealth / 4 },
-    (_, i) =>
-      `<span class="heart" aria-hidden="true">♥<span class="heart-fill" style="width:${Math.max(0, Math.min(4, game.health - i * 4)) * 25}%">♥</span></span>`,
+    { length: game.maxHealth },
+    (_, i) => `<span class="heart${i < game.health ? ' full' : ''}" aria-hidden="true">♥</span>`,
   ).join('');
-  hearts.setAttribute('aria-label', `${game.health / 4} of ${game.maxHealth / 4} hearts`);
+  hearts.setAttribute('aria-label', `${game.health} of ${game.maxHealth} hearts`);
   power.textContent = String(game.power);
   element('#power').setAttribute('aria-label', `Power ${game.power}`);
   here.textContent = `Here: ${numberAt(game, game.player)}`;
@@ -136,34 +135,31 @@ function animate(className: string): void {
 board.addEventListener('animationend', () => board.classList.remove('hit', 'hurt'));
 function handleEvents(events: GameEvent[]): void {
   for (const event of events) {
-    if ('at' in event) {
-      effects.push({
-        kind: event.type,
-        at: event.at,
-        started: performance.now(),
-        color: event.type === 'damage' ? '#f0a18c' : '#f3d794',
-        text:
-          event.type === 'hit'
-            ? 'Defeated'
-            : event.type === 'damage'
-              ? `−${event.amount / 4} ♥`
-              : `Power ${game.power}!`,
-      });
-    }
     switch (event.type) {
-      case 'hit':
-        animate('hit');
-        status.textContent = 'Monster defeated. Tap its corpse to inspect the clue.';
-        break;
-      case 'damage':
-        animate('hurt');
-        status.textContent = `Lost ${event.amount / 4} heart. You need more power.`;
+      case 'fight':
+        animate(event.damage ? 'hurt' : 'hit');
+        if (event.damage)
+          effects.push({
+            at: event.at,
+            text: `−${event.damage} ♥`,
+            color: '#f0a18c',
+            started: performance.now(),
+          });
+        status.textContent = event.damage
+          ? `Level ${event.monster.level} ${event.monster.kind}: −${event.damage} ♥`
+          : `Level ${event.monster.level} ${event.monster.kind} defeated.`;
         break;
       case 'shard':
+        effects.push({
+          at: event.at,
+          text: `Power ${game.power}!`,
+          color: '#f3d794',
+          started: performance.now(),
+        });
         status.textContent = `Sword shard found. Power ${game.power}!`;
         break;
-      case 'respawn':
-        status.textContent = 'Back at the start. Your power and explored tiles are kept.';
+      case 'death':
+        openDialog('#death-dialog');
         break;
       case 'win':
         element('#win-power').textContent = String(game.power);
@@ -186,10 +182,6 @@ function activate(target: Point): void {
   if (selectedNote) {
     setNote(game, target, selectedNote === 'erase' ? undefined : selectedNote);
     reportNote(target);
-    return;
-  }
-  if (inspectCorpse(game, target)) {
-    status.textContent = `Corpse clue: ${numberAt(game, target)}. Tap again to walk here.`;
     return;
   }
   if (same(game.player, target)) return;
@@ -364,7 +356,7 @@ element('#help').addEventListener('click', () => openDialog('#help-dialog'));
 element('#restart').addEventListener('click', () => openDialog('#restart-dialog'));
 for (const button of document.querySelectorAll('[data-close]'))
   button.addEventListener('click', () => button.closest('dialog')?.close());
-element('#confirm-restart').addEventListener('click', () => {
+function restart(): void {
   stop();
   cancelPress();
   game = createGame(map);
@@ -373,8 +365,12 @@ element('#confirm-restart').addEventListener('click', () => {
   selectNote(null);
   updateHud();
   status.textContent = 'Numbers sum nearby levels. Notes mark suspected monsters.';
-  element<HTMLDialogElement>('#restart-dialog').close();
-});
+  for (const dialog of document.querySelectorAll('dialog')) dialog.close();
+}
+// A finished run can only start over.
+element('#death-dialog').addEventListener('cancel', (event) => event.preventDefault());
+for (const button of document.querySelectorAll('[data-restart]'))
+  button.addEventListener('click', restart);
 function frame(time: number): void {
   if (path.length && time - lastWalk >= 75) {
     const next = path.shift();

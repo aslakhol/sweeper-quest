@@ -63,7 +63,7 @@ it('can finish the demo using only visible clue bounds, without blind attacks or
       step(game, action.target);
     }
     powers.add(game.power);
-    expect(game.health).toBe(12);
+    expect(game.health).toBe(game.maxHealth);
   }
   expect(game.won).toBe(true);
   expect([...powers]).toEqual([1, 2, 3]);

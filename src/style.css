@@ -93,16 +93,11 @@ h1 {
   align-items: center;
 }
 .heart {
-  position: relative;
   color: #53604d;
-  font-size: 24px;
+  font-size: 18px;
   line-height: 1;
 }
-.heart-fill {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  white-space: nowrap;
+.heart.full {
   color: #e69c87;
 }
 .stat {

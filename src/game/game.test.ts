@@ -4,7 +4,6 @@ import {
   canStep,
   createGame,
   cycleNote,
-  inspectCorpse,
   numberAt,
   planWalk,
   same,
@@ -30,9 +29,9 @@ describe('map and clues', () => {
   });
   it('sums monster levels, including diagonals, and removes dead monsters from clues', () => {
     const game = createGame('s . b\n. @ .\n. . G');
-    expect(numberAt(game, game.player)).toBe(6);
+    expect(numberAt(game, p(1, 1))).toBe(6);
     step(game, p(0, 0));
-    expect(numberAt(game, game.player)).toBe(5);
+    expect(numberAt(game, p(1, 1))).toBe(5);
   });
   it('floods connected zeros and their numbered border, but stops at clues and monsters', () => {
     const game = createGame('@ . . s . . .\n. . . . . . .\n. . . s . . .');
@@ -58,72 +57,44 @@ describe('map and clues', () => {
 });
 
 describe('combat and progression', () => {
-  it('kills a slime without moving', () => {
+  it('kills an equal or weaker monster for free and steps onto its tile', () => {
     const game = createGame('@ s .');
-    expect(step(game, p(1, 0))).toEqual([{ type: 'hit', at: p(1, 0) }]);
-    expect(game.player).toEqual(p(0, 0));
-    expect(game.health).toBe(12);
+    const [fight] = step(game, p(1, 0));
+    expect(fight).toMatchObject({ type: 'fight', from: p(0, 0), at: p(1, 0), damage: 0 });
+    expect(game.player).toEqual(p(1, 0));
+    expect(game.health).toBe(10);
     expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(false);
   });
-  it('needs both shard bundles to defeat the level-3 chief', () => {
-    const game = createGame('@ G\nP Q');
-    expect(step(game, p(1, 0))).toContainEqual({ type: 'damage', at: p(0, 0), amount: 4 });
-    step(game, p(0, 1));
-    expect(game.power).toBe(2);
-    expect(step(game, p(1, 0))).toContainEqual({ type: 'damage', at: p(0, 1), amount: 4 });
-    expect(game.won).toBe(false);
-    step(game, p(1, 1));
-    expect([game.shards, game.power]).toEqual([5, 3]);
-    expect(step(game, p(1, 0))).toContainEqual({ type: 'win' });
-    expect(game.won).toBe(true);
+  it('kills a stronger monster at the cost of its level times the gap', () => {
+    const game = createGame('@ g .');
+    expect(step(game, p(1, 0))).toMatchObject([{ type: 'fight', damage: 6 }]);
     expect(game.health).toBe(4);
-    expect(game.player).toEqual(p(1, 1));
-  });
-  it('ordinary goblins do not end the quest', () => {
-    const game = createGame('@ g\nP Q');
-    step(game, p(0, 1));
-    step(game, p(1, 1));
-    expect(step(game, p(1, 0))).toEqual([{ type: 'hit', at: p(1, 0) }]);
-    expect(game.won).toBe(false);
-  });
-  it('inspects a corpse without moving and restores its sprite after leaving', () => {
-    const game = createGame('@ s b');
-    expect(inspectCorpse(game, p(1, 0))).toBe(false);
-    step(game, p(1, 0));
-    const corpse = tileAt(game, p(1, 0));
-    expect(inspectCorpse(game, p(1, 0))).toBe(true);
-    expect(corpse?.showCorpseClue).toBe(true);
-    expect(numberAt(game, p(1, 0))).toBe(2);
-    expect(game.player).toEqual(game.start);
-    expect(inspectCorpse(game, p(1, 0))).toBe(false);
-    step(game, p(1, 0));
-    step(game, p(0, 0));
-    expect(corpse?.showCorpseClue).toBeUndefined();
-    expect(corpse?.monster).toMatchObject({ kind: 'slime', alive: false });
-    expect(inspectCorpse(game, p(1, 0))).toBe(true);
-  });
-  it('respawns with full hearts, retaining shards, dead monsters, and revealed tiles', () => {
-    const game = createGame('@ s P G');
-    step(game, p(1, 0));
-    step(game, p(1, 0));
-    step(game, p(2, 0));
-    const goblin = tileAt(game, p(3, 0))?.monster;
-    if (!goblin) throw new Error('Missing test goblin');
-    goblin.level = 5;
-    step(game, p(3, 0));
-    step(game, p(3, 0));
-    expect(step(game, p(3, 0))).toContainEqual({ type: 'respawn' });
-    expect(game.player).toEqual(game.start);
-    expect(game.health).toBe(12);
-    expect([game.shards, game.power]).toEqual([2, 2]);
+    expect(game.player).toEqual(p(1, 0));
     expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(false);
-    expect(tileAt(game, p(3, 0))?.revealed).toBe(true);
   });
-  it('tracks damage in quarter hearts', () => {
-    const game = createGame('@ s');
-    game.power = 0;
+  it('ends the run when a fight takes the last heart', () => {
+    const game = createGame('@ g g');
     step(game, p(1, 0));
-    expect(game.health).toBe(11);
+    expect(step(game, p(2, 0))).toMatchObject([{ type: 'fight', damage: 6 }, { type: 'death' }]);
+    expect([game.health, game.lost]).toEqual([0, true]);
+    expect(game.player).toEqual(p(1, 0));
+    expect(tileAt(game, p(2, 0))?.monster?.alive).toBe(true);
+    expect(step(game, p(0, 0))).toEqual([]);
+  });
+  it('wins by defeating the chief, and ordinary goblins do not end the quest', () => {
+    const game = createGame('@ g G');
+    step(game, p(1, 0));
+    expect(game.won).toBe(false);
+    game.health = 10;
+    expect(step(game, p(2, 0))).toContainEqual({ type: 'win' });
+    expect(game.won).toBe(true);
+  });
+  it('raises power from shard bundles', () => {
+    const game = createGame('@ P Q');
+    step(game, p(1, 0));
+    expect(game.power).toBe(2);
+    step(game, p(2, 0));
+    expect([game.shards, game.power]).toEqual([5, 3]);
   });
 });
 

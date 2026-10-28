@@ -2,7 +2,6 @@ import { type Game, type Monster, numberAt, type Point, same } from './game/game
 
 export const TILE_SIZE = 48;
 export type Effect = {
-  kind: 'hit' | 'damage' | 'shard';
   at: Point;
   text: string;
   color: string;
@@ -186,11 +185,9 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
       ctx.fillStyle = '#667a59';
       ctx.fillRect(x + 22, y + 12, 4, 5);
     }
-    if (tile.monster) {
-      if (tile.monster.alive || !tile.showCorpseClue) {
-        drawMonster(ctx, tile.monster, numberAt(game, tile), x, y);
-      }
-      if (tile.monster.alive || !tile.showCorpseClue) continue;
+    if (tile.monster?.alive) {
+      drawMonster(ctx, tile.monster, numberAt(game, tile), x, y);
+      continue;
     }
     if (tile.shards) {
       sprite(

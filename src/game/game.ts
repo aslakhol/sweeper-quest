@@ -3,7 +3,6 @@ export type Note = 1 | 2 | 3 | 4 | 5 | 'danger';
 export type Monster = {
   kind: 'slime' | 'bat' | 'goblin';
   level: number;
-  damage: number;
   alive: boolean;
   goal: boolean;
 };
@@ -11,7 +10,6 @@ export type Tile = Point & {
   terrain: 'floor' | 'wall' | 'water';
   revealed: boolean;
   note?: Note;
-  showCorpseClue?: boolean;
   monster?: Monster;
   shards: number;
 };
@@ -26,19 +24,19 @@ export type Game = {
   power: number;
   shards: number;
   won: boolean;
+  lost: boolean;
 };
 export type GameEvent =
-  | { type: 'hit'; at: Point }
-  | { type: 'damage'; at: Point; amount: number }
+  | { type: 'fight'; from: Point; at: Point; monster: Monster; damage: number }
   | { type: 'shard'; at: Point }
-  | { type: 'respawn' }
+  | { type: 'death' }
   | { type: 'win' };
 
 const monsters = {
-  s: { kind: 'slime', level: 1, damage: 1, goal: false },
-  b: { kind: 'bat', level: 2, damage: 2, goal: false },
-  g: { kind: 'goblin', level: 3, damage: 4, goal: false },
-  G: { kind: 'goblin', level: 3, damage: 4, goal: true },
+  s: { kind: 'slime', level: 1, goal: false },
+  b: { kind: 'bat', level: 2, goal: false },
+  g: { kind: 'goblin', level: 3, goal: false },
+  G: { kind: 'goblin', level: 3, goal: true },
 } as const;
 
 export function createGame(source: string): Game {
@@ -77,11 +75,12 @@ export function createGame(source: string): Game {
     tiles,
     start,
     player: { ...start },
-    health: 12,
-    maxHealth: 12,
+    health: 10,
+    maxHealth: 10,
     power: 1,
     shards: 0,
     won: false,
+    lost: false,
   };
   revealStep(game, start);
   return game;
@@ -155,43 +154,33 @@ export function cycleNote(game: Game, point: Point): void {
     note === 1 ? 2 : note === 2 ? 3 : note === 3 ? 4 : note === 4 ? 5 : note === 5 ? undefined : 1;
   setNote(game, point, next);
 }
-// First tap inspects a corpse; the next tap uses normal movement and loot rules.
-export function inspectCorpse(game: Game, target: Point): boolean {
-  const tile = tileAt(game, target);
-  if (!tile?.revealed || !tile.monster || tile.monster.alive || tile.showCorpseClue) return false;
-  tile.showCorpseClue = true;
-  return true;
+// Each level the monster has above your power costs that many times its level.
+export function fightDamage(game: Game, monster: Monster): number {
+  return monster.level * Math.max(0, monster.level - game.power);
 }
+// Fights always resolve: the monster dies unless its damage kills you first.
 export function step(game: Game, target: Point): GameEvent[] {
-  if (!canStep(game, game.player, target)) return [];
+  if (game.lost || !canStep(game, game.player, target)) return [];
   const tile = tileAt(game, target);
   if (!tile) return [];
   const events: GameEvent[] = [];
   if (tile.monster?.alive) {
     tile.revealed = true;
     delete tile.note;
-    if (tile.monster.level <= game.power) {
-      tile.monster.alive = false;
-      events.push({ type: 'hit', at: target });
-      if (tile.monster.goal && !game.won) {
-        game.won = true;
-        events.push({ type: 'win' });
-      }
-    } else {
-      game.health -= tile.monster.damage;
-      events.push({ type: 'damage', at: { ...game.player }, amount: tile.monster.damage });
-      if (game.health <= 0) {
-        game.health = game.maxHealth;
-        const previous = tileAt(game, game.player);
-        if (previous) delete previous.showCorpseClue;
-        game.player = { ...game.start };
-        events.push({ type: 'respawn' });
-      }
+    const damage = fightDamage(game, tile.monster);
+    game.health = Math.max(0, game.health - damage);
+    events.push({ type: 'fight', from: game.player, at: target, monster: tile.monster, damage });
+    if (!game.health) {
+      game.lost = true;
+      events.push({ type: 'death' });
+      return events;
     }
-    return events;
+    tile.monster.alive = false;
+    if (tile.monster.goal && !game.won) {
+      game.won = true;
+      events.push({ type: 'win' });
+    }
   }
-  const previous = tileAt(game, game.player);
-  if (previous) delete previous.showCorpseClue;
   game.player = { x: target.x, y: target.y };
   revealStep(game, target);
   if (tile.shards) {
