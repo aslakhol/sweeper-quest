@@ -189,19 +189,7 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
       drawMonster(ctx, tile.monster, numberAt(game, tile), x, y);
       continue;
     }
-    if (tile.shards) {
-      sprite(
-        ctx,
-        ['    s ', '   ss ', '  sss ', ' sss  ', 'bss   ', 'bb    ', ' b    '],
-        { s: '#d4ece2', b: '#d3b572' },
-        x + 14,
-        y + 9,
-        4,
-      );
-      ctx.fillStyle = '#efd4a0';
-      ctx.font = 'bold 12px monospace';
-      ctx.fillText(`+${tile.shards}`, x + 37, y + 39);
-    } else if (!same(tile, game.player)) {
+    if (!same(tile, game.player)) {
       const number = numberAt(game, tile);
       if (number) {
         ctx.fillStyle = colors[Math.min(number, 5)];

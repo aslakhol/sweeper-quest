@@ -18,8 +18,11 @@ describe('map and clues', () => {
   it('loads the hand-authored map and keeps monsters hidden', () => {
     const game = createGame(training);
     expect([game.width, game.height]).toEqual([11, 15]);
-    expect(game.player).toEqual(p(4, 9));
-    expect(game.tiles.filter((tile) => tile.monster).every((tile) => !tile.revealed)).toBe(true);
+    expect(game.player).toEqual(p(5, 12));
+    const monsters = game.tiles.filter((tile) => tile.monster);
+    expect(monsters.filter((tile) => tile.revealed).map((tile) => tile.monster?.goal)).toEqual([
+      true,
+    ]);
   });
   it('rejects malformed maps', () => {
     expect(() => createGame('@ .\n.')).toThrow('equal widths');
@@ -29,9 +32,9 @@ describe('map and clues', () => {
   });
   it('sums monster levels, including diagonals, and removes dead monsters from clues', () => {
     const game = createGame('s . b\n. @ .\n. . G');
-    expect(numberAt(game, p(1, 1))).toBe(6);
+    expect(numberAt(game, p(1, 1))).toBe(7);
     step(game, p(0, 0));
-    expect(numberAt(game, p(1, 1))).toBe(5);
+    expect(numberAt(game, p(1, 1))).toBe(6);
   });
   it('floods connected zeros and their numbered border, but stops at clues and monsters', () => {
     const game = createGame('@ . . s . . .\n. . . . . . .\n. . . s . . .');
@@ -43,7 +46,7 @@ describe('map and clues', () => {
     expect(game.tiles.filter((tile) => tile.monster).every((tile) => !tile.revealed)).toBe(true);
   });
   it('does not flood through walls or water into another area', () => {
-    const game = createGame('@ . # .\n. . ~ .\n. . # P');
+    const game = createGame('@ . # .\n. . ~ .\n. . # .');
     expect(tileAt(game, p(1, 2))?.revealed).toBe(true);
     expect(tileAt(game, p(3, 2))?.revealed).toBe(false);
   });
@@ -81,20 +84,21 @@ describe('combat and progression', () => {
     expect(tileAt(game, p(2, 0))?.monster?.alive).toBe(true);
     expect(step(game, p(0, 0))).toEqual([]);
   });
-  it('wins by defeating the chief, and ordinary goblins do not end the quest', () => {
+  it('shows the level-4 chief from the start and wins when it falls', () => {
     const game = createGame('@ g G');
+    expect(tileAt(game, p(2, 0))?.revealed).toBe(true);
+    game.power = 3;
     step(game, p(1, 0));
     expect(game.won).toBe(false);
-    game.health = 10;
-    expect(step(game, p(2, 0))).toContainEqual({ type: 'win' });
+    expect(step(game, p(2, 0))).toMatchObject([{ type: 'fight', damage: 4 }, { type: 'win' }]);
     expect(game.won).toBe(true);
   });
-  it('raises power from shard bundles', () => {
-    const game = createGame('@ P Q');
-    step(game, p(1, 0));
-    expect(game.power).toBe(2);
-    step(game, p(2, 0));
-    expect([game.shards, game.power]).toEqual([5, 3]);
+  it('earns XP equal to monster level and raises power at the thresholds', () => {
+    const game = createGame(`@ ${'s '.repeat(9)}b . . . . . . . . . . . . . . .`);
+    for (let x = 1; x <= 9; x++) step(game, p(x, 0));
+    expect([game.xp, game.power]).toEqual([9, 1]);
+    expect(step(game, p(10, 0))).toContainEqual({ type: 'levelUp', at: p(10, 0), power: 2 });
+    expect([game.xp, game.power, game.health]).toEqual([11, 2, 8]);
   });
 });
 

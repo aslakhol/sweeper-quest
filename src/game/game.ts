@@ -11,7 +11,6 @@ export type Tile = Point & {
   revealed: boolean;
   note?: Note;
   monster?: Monster;
-  shards: number;
 };
 export type Game = {
   width: number;
@@ -22,13 +21,13 @@ export type Game = {
   health: number;
   maxHealth: number;
   power: number;
-  shards: number;
+  xp: number;
   won: boolean;
   lost: boolean;
 };
 export type GameEvent =
   | { type: 'fight'; from: Point; at: Point; monster: Monster; damage: number }
-  | { type: 'shard'; at: Point }
+  | { type: 'levelUp'; at: Point; power: number }
   | { type: 'death' }
   | { type: 'win' };
 
@@ -36,8 +35,11 @@ const monsters = {
   s: { kind: 'slime', level: 1, goal: false },
   b: { kind: 'bat', level: 2, goal: false },
   g: { kind: 'goblin', level: 3, goal: false },
-  G: { kind: 'goblin', level: 3, goal: true },
+  G: { kind: 'goblin', level: 4, goal: true },
 } as const;
+
+// Total XP needed for each power, starting at power 1. Each kill earns its level in XP.
+export const powerThresholds = [0, 10, 26] as const;
 
 export function createGame(source: string): Game {
   const rows = source
@@ -48,15 +50,15 @@ export function createGame(source: string): Game {
   if (rows.some((row) => row.length !== width)) throw new Error('Map rows must have equal widths.');
   const tiles = rows.flatMap((row, y) =>
     row.map((symbol, x): Tile => {
-      if (!['#', '~', '.', '@', 'P', 'Q', 's', 'b', 'g', 'G'].includes(symbol)) {
+      if (!['#', '~', '.', '@', 's', 'b', 'g', 'G'].includes(symbol)) {
         throw new Error(`Unknown map symbol "${symbol}" at ${x},${y}.`);
       }
       return {
         x,
         y,
         terrain: symbol === '#' ? 'wall' : symbol === '~' ? 'water' : 'floor',
-        revealed: symbol === '#' || symbol === '~',
-        shards: symbol === 'P' ? 2 : symbol === 'Q' ? 3 : 0,
+        // The chief is the visible goal; every other monster hides until fought.
+        revealed: symbol === '#' || symbol === '~' || symbol === 'G',
         monster:
           symbol === 's' || symbol === 'b' || symbol === 'g' || symbol === 'G'
             ? { ...monsters[symbol], alive: true }
@@ -78,7 +80,7 @@ export function createGame(source: string): Game {
     health: 10,
     maxHealth: 10,
     power: 1,
-    shards: 0,
+    xp: 0,
     won: false,
     lost: false,
   };
@@ -176,6 +178,12 @@ export function step(game: Game, target: Point): GameEvent[] {
       return events;
     }
     tile.monster.alive = false;
+    game.xp += tile.monster.level;
+    const power = powerThresholds.filter((threshold) => game.xp >= threshold).length;
+    if (power > game.power) {
+      game.power = power;
+      events.push({ type: 'levelUp', at: target, power });
+    }
     if (tile.monster.goal && !game.won) {
       game.won = true;
       events.push({ type: 'win' });
@@ -183,12 +191,6 @@ export function step(game: Game, target: Point): GameEvent[] {
   }
   game.player = { x: target.x, y: target.y };
   revealStep(game, target);
-  if (tile.shards) {
-    game.shards += tile.shards;
-    game.power = game.shards >= 5 ? 3 : game.shards >= 2 ? 2 : 1;
-    tile.shards = 0;
-    events.push({ type: 'shard', at: target });
-  }
   return events;
 }
 

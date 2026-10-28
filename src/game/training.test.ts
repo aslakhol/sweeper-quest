@@ -1,71 +1,97 @@
 import { expect, it } from 'vitest';
 import training from '../maps/training.txt?raw';
-import { canStep, createGame, neighbors, numberAt, planWalk, same, step } from './game';
+import {
+  canStep,
+  createGame,
+  type Game,
+  neighbors,
+  numberAt,
+  planWalk,
+  step,
+  type Tile,
+} from './game';
 
-it('offers a low-risk western frontier and stronger eastern clues from the start', () => {
-  const game = createGame(training);
-  expect(numberAt(game, { x: 3, y: 8 })).toBe(1);
-  expect(numberAt(game, { x: 4, y: 8 })).toBe(2);
-  expect(numberAt(game, { x: 5, y: 8 })).toBe(2);
-});
-
-it('can finish the demo using only visible clue bounds, without blind attacks or damage', () => {
-  const game = createGame(training);
-  const powers = new Set([game.power]);
-  let deductions = 0;
-  // This is a map check, not a game hint system. Never read hidden contents.
-  for (let turn = 0; turn < 150 && !game.won; turn++) {
-    const reachable = game.tiles.filter(
-      (tile) => tile.revealed && !tile.monster?.alive && planWalk(game, tile) !== null,
-    );
-    const pickup = reachable.find((tile) => tile.shards);
-    const actions = reachable
-      .flatMap((from) =>
-        neighbors(game, from)
-          .filter((target) => {
-            if (!canStep(game, from, target)) return false;
-            if (target.revealed)
-              return Boolean(target.monster?.alive && target.monster.level <= game.power);
-            // An unknown monster cannot exceed the unaccounted-for sum of any visible adjacent clue.
-            const bounds = neighbors(game, target)
-              .filter(
-                (clue) =>
-                  clue.revealed && clue.terrain === 'floor' && !clue.shards && !clue.monster?.alive,
-              )
-              .map(
-                (clue) =>
-                  numberAt(game, clue) -
-                  neighbors(game, clue)
-                    .filter((tile) => tile.revealed && tile.monster?.alive)
-                    .reduce((sum, tile) => sum + (tile.monster?.level ?? 0), 0),
-              );
-            return Math.min(3, ...bounds) <= game.power;
-          })
-          .map((target) => ({ from, target })),
-      )
-      .sort(
-        (a, b) =>
-          Math.hypot(a.from.x - game.player.x, a.from.y - game.player.y) -
-          Math.hypot(b.from.x - game.player.x, b.from.y - game.player.y),
-      );
-    const action = pickup ? { from: pickup, target: pickup } : actions[0];
-    expect(action, `No provably safe action at power ${game.power}`).toBeDefined();
-    if (!action) break;
-    let interrupted = false;
-    for (const next of planWalk(game, action.from) ?? []) {
-      if (step(game, next).length) {
-        interrupted = true;
-        break;
+// Narrow each hidden tile's possible level using only visible clues, like a careful player.
+function levelBounds(game: Game) {
+  const hidden = game.tiles.filter((tile) => tile.terrain === 'floor' && !tile.revealed);
+  const low = new Map<Tile, number>(hidden.map((tile) => [tile, 0]));
+  const high = new Map<Tile, number>(hidden.map((tile) => [tile, 3]));
+  const clues = game.tiles.filter(
+    (tile) => tile.revealed && tile.terrain === 'floor' && !tile.monster?.alive,
+  );
+  for (let changed = true; changed; ) {
+    changed = false;
+    for (const clue of clues) {
+      const around = neighbors(game, clue);
+      const remaining =
+        numberAt(game, clue) -
+        around
+          .filter((tile) => tile.revealed && tile.monster?.alive)
+          .reduce((sum, tile) => sum + (tile.monster?.level ?? 0), 0);
+      const unknown = around.filter((tile) => low.has(tile));
+      const lowSum = unknown.reduce((sum, tile) => sum + (low.get(tile) ?? 0), 0);
+      const highSum = unknown.reduce((sum, tile) => sum + (high.get(tile) ?? 0), 0);
+      for (const tile of unknown) {
+        const lo = low.get(tile) ?? 0;
+        const hi = high.get(tile) ?? 3;
+        const nextHigh = Math.min(hi, remaining - (lowSum - lo));
+        const nextLow = Math.max(lo, remaining - (highSum - hi));
+        if (nextHigh !== hi || nextLow !== lo) {
+          high.set(tile, nextHigh);
+          low.set(tile, nextLow);
+          changed = true;
+        }
       }
     }
-    if (!interrupted && !same(game.player, action.target)) {
-      if (!action.target.revealed && game.power < 3) deductions++;
-      step(game, action.target);
-    }
-    powers.add(game.power);
-    expect(game.health).toBe(game.maxHealth);
   }
+  return high;
+}
+
+function playCarefully(game: Game) {
+  const actions = { 1: 0, 2: 0, 3: 0 } as Record<number, number>;
+  let guesses = 0;
+  while (!game.won && !game.lost) {
+    const high = levelBounds(game);
+    const options = game.tiles
+      .filter((tile) => tile.revealed && !tile.monster?.alive && planWalk(game, tile))
+      .flatMap((from) =>
+        neighbors(game, from)
+          .filter(
+            (target) => canStep(game, from, target) && (high.has(target) || target.monster?.alive),
+          )
+          .map((target) => {
+            const level = target.revealed ? (target.monster?.level ?? 0) : (high.get(target) ?? 3);
+            const cost = level * Math.max(0, level - game.power);
+            return { from, target, cost, goal: Boolean(target.monster?.goal) };
+          }),
+      )
+      .sort((a, b) => a.cost - b.cost);
+    const safe = options.find((option) => !option.goal && option.cost === 0);
+    const chief = options.find((option) => option.goal && option.cost < game.health);
+    const action = safe ?? chief ?? options.find((option) => !option.goal);
+    if (!action) break;
+    if (!safe && !chief) guesses++;
+    for (const next of planWalk(game, action.from) ?? []) step(game, next);
+    actions[game.power]++;
+    step(game, action.target);
+  }
+  return { actions, guesses };
+}
+
+it('opens with an empty area around the start', () => {
+  const game = createGame(training);
+  expect(numberAt(game, game.player)).toBe(0);
+  expect(
+    game.tiles.filter((tile) => tile.revealed && tile.terrain === 'floor').length,
+  ).toBeGreaterThan(9);
+});
+
+it('can be won by careful deduction with a few forced guesses', () => {
+  const game = createGame(training);
+  const { actions, guesses } = playCarefully(game);
   expect(game.won).toBe(true);
-  expect([...powers]).toEqual([1, 2, 3]);
-  expect(deductions).toBeGreaterThan(10);
+  expect(game.health).toBeLessThan(game.maxHealth);
+  expect(guesses).toBeGreaterThan(0);
+  // Most of the run happens while many monsters can still hurt you.
+  expect(actions[1] + actions[2]).toBeGreaterThan(40);
 });

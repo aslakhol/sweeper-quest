@@ -8,6 +8,7 @@ import {
   numberAt,
   type Point,
   planWalk,
+  powerThresholds,
   same,
   setNote,
   step,
@@ -24,8 +25,9 @@ app.innerHTML = `
   <section aria-label="Player stats" class="stats">
     <div class="health" id="hearts" role="img"></div>
     <div class="stat" id="power" aria-label="Power"><span class="stat-icon" aria-hidden="true">⚔</span><span id="power-value">1</span></div>
+    <div class="stat" id="xp" aria-label="Experience"><span class="stat-icon" aria-hidden="true">✦</span><span id="xp-value">0/10</span></div>
   </section>
-  <div class="board-top"><span>The old clearing <span id="slain"></span></span><span class="here" id="here">Here: 0</span></div>
+  <div class="board-top"><span>The old clearing</span><span class="here" id="here">Here: 0</span></div>
   <div class="board-wrap"><canvas tabindex="0" aria-label="Game board. Move with arrow keys or WASD. Use Q, E, Z, C for diagonals." aria-describedby="status"></canvas></div>
   <section class="notes" aria-label="Tile notes">
     <div class="notes-heading"><span>Mark a tile</span><span id="note-mode">Tap to move</span></div>
@@ -33,8 +35,8 @@ app.innerHTML = `
       ${noteTools.map((note) => `<button class="note-button" data-note="${note}" aria-label="${note === 'erase' ? 'Erase notes' : note === 'danger' ? 'Mark danger' : `Mark level ${note}`}" aria-pressed="false">${note === 'danger' ? '!' : note === 'erase' ? '⌫' : note}</button>`).join('')}
     </div>
   </section>
-  <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin</span></div>
-  <div class="objective"><span class="objective-icon" aria-hidden="true">◇</span><div><div class="objective-label">Your quest</div><div id="objective">Find the first shard bundle</div></div></div>
+  <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin</span><span class="goblin-key">4 · Chief</span></div>
+  <div class="objective"><span class="objective-icon" aria-hidden="true">◇</span><div><div class="objective-label">Your quest</div><div id="objective">Defeat the goblin chief</div></div></div>
   <p id="status" role="status" aria-live="polite">Numbers sum nearby levels. Notes mark suspected monsters.</p>
   <footer><span>02 / THE CLEARING</span><button class="reset" id="restart">Start over ↻</button></footer>
   <dialog id="help-dialog"><h2>How to play</h2><ul>
@@ -43,10 +45,10 @@ app.innerHTML = `
     <li>Tap a distant tile to walk over known ground. Tap again when next to hidden ground to enter it.</li>
     <li>Choose a note, then tap hidden tiles. Choose it again to move. Hold or right-click a tile to cycle 1–5.</li>
     <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
-    <li>Slimes are level 1, bats level 2, and goblins level 3. Find both shard bundles to reach power 3, then defeat the crowned goblin.</li>
+    <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. The crowned chief is level 4.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
   </ul><button data-close>Back to the clearing</button></dialog>
-  <dialog id="win-dialog"><div class="eyebrow">Quest complete</div><h2>Goblin chief defeated</h2><p>Power <span id="win-power">2</span>.</p><button data-close>Keep exploring</button></dialog>
+  <dialog id="win-dialog"><div class="eyebrow">Quest complete</div><h2>Goblin chief defeated</h2><p>Power <span id="win-power">3</span>, <span id="win-health">10</span> hearts left.</p><div class="dialog-actions"><button class="secondary" data-close>Keep exploring</button><button data-restart>Start over</button></div></dialog>
   <dialog id="death-dialog"><div class="eyebrow">Game over</div><h2>You fell in the clearing</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
   <dialog id="restart-dialog"><h2>Start a new quest?</h2><p>This clears your power and explored tiles.</p><div class="dialog-actions"><button class="secondary" data-close>Keep playing</button><button data-restart>Start over</button></div></dialog>
 `;
@@ -101,16 +103,13 @@ function updateHud(): void {
   power.textContent = String(game.power);
   element('#power').setAttribute('aria-label', `Power ${game.power}`);
   here.textContent = `Here: ${numberAt(game, game.player)}`;
-  objective.textContent = game.won
-    ? 'Goblin chief defeated'
-    : game.power >= 3
-      ? 'Defeat the crowned goblin'
-      : game.power === 2
-        ? `Find the second bundle · ${game.shards}/5 shards`
-        : 'Find the first shard bundle';
-  const monsters = game.tiles.flatMap((tile) => (tile.monster ? [tile.monster] : []));
-  element('#slain').textContent =
-    `· ${monsters.filter((monster) => !monster.alive).length}/${monsters.length}`;
+  const next = powerThresholds[game.power];
+  element('#xp-value').textContent = next === undefined ? String(game.xp) : `${game.xp}/${next}`;
+  element('#xp').setAttribute(
+    'aria-label',
+    next === undefined ? `${game.xp} XP` : `${game.xp} of ${next} XP to the next power`,
+  );
+  objective.textContent = game.won ? 'Goblin chief defeated' : 'Defeat the goblin chief';
 }
 function stop(): void {
   pendingChord = false;
@@ -149,20 +148,21 @@ function handleEvents(events: GameEvent[]): void {
           ? `Level ${event.monster.level} ${event.monster.kind}: −${event.damage} ♥`
           : `Level ${event.monster.level} ${event.monster.kind} defeated.`;
         break;
-      case 'shard':
+      case 'levelUp':
         effects.push({
           at: event.at,
-          text: `Power ${game.power}!`,
+          text: `Power ${event.power}!`,
           color: '#f3d794',
           started: performance.now(),
         });
-        status.textContent = `Sword shard found. Power ${game.power}!`;
+        status.textContent = `Power ${event.power}. Level ${event.power} monsters are now free to fight.`;
         break;
       case 'death':
         openDialog('#death-dialog');
         break;
       case 'win':
         element('#win-power').textContent = String(game.power);
+        element('#win-health').textContent = String(game.health);
         openDialog('#win-dialog');
         break;
     }
