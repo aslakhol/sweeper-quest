@@ -519,7 +519,8 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
         TILE_SIZE - inset * 2,
       );
     }
-    if (effect.kind !== 'text') continue;
+    // Text can be queued to start later.
+    if (effect.kind !== 'text' || progress < 0) continue;
     ctx.globalAlpha = Math.max(0, 1 - progress);
     ctx.font = 'bold 15px monospace';
     ctx.strokeStyle = '#16231f';

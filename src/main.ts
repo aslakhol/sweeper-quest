@@ -134,6 +134,13 @@ function animate(className: string): void {
   app.classList.add(className);
 }
 app.addEventListener('animationend', () => app.classList.remove('hit', 'hurt'));
+// Announcements rise one after another once the fight is over, clear of damage numbers.
+let nextAnnouncement = 0;
+function announce(at: Point, text: string, color = '#f3d794'): void {
+  const started = Math.max(performance.now() + effectDuration.fight, nextAnnouncement);
+  nextAnnouncement = started + 600;
+  effects.push({ kind: 'text', at, text, color, started });
+}
 function handleEvents(events: GameEvent[]): void {
   for (const event of events) {
     switch (event.type) {
@@ -160,13 +167,7 @@ function handleEvents(events: GameEvent[]): void {
           : `Level ${event.monster.level} ${event.monster.kind} defeated.`;
         break;
       case 'levelUp':
-        effects.push({
-          kind: 'text',
-          at: event.at,
-          text: `Power ${event.power}!`,
-          color: '#f3d794',
-          started: performance.now(),
-        });
+        announce(event.at, 'Level up!');
         status.textContent = `Power ${event.power}. Level ${event.power} monsters are now free to fight.`;
         break;
       case 'death':
@@ -183,23 +184,11 @@ function handleEvents(events: GameEvent[]): void {
         talk(event.person);
         break;
       case 'heal':
-        effects.push({
-          kind: 'text',
-          at: event.at,
-          text: `+${event.amount} ♥`,
-          color: '#a5c97c',
-          started: performance.now(),
-        });
+        announce(event.at, 'Healed!', '#a5c97c');
         status.textContent = `Hearts restored: +${event.amount}.`;
         break;
       case 'win':
-        effects.push({
-          kind: 'text',
-          at: game.player,
-          text: 'Chief defeated!',
-          color: '#f3d794',
-          started: performance.now(),
-        });
+        announce(game.player, 'Chief defeated!');
         status.textContent = 'Goblin chief defeated.';
         break;
     }
