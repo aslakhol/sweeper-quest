@@ -1,5 +1,6 @@
 import './style.css';
 import {
+  canNote,
   createGame,
   cycleNote,
   distance,
@@ -21,7 +22,8 @@ import { draw, type Effect, effectDuration } from './render';
 
 const app = document.querySelector<HTMLElement>('#app');
 if (!app) throw new Error('Missing app element.');
-const noteTools = [1, 2, 3, 4, 5, 'danger', 'erase'] as const;
+const levelNotes = [1, 2, 3, 4, 5] as const;
+const noteTools = [...levelNotes, 'danger', 'erase'] as const;
 app.innerHTML = `
   <header><div><div class="eyebrow">Field test · 02</div><h1>Sweeper Quest</h1></div><button class="help-button" id="help" aria-label="How to play">?</button></header>
   <section aria-label="Player stats" class="stats">
@@ -45,7 +47,7 @@ app.innerHTML = `
     <li>Tap a neighboring tile to move or fight. Numbers sum the levels of living monsters in the eight neighboring tiles.</li>
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. Tap again when next to hidden ground to enter it.</li>
-    <li>Choose a note, then tap a hidden tile to mark it. Number keys 1–5 pick a note. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
+    <li>Choose a note, then tap a hidden tile to mark it. Number keys 1–5 mark the tile under the mouse, or pick that note. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
     <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
     <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. The crowned chief is level 4.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
@@ -70,6 +72,7 @@ const noteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-note
 let mapIndex = 0;
 let game = createGame(maps[mapIndex]);
 let selectedNote: Note | 'erase' | null = null;
+let hovered: Point | undefined;
 let path: Point[] = [];
 let effects: Effect[] = [];
 let flash: Point | undefined;
@@ -266,6 +269,7 @@ canvas.addEventListener('pointerdown', (event) => {
   };
 });
 canvas.addEventListener('pointermove', (event) => {
+  if (event.pointerType === 'mouse') hovered = pointFromPointer(event);
   if (
     press?.id === event.pointerId &&
     Math.hypot(event.clientX - press.x, event.clientY - press.y) > 10
@@ -277,6 +281,9 @@ canvas.addEventListener('pointerup', (event) => {
   const current = press;
   cancelPress();
   if (current && !current.consumed) activate(current.point, event.shiftKey);
+});
+canvas.addEventListener('pointerleave', () => {
+  hovered = undefined;
 });
 canvas.addEventListener('pointercancel', cancelPress);
 canvas.addEventListener('lostpointercapture', cancelPress);
@@ -338,11 +345,16 @@ window.addEventListener('keydown', (event) => {
     selectNote(null);
     return;
   }
-  // Physical keys, so Shift+3 still picks 3 on layouts where it types a symbol.
+  // Physical keys, so Shift+3 still means 3 on layouts where it types a symbol.
   const digit = /^(?:Digit|Numpad)([1-5])$/.exec(event.code)?.[1];
-  const tool = noteTools.find((note) => String(note) === digit);
-  if (tool !== undefined) {
-    if (!event.repeat) selectNote(tool);
+  const note = levelNotes.find((level) => String(level) === digit);
+  if (note !== undefined) {
+    if (event.repeat) return;
+    // Mark the hovered tile directly; otherwise pick the tool for the next click.
+    if (hovered && canNote(game, hovered)) {
+      toggleNote(game, hovered, note);
+      reportNote(hovered);
+    } else selectNote(note);
     return;
   }
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;

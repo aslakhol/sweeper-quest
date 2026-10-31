@@ -145,10 +145,14 @@ function revealStep(game: Game, point: Point): void {
     }
   }
 }
+// Notes only go on hidden floor.
+export function canNote(game: Game, point: Point): boolean {
+  const tile = tileAt(game, point);
+  return tile?.terrain === 'floor' && !tile.revealed;
+}
 export function setNote(game: Game, point: Point, note: Note | undefined): void {
   const tile = tileAt(game, point);
-  if (!tile || tile.revealed || tile.terrain !== 'floor') return;
-  tile.note = note;
+  if (tile && canNote(game, point)) tile.note = note;
 }
 // Placing the note a tile already has removes it; a different note replaces it.
 export function toggleNote(game: Game, point: Point, note: Note): void {
