@@ -10,7 +10,36 @@ export const effectDuration = { text: 1100, fight: 420, pulse: 700 } as const;
 const hitEnd = 200;
 const popEnd = 340;
 const stepStart = 260;
-export type View = { path: Point[]; flash?: Point; effects: Effect[]; time: number };
+export type View = {
+  camera: Point;
+  path: Point[];
+  flash?: Point;
+  effects: Effect[];
+  time: number;
+};
+type Size = Pick<Game, 'width' | 'height'>;
+
+// Screen pixels per tile: about nine tiles across the short side of the screen.
+function tileSize(width: number, height: number): number {
+  return Math.round(Math.min(64, Math.max(36, Math.min(width, height) / 9)));
+}
+// Follow the player, but stop at the map edges. A map smaller than the screen sits centered.
+export function cameraTarget(map: Size, player: Point, width: number, height: number): Point {
+  const tile = tileSize(width, height);
+  const axis = (position: number, mapSize: number, visible: number) =>
+    mapSize <= visible
+      ? mapSize / 2
+      : Math.min(Math.max(position + 0.5, visible / 2), mapSize - visible / 2);
+  return {
+    x: axis(player.x, map.width, width / tile),
+    y: axis(player.y, map.height, height / tile),
+  };
+}
+// The camera is the map position, in tiles, shown at the center of the screen.
+export function layout(camera: Point, width: number, height: number) {
+  const tile = tileSize(width, height);
+  return { tile, left: width / 2 - camera.x * tile, top: height / 2 - camera.y * tile };
+}
 const colors = ['#687b73', '#88c8b1', '#e2c477', '#ed9b78', '#ce9bdb', '#ed7382'];
 
 function sprite(
@@ -141,18 +170,28 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   const ratio = Math.min(window.devicePixelRatio || 1, 3);
-  const width = game.width * TILE_SIZE;
-  const height = game.height * TILE_SIZE;
-  if (canvas.width !== width * ratio || canvas.height !== height * ratio) {
-    canvas.width = width * ratio;
-    canvas.height = height * ratio;
-    canvas.style.aspectRatio = `${game.width} / ${game.height}`;
+  const width = canvas.clientWidth;
+  const height = canvas.clientHeight;
+  if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
+    canvas.width = Math.round(width * ratio);
+    canvas.height = Math.round(height * ratio);
   }
-  ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-  ctx.clearRect(0, 0, width, height);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = '#101a17';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const { tile: size, left, top } = layout(view.camera, width, height);
+  const scale = (size / TILE_SIZE) * ratio;
+  // Whole device pixels keep tile edges crisp while the camera glides.
+  ctx.setTransform(scale, 0, 0, scale, Math.round(left * ratio), Math.round(top * ratio));
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
+  const visible = (point: Point) =>
+    left + (point.x + 1) * size > 0 &&
+    left + point.x * size < width &&
+    top + (point.y + 1) * size > 0 &&
+    top + point.y * size < height;
   for (const tile of game.tiles) {
+    if (!visible(tile)) continue;
     const x = tile.x * TILE_SIZE;
     const y = tile.y * TILE_SIZE;
     ctx.fillStyle = '#16231f';

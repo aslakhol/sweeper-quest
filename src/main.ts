@@ -18,21 +18,22 @@ import {
   toggleNote,
 } from './game/game';
 import { maps } from './maps';
-import { draw, type Effect, effectDuration } from './render';
+import { cameraTarget, draw, type Effect, effectDuration, layout } from './render';
 
-const app = document.querySelector<HTMLElement>('#app');
-if (!app) throw new Error('Missing app element.');
+const app = element<HTMLElement>('#app');
 const levelNotes = [1, 2, 3, 4, 5] as const;
 const noteTools = [...levelNotes, 'danger', 'erase'] as const;
 app.innerHTML = `
-  <section aria-label="Player stats" class="stats">
+  <canvas tabindex="0" aria-label="Game board. Move with arrow keys or WASD. Use Q, E, Z, C for diagonals." aria-describedby="status"></canvas>
+  <section aria-label="Player stats" class="stats hud">
     <div class="health" id="hearts" role="img"></div>
-    <div class="stat" id="power" aria-label="Power"><span class="stat-icon" aria-hidden="true">⚔</span><span id="power-value">1</span></div>
-    <div class="stat" id="xp" aria-label="Experience"><span class="stat-icon" aria-hidden="true">✦</span><span id="xp-value">0/10</span></div>
-    <button class="menu-button" id="menu" aria-label="Menu">☰</button>
+    <div class="stat-row">
+      <div class="stat" id="power" aria-label="Power"><span class="stat-icon" aria-hidden="true">⚔</span><span id="power-value">1</span></div>
+      <div class="stat" id="xp" aria-label="Experience"><span class="stat-icon" aria-hidden="true">✦</span><span id="xp-value">0/10</span></div>
+    </div>
   </section>
-  <div class="board-wrap"><canvas tabindex="0" aria-label="Game board. Move with arrow keys or WASD. Use Q, E, Z, C for diagonals." aria-describedby="status"></canvas></div>
-  <section class="notes" aria-label="Tile notes">
+  <button class="menu-button hud" id="menu" aria-label="Menu">☰</button>
+  <section class="notes hud" aria-label="Tile notes">
     ${noteTools.map((note) => `<button class="note-button" data-note="${note}" aria-label="${note === 'erase' ? 'Erase notes' : note === 'danger' ? 'Mark danger' : `Mark level ${note}`}" aria-pressed="false">${note === 'danger' ? '!' : note === 'erase' ? '⌫' : note}</button>`).join('')}
   </section>
   <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
@@ -56,7 +57,6 @@ function element<T extends Element>(selector: string): T {
   return value;
 }
 const canvas = element<HTMLCanvasElement>('canvas');
-const board = element<HTMLDivElement>('.board-wrap');
 const status = element<HTMLParagraphElement>('#status');
 const hearts = element<HTMLDivElement>('#hearts');
 const power = element<HTMLSpanElement>('#power-value');
@@ -70,6 +70,10 @@ let effects: Effect[] = [];
 let flash: Point | undefined;
 let flashUntil = 0;
 let lastWalk = 0;
+let lastFrame = 0;
+const settledCamera = () =>
+  cameraTarget(game, game.player, canvas.clientWidth, canvas.clientHeight);
+let camera = settledCamera();
 let keyboardTimer: ReturnType<typeof setTimeout> | undefined;
 let pendingChord = false;
 const held = new Set<string>();
@@ -122,11 +126,11 @@ function feedback(point: Point): void {
   flashUntil = performance.now() + 280;
 }
 function animate(className: string): void {
-  board.classList.remove('hit', 'hurt');
-  void board.offsetWidth;
-  board.classList.add(className);
+  app.classList.remove('hit', 'hurt');
+  void app.offsetWidth;
+  app.classList.add(className);
 }
-board.addEventListener('animationend', () => board.classList.remove('hit', 'hurt'));
+app.addEventListener('animationend', () => app.classList.remove('hit', 'hurt'));
 function handleEvents(events: GameEvent[]): void {
   for (const event of events) {
     switch (event.type) {
@@ -217,9 +221,10 @@ function activate(target: Point, keepTool = false): void {
 }
 function pointFromPointer(event: PointerEvent | MouseEvent): Point | undefined {
   const bounds = canvas.getBoundingClientRect();
+  const { tile, left, top } = layout(camera, bounds.width, bounds.height);
   const point = {
-    x: Math.floor(((event.clientX - bounds.left) / bounds.width) * game.width),
-    y: Math.floor(((event.clientY - bounds.top) / bounds.height) * game.height),
+    x: Math.floor((event.clientX - bounds.left - left) / tile),
+    y: Math.floor((event.clientY - bounds.top - top) / tile),
   };
   return tileAt(game, point) ? point : undefined;
 }
@@ -381,6 +386,7 @@ function restart(): void {
   stop();
   cancelPress();
   game = createGame(maps[mapIndex]);
+  camera = settledCamera();
   effects = [];
   flash = undefined;
   selectNote(null);
@@ -405,7 +411,15 @@ function frame(time: number): void {
   }
   effects = effects.filter((effect) => time - effect.started < effectDuration[effect.kind]);
   if (time > flashUntil) flash = undefined;
-  draw(canvas, game, { path, flash, effects, time });
+  // Ease toward the player rather than jumping a whole tile with every step.
+  const target = settledCamera();
+  const ease = 1 - Math.exp(-(time - lastFrame) / 50);
+  camera = {
+    x: camera.x + (target.x - camera.x) * ease,
+    y: camera.y + (target.y - camera.y) * ease,
+  };
+  lastFrame = time;
+  draw(canvas, game, { camera, path, flash, effects, time });
   requestAnimationFrame(frame);
 }
 updateHud();

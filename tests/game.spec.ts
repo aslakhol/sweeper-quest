@@ -1,20 +1,27 @@
 import { readFileSync } from 'node:fs';
 import { expect, type Page, test } from '@playwright/test';
+import { cameraTarget, layout } from '../src/render';
 
 const mapRows = readFileSync(new URL('../src/maps/clearing-01.txt', import.meta.url), 'utf8')
   .trim()
   .split('\n')
   .map((row) => row.trim().split(/\s+/));
-const boardWidth = mapRows[0].length;
-const boardHeight = mapRows.length;
+const map = { width: mapRows[0].length, height: mapRows.length };
 
+// Aim where the camera comes to rest once it has caught up with the player.
 async function tile(page: Page, x: number, y: number) {
+  await page.waitForTimeout(300);
+  const label = (await page.locator('canvas').getAttribute('aria-label')) ?? '';
+  const [, column, row] = /column (\d+), row (\d+)/.exec(label) ?? [];
+  const player = { x: Number(column) - 1, y: Number(row) - 1 };
   const box = await page.locator('canvas').boundingBox();
   if (!box) throw new Error('Board is not visible');
-  return {
-    x: box.x + ((x + 0.5) * box.width) / boardWidth,
-    y: box.y + ((y + 0.5) * box.height) / boardHeight,
-  };
+  const { tile, left, top } = layout(
+    cameraTarget(map, player, box.width, box.height),
+    box.width,
+    box.height,
+  );
+  return { x: box.x + left + (x + 0.5) * tile, y: box.y + top + (y + 0.5) * tile };
 }
 async function tap(page: Page, x: number, y: number, touch: boolean) {
   const point = await tile(page, x, y);
