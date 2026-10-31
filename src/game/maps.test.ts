@@ -61,18 +61,18 @@ function playCarefully(game: Game) {
           )
           .map((target) => {
             const level = target.revealed ? (target.monster?.level ?? 0) : (high.get(target) ?? 3);
-            const cost = level * Math.max(0, level - game.power);
+            const cost = level * Math.max(0, level - game.hero.power);
             return { from, target, cost, goal: Boolean(target.monster?.goal) };
           }),
       )
       .sort((a, b) => a.cost - b.cost);
     const safe = options.find((option) => !option.goal && option.cost === 0);
-    const chief = options.find((option) => option.goal && option.cost < game.health);
+    const chief = options.find((option) => option.goal && option.cost < game.hero.health);
     const action = safe ?? chief ?? options.find((option) => !option.goal);
     if (!action) break;
     if (!safe && !chief) guesses++;
     for (const next of planWalk(game, action.from) ?? []) step(game, next);
-    actions[game.power]++;
+    actions[game.hero.power]++;
     step(game, action.target);
   }
   return { actions, guesses };
@@ -90,7 +90,7 @@ describe.each(clearings.map((map, index) => ({ map, name: `clearing ${index + 1}
       const game = createGame(map);
       const { actions, guesses } = playCarefully(game);
       expect(game.won).toBe(true);
-      expect(game.health).toBeLessThan(game.maxHealth);
+      expect(game.hero.health).toBeLessThan(game.hero.maxHealth);
       expect(guesses).toBeGreaterThan(0);
       // Most of the run happens while many monsters can still hurt you.
       expect(actions[1] + actions[2]).toBeGreaterThan(40);

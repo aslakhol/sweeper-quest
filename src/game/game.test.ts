@@ -102,13 +102,13 @@ describe('combat and progression', () => {
     const [fight] = step(game, p(1, 0));
     expect(fight).toMatchObject({ type: 'fight', from: p(0, 0), at: p(1, 0), damage: 0 });
     expect(game.player).toEqual(p(1, 0));
-    expect(game.health).toBe(10);
+    expect(game.hero.health).toBe(10);
     expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(false);
   });
   it('kills a stronger monster at the cost of its level times the gap', () => {
     const game = createGame('@ g .');
     expect(step(game, p(1, 0))).toMatchObject([{ type: 'fight', damage: 6 }]);
-    expect(game.health).toBe(4);
+    expect(game.hero.health).toBe(4);
     expect(game.player).toEqual(p(1, 0));
     expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(false);
   });
@@ -116,7 +116,7 @@ describe('combat and progression', () => {
     const game = createGame('@ g g');
     step(game, p(1, 0));
     expect(step(game, p(2, 0))).toMatchObject([{ type: 'fight', damage: 6 }, { type: 'death' }]);
-    expect([game.health, game.lost]).toEqual([0, true]);
+    expect([game.hero.health, game.lost]).toEqual([0, true]);
     expect(game.player).toEqual(p(1, 0));
     expect(tileAt(game, p(2, 0))?.monster?.alive).toBe(true);
     expect(step(game, p(0, 0))).toEqual([]);
@@ -124,7 +124,7 @@ describe('combat and progression', () => {
   it('shows the level-4 chief from the start and wins when it falls', () => {
     const game = createGame('@ g G');
     expect(tileAt(game, p(2, 0))?.revealed).toBe(true);
-    game.power = 3;
+    game.hero.power = 3;
     step(game, p(1, 0));
     expect(game.won).toBe(false);
     expect(step(game, p(2, 0))).toMatchObject([{ type: 'fight', damage: 4 }, { type: 'win' }]);
@@ -133,9 +133,9 @@ describe('combat and progression', () => {
   it('earns XP equal to monster level and raises power at the thresholds', () => {
     const game = createGame(`@ ${'s '.repeat(9)}b . . . . . . . . . . . . . . .`);
     for (let x = 1; x <= 9; x++) step(game, p(x, 0));
-    expect([game.xp, game.power]).toEqual([9, 1]);
+    expect([game.hero.xp, game.hero.power]).toEqual([9, 1]);
     expect(step(game, p(10, 0))).toContainEqual({ type: 'levelUp', at: p(10, 0), power: 2 });
-    expect([game.xp, game.power, game.health]).toEqual([11, 2, 8]);
+    expect([game.hero.xp, game.hero.power, game.hero.health]).toEqual([11, 2, 8]);
   });
 });
 

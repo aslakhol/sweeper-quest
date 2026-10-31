@@ -96,17 +96,19 @@ function updateHud(): void {
     `Player column ${game.player.x + 1}, row ${game.player.y + 1}. Here: ${numberAt(game, game.player)}. Use arrows or WASD to move.`,
   );
   hearts.innerHTML = Array.from(
-    { length: game.maxHealth },
-    (_, i) => `<span class="heart${i < game.health ? ' full' : ''}" aria-hidden="true">♥</span>`,
+    { length: game.hero.maxHealth },
+    (_, i) =>
+      `<span class="heart${i < game.hero.health ? ' full' : ''}" aria-hidden="true">♥</span>`,
   ).join('');
-  hearts.setAttribute('aria-label', `${game.health} of ${game.maxHealth} hearts`);
-  power.textContent = String(game.power);
-  element('#power').setAttribute('aria-label', `Power ${game.power}`);
-  const next = powerThresholds[game.power];
-  element('#xp-value').textContent = next === undefined ? String(game.xp) : `${game.xp}/${next}`;
+  hearts.setAttribute('aria-label', `${game.hero.health} of ${game.hero.maxHealth} hearts`);
+  power.textContent = String(game.hero.power);
+  element('#power').setAttribute('aria-label', `Power ${game.hero.power}`);
+  const next = powerThresholds[game.hero.power];
+  element('#xp-value').textContent =
+    next === undefined ? String(game.hero.xp) : `${game.hero.xp}/${next}`;
   element('#xp').setAttribute(
     'aria-label',
-    next === undefined ? `${game.xp} XP` : `${game.xp} of ${next} XP to the next power`,
+    next === undefined ? `${game.hero.xp} XP` : `${game.hero.xp} of ${next} XP to the next power`,
   );
 }
 function stop(): void {
@@ -169,8 +171,8 @@ function handleEvents(events: GameEvent[]): void {
         openDialog('#death-dialog');
         break;
       case 'win':
-        element('#win-power').textContent = String(game.power);
-        element('#win-health').textContent = String(game.health);
+        element('#win-power').textContent = String(game.hero.power);
+        element('#win-health').textContent = String(game.hero.health);
         openDialog('#win-dialog');
         break;
     }

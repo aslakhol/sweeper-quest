@@ -348,7 +348,7 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
     }
     if (tile.monster?.alive) {
       drawMonster(ctx, tile.monster, x, y);
-      if (tile.monster.level > game.power) {
+      if (tile.monster.level > game.hero.power) {
         ctx.strokeStyle = '#e4867599';
         ctx.lineWidth = 2;
         ctx.strokeRect(x + 3, y + 3, 42, 42);

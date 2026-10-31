@@ -14,16 +14,15 @@ export type Tile = Point & {
   note?: Note;
   monster?: Monster;
 };
+// The hero's stats travel with the player from map to map.
+export type Hero = { health: number; maxHealth: number; power: number; xp: number };
 export type Game = {
   width: number;
   height: number;
   tiles: Tile[];
   start: Point;
   player: Point;
-  health: number;
-  maxHealth: number;
-  power: number;
-  xp: number;
+  hero: Hero;
   won: boolean;
   lost: boolean;
 };
@@ -60,7 +59,11 @@ function isKey<T extends object>(object: T, key: string): key is Extract<keyof T
   return Object.hasOwn(object, key);
 }
 
-export function createGame(source: string): Game {
+export function createHero(): Hero {
+  return { health: 10, maxHealth: 10, power: 1, xp: 0 };
+}
+
+export function createGame(source: string, hero = createHero()): Game {
   const rows = source
     .trim()
     .split('\n')
@@ -96,10 +99,7 @@ export function createGame(source: string): Game {
     tiles,
     start,
     player: { ...start },
-    health: 10,
-    maxHealth: 10,
-    power: 1,
-    xp: 0,
+    hero,
     won: false,
     lost: false,
   };
@@ -185,7 +185,7 @@ export function cycleNote(game: Game, point: Point): void {
 }
 // Each level the monster has above your power costs that many times its level.
 export function fightDamage(game: Game, monster: Monster): number {
-  return monster.level * Math.max(0, monster.level - game.power);
+  return monster.level * Math.max(0, monster.level - game.hero.power);
 }
 // Fights always resolve: the monster dies unless its damage kills you first.
 export function step(game: Game, target: Point): GameEvent[] {
@@ -197,9 +197,9 @@ export function step(game: Game, target: Point): GameEvent[] {
     tile.revealed = true;
     delete tile.note;
     const damage = fightDamage(game, tile.monster);
-    game.health = Math.max(0, game.health - damage);
+    game.hero.health = Math.max(0, game.hero.health - damage);
     events.push({ type: 'fight', from: game.player, at: target, monster: tile.monster, damage });
-    if (!game.health) {
+    if (!game.hero.health) {
       game.lost = true;
       events.push({ type: 'death' });
       return events;
@@ -215,10 +215,10 @@ export function step(game: Game, target: Point): GameEvent[] {
       )
         revealStep(game, neighbor);
     }
-    game.xp += tile.monster.level;
-    const power = powerThresholds.filter((threshold) => game.xp >= threshold).length;
-    if (power > game.power) {
-      game.power = power;
+    game.hero.xp += tile.monster.level;
+    const power = powerThresholds.filter((threshold) => game.hero.xp >= threshold).length;
+    if (power > game.hero.power) {
+      game.hero.power = power;
       events.push({ type: 'levelUp', at: target, power });
     }
     if (tile.monster.goal && !game.won) {
