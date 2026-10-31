@@ -17,7 +17,7 @@ import {
   tileAt,
   toggleNote,
 } from './game/game';
-import { maps } from './maps';
+import { village } from './maps';
 import { cameraTarget, draw, type Effect, effectDuration, layout } from './render';
 
 const app = element<HTMLElement>('#app');
@@ -48,7 +48,7 @@ app.innerHTML = `
   </ul>
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin</span><span class="goblin-key">4 · Chief</span></div>
   <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
-  <dialog id="win-dialog"><h2>Goblin chief defeated</h2><p>Power <span id="win-power">3</span>, <span id="win-health">10</span> hearts left.</p><div class="dialog-actions"><button id="next-map">Next clearing</button></div></dialog>
+  <dialog id="win-dialog"><h2>Goblin chief defeated</h2><p>Power <span id="win-power">3</span>, <span id="win-health">10</span> hearts left.</p><div class="dialog-actions"><button data-restart>Play again</button></div></dialog>
   <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
@@ -61,8 +61,7 @@ const status = element<HTMLParagraphElement>('#status');
 const hearts = element<HTMLDivElement>('#hearts');
 const power = element<HTMLSpanElement>('#power-value');
 const noteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-note]')];
-let mapIndex = 0;
-let game = createGame(maps[mapIndex]);
+let game = createGame(village);
 let selectedNote: Note | 'erase' | null = null;
 let hovered: Point | undefined;
 let path: Point[] = [];
@@ -94,7 +93,7 @@ const directions: Record<string, Point> = {
 function updateHud(): void {
   canvas.setAttribute(
     'aria-label',
-    `Clearing. Player column ${game.player.x + 1}, row ${game.player.y + 1}. Here: ${numberAt(game, game.player)}. Use arrows or WASD to move.`,
+    `Player column ${game.player.x + 1}, row ${game.player.y + 1}. Here: ${numberAt(game, game.player)}. Use arrows or WASD to move.`,
   );
   hearts.innerHTML = Array.from(
     { length: game.maxHealth },
@@ -172,8 +171,6 @@ function handleEvents(events: GameEvent[]): void {
       case 'win':
         element('#win-power').textContent = String(game.power);
         element('#win-health').textContent = String(game.health);
-        element('#next-map').textContent =
-          mapIndex === maps.length - 1 ? 'Back to clearing 1' : 'Next clearing';
         openDialog('#win-dialog');
         break;
     }
@@ -385,7 +382,7 @@ for (const button of document.querySelectorAll('[data-close]'))
 function restart(): void {
   stop();
   cancelPress();
-  game = createGame(maps[mapIndex]);
+  game = createGame(village);
   camera = settledCamera();
   effects = [];
   flash = undefined;
@@ -397,10 +394,6 @@ function restart(): void {
 // A finished run can only start over or move on.
 for (const id of ['#death-dialog', '#win-dialog'])
   element(id).addEventListener('cancel', (event) => event.preventDefault());
-element('#next-map').addEventListener('click', () => {
-  mapIndex = (mapIndex + 1) % maps.length;
-  restart();
-});
 for (const button of document.querySelectorAll('[data-restart]'))
   button.addEventListener('click', restart);
 function frame(time: number): void {

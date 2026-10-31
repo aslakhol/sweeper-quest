@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { maps } from '../maps';
+import { clearings, village } from '../maps';
 import {
   canStep,
   createGame,
@@ -78,7 +78,7 @@ function playCarefully(game: Game) {
   return { actions, guesses };
 }
 
-describe.each(maps.map((map, index) => ({ map, name: `clearing ${index + 1}` })))(
+describe.each(clearings.map((map, index) => ({ map, name: `clearing ${index + 1}` })))(
   '$name',
   ({ map }) => {
     it('opens with an empty area around the start', () => {
@@ -97,3 +97,11 @@ describe.each(maps.map((map, index) => ({ map, name: `clearing ${index + 1}` }))
     });
   },
 );
+
+describe('village', () => {
+  it('can be won by careful deduction', () => {
+    const game = createGame(village);
+    playCarefully(game);
+    expect(game.won).toBe(true);
+  });
+});
