@@ -6,7 +6,7 @@
 
 Ten generated 11×15 clearings each hide 31 monsters at levels 1–3 around a visible level-4 chief. Kills earn XP that raises power; fights resolve in one action and cost hearts when the monster is stronger. Running out of hearts is game over. Zeros flood open, including revealed clues that become zero after a kill. A map test plays each clearing with a solver that only uses visible clues.
 
-The game now plays a full-screen scratch village with a tall-grass meadow instead; the clearings remain as a balance test bank. They test deduction and combat balance. Their size, sequence, and fresh state between maps are not the intended world structure. This phase does not include rooms, tall grass, a shop, inventory items, dungeons, or saved games.
+The game now plays a full-screen scratch village with a tall-grass meadow, enterable houses with people to talk to, and a cave whose floors are these clearings, picked at random and fresh on every trip. The clearings test deduction and combat balance. Their size, sequence, and fresh state between maps are not the intended world structure. This phase does not include rooms, tall grass, a shop, inventory items, dungeons, or saved games.
 
 ## Phase 2: starting area
 
