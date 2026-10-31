@@ -77,7 +77,11 @@ describe('map and clues', () => {
     expect(numberAt(game, p(2, 0))).toBe(0);
     expect(tileAt(game, p(3, 0))?.revealed).toBe(false);
   });
-  it('shows walls and water from the start and blocks their corners', () => {
+  it('steps diagonally past one obstacle but not between two', () => {
+    expect(canStep(createGame('@ T\n, ,'), p(0, 0), p(1, 1))).toBe(true);
+    expect(canStep(createGame('@ T\nT ,'), p(0, 0), p(1, 1))).toBe(false);
+  });
+  it('shows walls and water from the start and blocks squeezing between them', () => {
     const game = createGame('@ # .\n~ . .\n. . .');
     expect(tileAt(game, p(1, 0))?.revealed).toBe(true);
     expect(tileAt(game, p(0, 1))?.revealed).toBe(true);
@@ -160,7 +164,7 @@ describe('routes and notes', () => {
     const game = createGame('@ # .\n. # .\n. . .');
     for (const tile of game.tiles) tile.revealed = true;
     const route = planWalk(game, p(2, 0));
-    expect(route).toEqual([p(0, 1), p(0, 2), p(1, 2), p(2, 2), p(2, 1), p(2, 0)]);
+    expect(route).toEqual([p(0, 1), p(1, 2), p(2, 1), p(2, 0)]);
   });
   it('travels when stepping onto an exit, but never walks across one', () => {
     const legend = { exits: { '>': { to: 'cave', look: 'mat' } } } as const;

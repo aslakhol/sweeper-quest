@@ -29,7 +29,7 @@ The player's tile keeps its clue readable above the hero. A separate corner badg
 
 ## Movement and notes
 
-Move in eight directions by tapping an adjacent tile, using WASD or arrow keys, or using Q/E/Z/C for diagonals. Two direction keys also form a diagonal. Walls and water block diagonal corner-cutting.
+Move in eight directions by tapping an adjacent tile, using WASD or arrow keys, or using Q/E/Z/C for diagonals. Two direction keys also form a diagonal. A diagonal step is blocked only when both tiles beside it block movement, so the hero cannot squeeze between two obstacles.
 
 Tapping a distant revealed tile walks there over known, unoccupied floor. Auto-walk advances quickly, roughly 60–80 ms per tile, and stops on combat, discoveries or pickups that need attention, new input, or a dialog. An unreachable target briefly flashes.
 

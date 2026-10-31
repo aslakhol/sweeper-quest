@@ -202,9 +202,10 @@ export function numberAt(game: Game, point: Point): number {
 }
 export function canStep(game: Game, from: Point, to: Point): boolean {
   if (distance(from, to) !== 1 || tileAt(game, to)?.terrain !== 'floor') return false;
+  // A diagonal step only needs one open corner; it cannot squeeze between two obstacles.
   if (from.x !== to.x && from.y !== to.y) {
     return (
-      tileAt(game, { x: from.x, y: to.y })?.terrain === 'floor' &&
+      tileAt(game, { x: from.x, y: to.y })?.terrain === 'floor' ||
       tileAt(game, { x: to.x, y: from.y })?.terrain === 'floor'
     );
   }
