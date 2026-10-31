@@ -9,10 +9,31 @@ export type Monster = {
 export type Tile = Point & {
   terrain: 'floor' | 'wall' | 'water';
   // How the tile is drawn. Only terrain affects the rules.
-  look: 'grass' | 'path' | 'rock' | 'tree' | 'roof' | 'house' | 'door' | 'fence' | 'water';
+  look:
+    | 'grass'
+    | 'path'
+    | 'rock'
+    | 'tree'
+    | 'roof'
+    | 'house'
+    | 'door'
+    | 'fence'
+    | 'water'
+    | 'wood'
+    | 'interior'
+    | 'mat'
+    | 'table'
+    | 'bed'
+    | 'shelf';
   revealed: boolean;
   note?: Note;
   monster?: Monster;
+  // The map that stepping onto this tile leads to.
+  exit?: string;
+};
+// Symbols a particular map adds on top of the shared ones.
+export type Legend = {
+  exits?: Record<string, { to: string; look: Tile['look'] }>;
 };
 // The hero's stats travel with the player from map to map.
 export type Hero = { health: number; maxHealth: number; power: number; xp: number };
@@ -30,7 +51,8 @@ export type GameEvent =
   | { type: 'fight'; from: Point; at: Point; monster: Monster; damage: number }
   | { type: 'levelUp'; at: Point; power: number }
   | { type: 'death' }
-  | { type: 'win' };
+  | { type: 'win' }
+  | { type: 'travel'; to: string };
 
 const grounds = {
   '.': { terrain: 'floor', look: 'grass', revealed: false },
@@ -44,6 +66,11 @@ const grounds = {
   D: { terrain: 'wall', look: 'door', revealed: true },
   F: { terrain: 'wall', look: 'fence', revealed: true },
   '~': { terrain: 'water', look: 'water', revealed: true },
+  _: { terrain: 'floor', look: 'wood', revealed: true },
+  W: { terrain: 'wall', look: 'interior', revealed: true },
+  O: { terrain: 'wall', look: 'table', revealed: true },
+  B: { terrain: 'wall', look: 'bed', revealed: true },
+  S: { terrain: 'wall', look: 'shelf', revealed: true },
 } as const satisfies Record<string, Pick<Tile, 'terrain' | 'look' | 'revealed'>>;
 const monsters = {
   s: { kind: 'slime', level: 1, goal: false },
@@ -63,7 +90,17 @@ export function createHero(): Hero {
   return { health: 10, maxHealth: 10, power: 1, xp: 0 };
 }
 
-export function createGame(source: string, hero = createHero()): Game {
+// A map entered from another starts the player on the exit leading back there.
+function exitTo(tiles: Tile[], from: string): Point {
+  const exits = tiles.filter((tile) => tile.exit === from);
+  if (exits.length !== 1) throw new Error(`Map must have exactly one exit to ${from}.`);
+  return { x: exits[0].x, y: exits[0].y };
+}
+
+export function createGame(
+  source: string,
+  { legend = {}, hero = createHero(), from }: { legend?: Legend; hero?: Hero; from?: string } = {},
+): Game {
   const rows = source
     .trim()
     .split('\n')
@@ -72,6 +109,8 @@ export function createGame(source: string, hero = createHero()): Game {
   if (rows.some((row) => row.length !== width)) throw new Error('Map rows must have equal widths.');
   const tiles = rows.flatMap((row, y) =>
     row.map((symbol, x): Tile => {
+      const exit = legend.exits?.[symbol];
+      if (exit) return { x, y, terrain: 'floor', look: exit.look, revealed: true, exit: exit.to };
       if (isKey(monsters, symbol)) {
         const monster = monsters[symbol];
         // The chief is the visible goal; every other monster hides until fought.
@@ -91,8 +130,8 @@ export function createGame(source: string, hero = createHero()): Game {
   const starts = rows.flatMap((row, y) =>
     row.flatMap((symbol, x) => (symbol === '@' ? [{ x, y }] : [])),
   );
-  if (starts.length !== 1) throw new Error('Map must have exactly one start (@).');
-  const start = starts[0];
+  if (!from && starts.length !== 1) throw new Error('Map must have exactly one start (@).');
+  const start = from ? exitTo(tiles, from) : starts[0];
   const game: Game = {
     width,
     height: rows.length,
@@ -105,6 +144,12 @@ export function createGame(source: string, hero = createHero()): Game {
   };
   revealStep(game, start);
   return game;
+}
+
+// Coming back to a map you have visited puts you on the exit you left by.
+export function arrive(game: Game, from: string): void {
+  game.player = exitTo(game.tiles, from);
+  revealStep(game, game.player);
 }
 
 export function tileAt(game: Game, point: Point): Tile | undefined {
@@ -228,6 +273,7 @@ export function step(game: Game, target: Point): GameEvent[] {
   }
   game.player = { x: target.x, y: target.y };
   revealStep(game, target);
+  if (tile.exit) events.push({ type: 'travel', to: tile.exit });
   return events;
 }
 
@@ -264,7 +310,9 @@ export function planWalk(game: Game, target: Point): Point[] | null {
         previous.has(key(next)) ||
         !canStep(game, current, next) ||
         !next.revealed ||
-        next.monster?.alive
+        next.monster?.alive ||
+        // Walking over an exit would leave the map partway.
+        (next.exit && !same(next, target))
       )
         continue;
       previous.set(key(next), current);

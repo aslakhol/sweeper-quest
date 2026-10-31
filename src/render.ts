@@ -285,6 +285,62 @@ function drawGround(ctx: CanvasRenderingContext2D, game: Game, tile: Tile, x: nu
       rects(ctx, '#4b3423', x, y, [[23, 11, 2, 37]]);
       rects(ctx, '#d8b46a', x, y, [[28, 30, 3, 3]]);
       return;
+    case 'wood':
+      rects(ctx, (tile.x + tile.y) % 2 ? '#5c4632' : '#604934', x, y, [[1, 1, 46, 46]]);
+      rects(ctx, '#4f3c2b', x, y, [
+        [1, 16, 46, 1],
+        [1, 32, 46, 1],
+        [tile.y % 2 ? 14 : 34, 1, 1, 15],
+        [tile.y % 2 ? 30 : 10, 17, 1, 15],
+      ]);
+      return;
+    case 'interior':
+    case 'mat': {
+      // Walls show their face toward the room and their dark top elsewhere.
+      const below = tileAt(game, { x: tile.x, y: tile.y + 1 });
+      if (tile.look === 'mat' || (below && below.look !== 'interior')) {
+        rects(ctx, '#8c7458', x, y, [[0, 0, 48, 48]]);
+        rects(ctx, '#7a6349', x, y, [
+          [0, 15, 48, 2],
+          [0, 31, 48, 2],
+        ]);
+        rects(ctx, '#5b4836', x, y, [[0, 44, 48, 4]]);
+      } else rects(ctx, '#2a211a', x, y, [[0, 0, 48, 48]]);
+      if (tile.look === 'mat') {
+        rects(ctx, '#31443b', x, y, [[8, 4, 32, 44]]);
+        rects(ctx, '#8a3b3b', x, y, [[6, 34, 36, 14]]);
+        rects(ctx, '#a85050', x, y, [[9, 37, 30, 2]]);
+      }
+      return;
+    }
+    case 'table':
+      rects(ctx, '#5c4632', x, y, [[1, 1, 46, 46]]);
+      rects(ctx, '#7b5636', x, y, [[joins(-1, 0) ? 0 : 4, joins(0, -1) ? 0 : 6, 48, 48]]);
+      rects(ctx, '#5c4632', x, y, [
+        ...(joins(1, 0) ? [] : [[44, 0, 4, 48]]),
+        ...(joins(0, 1) ? [] : [[0, 40, 48, 8]]),
+      ]);
+      if (!joins(0, 1))
+        rects(ctx, '#4a3324', x, y, [[joins(-1, 0) ? 0 : 4, 38, joins(1, 0) ? 48 : 40, 4]]);
+      return;
+    case 'bed':
+      rects(ctx, '#5c4632', x, y, [[1, 1, 46, 46]]);
+      rects(ctx, '#6e4a2e', x, y, [[joins(-1, 0) ? 0 : 3, 6, joins(1, 0) ? 48 : 42, 38]]);
+      rects(ctx, '#5a7a9a', x, y, [[joins(-1, 0) ? 0 : 6, 9, joins(1, 0) ? 48 : 36, 32]]);
+      if (!joins(-1, 0)) rects(ctx, '#e3dccb', x, y, [[8, 12, 14, 26]]);
+      return;
+    case 'shelf':
+      rects(ctx, '#3f2c1e', x, y, [[2, 0, 44, 46]]);
+      for (const [index, row] of [6, 20, 34].entries())
+        for (let book = 0; book < 5; book++)
+          rects(
+            ctx,
+            ['#8a3b3b', '#4d6b8a', '#7a8a4d', '#a08050'][(book + index + tile.x) % 4],
+            x,
+            y,
+            [[6 + book * 7, row, 5, 10]],
+          );
+      return;
     case 'fence':
       rects(ctx, lawn(tile), x, y, [[1, 1, 46, 46]]);
       if (joins(-1, 0))

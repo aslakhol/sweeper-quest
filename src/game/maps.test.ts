@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dungeons, village } from '../maps';
+import { areas, dungeons } from '../maps';
 import {
   canStep,
   createGame,
@@ -100,7 +100,7 @@ describe.each(dungeons.map((map, index) => ({ map, name: `dungeon ${index + 1}` 
 
 describe('village', () => {
   it('can be won by careful deduction', () => {
-    const game = createGame(village);
+    const game = createGame(areas.village.map, { legend: areas.village });
     playCarefully(game);
     expect(game.won).toBe(true);
   });

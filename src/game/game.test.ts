@@ -162,6 +162,13 @@ describe('routes and notes', () => {
     const route = planWalk(game, p(2, 0));
     expect(route).toEqual([p(0, 1), p(0, 2), p(1, 2), p(2, 2), p(2, 1), p(2, 0)]);
   });
+  it('travels when stepping onto an exit, but never walks across one', () => {
+    const legend = { exits: { '>': { to: 'cave', look: 'mat' } } } as const;
+    const game = createGame('@ > ,\n, , ,', { legend });
+    expect(planWalk(game, p(2, 0))).toEqual([p(1, 1), p(2, 0)]);
+    expect(step(game, p(1, 0))).toEqual([{ type: 'travel', to: 'cave' }]);
+    expect(game.player).toEqual(p(1, 0));
+  });
   it('does not route through a visible living monster', () => {
     const game = createGame('@ s .');
     for (const tile of game.tiles) tile.revealed = true;

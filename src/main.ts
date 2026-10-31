@@ -1,7 +1,6 @@
 import './style.css';
 import {
   canNote,
-  createGame,
   cycleNote,
   distance,
   type GameEvent,
@@ -17,7 +16,8 @@ import {
   tileAt,
   toggleNote,
 } from './game/game';
-import { village } from './maps';
+import { createWorld, travel } from './game/world';
+import { areas } from './maps';
 import { cameraTarget, draw, type Effect, effectDuration, layout } from './render';
 
 const app = element<HTMLElement>('#app');
@@ -60,7 +60,8 @@ const status = element<HTMLParagraphElement>('#status');
 const hearts = element<HTMLDivElement>('#hearts');
 const power = element<HTMLSpanElement>('#power-value');
 const noteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-note]')];
-let game = createGame(village);
+let world = createWorld();
+let game = world.game;
 let selectedNote: Note | 'erase' | null = null;
 let hovered: Point | undefined;
 let path: Point[] = [];
@@ -92,7 +93,7 @@ const directions: Record<string, Point> = {
 function updateHud(): void {
   canvas.setAttribute(
     'aria-label',
-    `Player column ${game.player.x + 1}, row ${game.player.y + 1}. Here: ${numberAt(game, game.player)}. Use arrows or WASD to move.`,
+    `${areas[world.area].name}. Player column ${game.player.x + 1}, row ${game.player.y + 1}. Here: ${numberAt(game, game.player)}. Use arrows or WASD to move.`,
   );
   hearts.innerHTML = Array.from(
     { length: game.hero.maxHealth },
@@ -168,6 +169,13 @@ function handleEvents(events: GameEvent[]): void {
         break;
       case 'death':
         openDialog('#death-dialog');
+        break;
+      case 'travel':
+        travel(world, event.to);
+        game = world.game;
+        camera = settledCamera();
+        effects = [];
+        status.textContent = areas[world.area].name;
         break;
       case 'win':
         effects.push({
@@ -388,7 +396,8 @@ for (const button of document.querySelectorAll('[data-close]'))
 function restart(): void {
   stop();
   cancelPress();
-  game = createGame(village);
+  world = createWorld();
+  game = world.game;
   camera = settledCamera();
   effects = [];
   flash = undefined;
