@@ -27,7 +27,6 @@ button {
   touch-action: manipulation;
 }
 button:focus-visible,
-canvas:focus-visible,
 summary:focus-visible {
   outline: 2px solid #e4c782;
   outline-offset: 4px;
@@ -140,6 +139,7 @@ canvas {
   user-select: none;
   image-rendering: pixelated;
   border-radius: 2px;
+  outline: none;
 }
 .board-wrap.hurt {
   animation: hurt 0.3s ease-out;
