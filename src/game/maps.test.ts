@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { clearings, village } from '../maps';
+import { dungeons, village } from '../maps';
 import {
   canStep,
   createGame,
@@ -78,7 +78,7 @@ function playCarefully(game: Game) {
   return { actions, guesses };
 }
 
-describe.each(clearings.map((map, index) => ({ map, name: `clearing ${index + 1}` })))(
+describe.each(dungeons.map((map, index) => ({ map, name: `dungeon ${index + 1}` })))(
   '$name',
   ({ map }) => {
     it('opens with an empty area around the start', () => {
