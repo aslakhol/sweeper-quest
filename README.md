@@ -1,8 +1,8 @@
 # Sweeper Quest
 
-A portrait, touch-first Minesweeper RPG prototype. Ten generated 11×15 clearings each hide 31 monsters: 16 level-1 slimes, 10 level-2 bats and 5 level-3 goblins. Earn XP from kills to raise your power, and defeat the visible level-4 goblin chief before your hearts run out. Each win moves on to the next clearing.
+A touch-first Minesweeper RPG prototype. The map fills the screen and a camera follows you around a 34×30 village. West of the village fence, a tall-grass meadow hides slimes (level 1), bats (level 2) and goblins (level 3). Earn XP from kills to raise your power, and defeat the visible level-4 goblin chief in the far corner before your hearts run out.
 
-For the intended adventure and current design direction, start with [idea.md](idea.md). The clearings below are a test bed for that game.
+For the intended adventure and current design direction, start with [idea.md](idea.md). The village is a scratch map for trying out a full-screen world, not a designed area.
 
 ## Run locally
 
@@ -37,8 +37,8 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 - Tap a neighboring tile to move or fight. Arrow keys and WASD work too. Combine directions for diagonals, or use Q/E/Z/C.
 - Numbers sum the levels of living monsters in the eight neighboring tiles. Zeros are blank and open their whole connected empty area plus its bordering numbers.
 - Fights always resolve and move you onto the tile. A monster at or below your power costs nothing. A stronger one first costs its level times the levels it has over you, in hearts. You have 10 hearts and they do not refill.
-- Each kill earns its level in XP. Power rises to 2 at 10 XP and to 3 at 26 XP. The map holds 51 XP besides the chief.
-- Running out of hearts is game over; start the same clearing over. After the tenth clearing, play returns to the first.
+- Each kill earns its level in XP. Power rises to 2 at 10 XP and to 3 at 26 XP.
+- Running out of hearts is game over; start the village over. Start over is also in the menu, along with the rules and monster levels.
 - Tap a distant revealed tile to walk there. A distant hidden tile routes only to the nearest reachable revealed floor. Tap again from beside the hidden tile to enter it.
 - Number keys 1–5 mark the hidden tile under the mouse right away. Anywhere else they pick that note tool. Choose a note tool with its button or a number key, then tap a hidden tile to mark it. The tool then returns to movement; hold Shift while clicking to keep marking. Marking a tile with the note it already has clears it, and a different note replaces it. Long press or right-click cycles 1–5, then clear. Notes do not prevent movement.
 - Escape stops auto-walk and clears the note tool. New input, fights, dialogs, and loss of focus stop auto-walk too.
@@ -47,14 +47,15 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 
 | File | Responsibility |
 | --- | --- |
-| `src/maps/clearing-*.txt` | The ten clearings in play order, edited as whitespace-separated symbols |
-| `src/maps/index.ts` | Loads every clearing file in name order |
+| `src/maps/village.txt` | The map in play, edited as whitespace-separated symbols |
+| `src/maps/clearing-*.txt` | Ten generated clearings from the first playtest, kept as a balance test bank |
+| `src/maps/index.ts` | Loads the village and the clearings |
 | `src/game/game.ts` | Validated map loading, state, clues, combat, XP, reveal rules, notes, and route planning |
 | `src/game/game.test.ts` | Rule and progression tests with small maps |
-| `src/game/maps.test.ts` | Plays every clearing with a solver that narrows hidden levels from visible clues |
-| `src/main.ts` | DOM controls, touch and keyboard input, 75 ms auto-walk, event feedback |
-| `src/render.ts` | Canvas tiles, pixel sprites, fight animation, remains, route dots, and popups |
-| `src/style.css` | Portrait layout and HTML controls |
+| `src/game/maps.test.ts` | Plays the village and every clearing with a solver that narrows hidden levels from visible clues |
+| `src/main.ts` | HUD, touch and keyboard input, camera easing, 75 ms auto-walk, event feedback |
+| `src/render.ts` | Camera layout, canvas tiles, pixel sprites, fight animation, remains, route dots, and popups |
+| `src/style.css` | Full-screen canvas, HUD and dialogs |
 | `tests/game.spec.ts` | Full browser interactions on desktop and phone layouts |
 
 The game module has no DOM, timers, or rendering dependencies. Actions mutate one game state and return typed events. The controller uses those events to interrupt movement and show feedback. Keep new rules in that module until their size justifies splitting it. There is no engine or ECS to maintain.
@@ -66,15 +67,24 @@ Rows must have equal widths and exactly one `@`. Coordinates in code start at ze
 | Symbol | Meaning |
 | --- | --- |
 | `@` | Start, revealed on spawn |
-| `#` | Always-visible wall |
-| `~` | Always-visible water |
-| `.` | Hidden floor |
+| `.` | Hidden floor, drawn as tall grass |
+| `,` | Revealed lawn |
+| `=` | Revealed path |
+| `#` | Stone wall |
+| `T` | Tree |
+| `^` | Roof |
+| `H` | House wall |
+| `D` | Door (closed; blocks like a wall) |
+| `F` | Fence |
+| `~` | Water |
 | `s` | Level-1 slime |
 | `b` | Level-2 bat |
 | `g` | Level-3 goblin |
 | `G` | Level-4 goblin chief, visible from the start; killing it completes the quest |
 
-[`docs/decisions.md`](docs/decisions.md) records why the game works this way. The clearings are the ten best of 300 generated candidates: a careful solver that only narrows hidden levels from visible clues wins each with a few forced guesses, spends most of the run below power 3, and levels up with weaker monsters still alive. A player who bumps tiles at random does not survive. They double as a test bank for rule changes.
+Everything except floor and monsters is always visible and blocks movement. Monsters sit on hidden floor.
+
+[`docs/decisions.md`](docs/decisions.md) records why the game works this way. The village meadow is not balanced; the careful solver wins it without guessing. A slime beside each gate keeps the village's open ground from flooding into the meadow at the start. The clearings are the ten best of 300 generated candidates: a careful solver that only narrows hidden levels from visible clues wins each with a few forced guesses, spends most of the run below power 3, and levels up with weaker monsters still alive. A player who bumps tiles at random does not survive. They double as a test bank for rule changes.
 
 Clues count living monsters only and update after kills. Monsters stay hidden until fought. Diagonal movement is blocked if either bordering cardinal tile is wall or water. The nearest revealed tile uses straight-line distance; ties keep the shortest known route. Routing does not read hidden contents.
 

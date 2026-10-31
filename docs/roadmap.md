@@ -4,9 +4,9 @@
 
 ## Phase 1: core loop
 
-Ten generated 11×15 clearings, played in sequence, each hide 31 monsters at levels 1–3 around a visible level-4 chief. Kills earn XP that raises power; fights resolve in one action and cost hearts when the monster is stronger. Running out of hearts is game over. Zeros flood open, including revealed clues that become zero after a kill. A map test plays each clearing with a solver that only uses visible clues.
+Ten generated 11×15 clearings each hide 31 monsters at levels 1–3 around a visible level-4 chief. Kills earn XP that raises power; fights resolve in one action and cost hearts when the monster is stronger. Running out of hearts is game over. Zeros flood open, including revealed clues that become zero after a kill. A map test plays each clearing with a solver that only uses visible clues.
 
-These clearings test deduction and combat balance. Their size, sequence, and fresh state between maps are not the intended world structure. This phase does not include rooms, tall grass, a shop, inventory items, dungeons, or saved games.
+The game now plays a full-screen scratch village with a tall-grass meadow instead; the clearings remain as a balance test bank. They test deduction and combat balance. Their size, sequence, and fresh state between maps are not the intended world structure. This phase does not include rooms, tall grass, a shop, inventory items, dungeons, or saved games.
 
 ## Phase 2: starting area
 
@@ -29,7 +29,7 @@ Resolve the questions below, then build the overworld and room/reset rules, shop
 3. **Economy and rewards.** Decide how coins return with a shop, whether healing is available, and how heart pieces or containers affect current health. Define bomb XP and reward behavior.
 4. **Multi-tile clues.** Deduplicate the boss in neighboring sums. Define clues inside its footprint and where the player and remains go after victory.
 5. **Resets.** Decide which pickups and exploration state persist in grass and dungeons, and when notes clear. Retaining notes against regenerated layouts can mislead players.
-6. **Mobile camera and routing.** The larger overworld needs a viewport and panning without accidental movement or notes. Refine distant hidden targeting to require a reachable revealed neighbor before auto-walking.
+6. **Mobile panning and routing.** The camera follows the player; looking ahead still needs panning without accidental movement or notes. Refine distant hidden targeting to require a reachable revealed neighbor before auto-walking.
 
 ## Later
 

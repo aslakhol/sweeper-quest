@@ -12,10 +12,10 @@ This document combines the original adventure plan with subsequent playtest deci
 
 ## Platform and maps
 
-- Web first, portrait layout, touch first. All essential actions work on a phone; keyboard and mouse also work.
+- Web first, touch first. All essential actions work on a phone; keyboard and mouse also work.
 - TypeScript, Vite, and HTML Canvas, with pnpm. Keep game rules separate from rendering and input.
 - Maps are editable text files. Extend the format with explicit room, zone, entrance, and spawn metadata when those systems are built.
-- Larger areas will need a camera and deliberate panning controls. Fitting the current board on one screen is a demo convenience.
+- The map fills the screen and the camera follows the player, with health, power, XP, a menu and note tools floating on top. Deliberate panning without accidental moves or notes is still open.
 
 ## Board and deduction
 
@@ -35,7 +35,7 @@ Tapping a distant revealed tile walks there over known, unoccupied floor. Auto-w
 
 A distant hidden target must never cause an unconfirmed step into danger. The intended refinement is to walk to a reachable revealed neighbor of that target, then require a second tap to enter it. If no such neighbor is reachable, do not walk. The demo still routes to the geometrically closest reachable revealed tile, which may not border the target; that is a known limitation.
 
-Notes are guesses on hidden floor, not movement barriers. Provide levels 1–5, danger, and an eraser beneath the board. Choosing a note and marking a tile returns to movement; hold Shift on desktop to keep marking. Placing the same note again clears it; another note replaces it. Long press or right-click cycles 1 through 5, then clear. Number keys mark the hidden tile under the pointer directly, or select the tool when no eligible tile is hovered. Touch usability remains a requirement as the note UI evolves.
+Notes are guesses on hidden floor, not movement barriers. Provide levels 1–5, danger, and an eraser along the bottom of the screen. Choosing a note and marking a tile returns to movement; hold Shift on desktop to keep marking. Placing the same note again clears it; another note replaces it. Long press or right-click cycles 1 through 5, then clear. Number keys mark the hidden tile under the pointer directly, or select the tool when no eligible tile is hovered. Touch usability remains a requirement as the note UI evolves.
 
 ## Combat, health, and progression
 
@@ -102,6 +102,6 @@ The adventure is complete when village exploration, deduction, XP progression, u
 
 ## Open decisions and later scope
 
-Before Phase 2, settle the many-area run/death model, healing and heart upgrades, XP through power 5, repeatable farming, the shop economy, room/zone reset boundaries, multi-tile boss behavior, and mobile camera controls. Screen layout and HUD presentation remain open to redesign.
+Before Phase 2, settle the many-area run/death model, healing and heart upgrades, XP through power 5, repeatable farming, the shop economy, room/zone reset boundaries, multi-tile boss behavior, and mobile panning controls.
 
 Later zones can introduce swamp, ice, or darkness. Traversal items such as boots or a shovel, an Infinite Minesweeper-style number display option, and a distinct hardcore mode remain outside this prototype. The current test's game-over rule alone does not settle the eventual difficulty modes.
