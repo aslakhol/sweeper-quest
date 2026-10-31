@@ -16,7 +16,7 @@ export const dungeons = Object.keys(files)
   .sort()
   .map((path) => files[path]);
 
-const backToVillage = { '<': { to: 'village', look: 'mat' } } as const;
+const indoors = { floor: 'wood', exits: { '<': { to: 'village', look: 'mat' } } } as const;
 
 export const areas = {
   village: {
@@ -29,9 +29,64 @@ export const areas = {
       '>': { to: 'dungeon', look: 'stairs' },
     },
   },
-  'elder-house': { name: "Elder's house", map: elderHouse, exits: backToVillage },
-  smithy: { name: 'Smithy', map: smithy, exits: backToVillage },
-  inn: { name: 'Inn', map: inn, exits: backToVillage },
+  'elder-house': {
+    name: "Elder's house",
+    map: elderHouse,
+    ...indoors,
+    people: {
+      e: {
+        name: 'Elder Maren',
+        colors: { hair: '#d8d4c8', shirt: '#5d6e8c' },
+        lines: [
+          'A visitor! Mind the tall grass west of the fence.',
+          'The numbers out there add up the strength of the creatures around them.',
+          'A slime counts one, a bat two, a goblin three.',
+          'Their chief waits in the far corner. Grow strong before you face him.',
+        ],
+      },
+    },
+  },
+  smithy: {
+    name: 'Smithy',
+    map: smithy,
+    ...indoors,
+    people: {
+      m: {
+        name: 'Torvald the smith',
+        colors: { hair: '#3a2a20', shirt: '#7a4a3a' },
+        lines: [
+          'No swords for sale. Strength comes from the fight, not the forge.',
+          'Every creature you beat makes you stronger. Pick fights you can win.',
+          'And if you must guess, guess where a slime would be.',
+        ],
+      },
+    },
+  },
+  inn: {
+    name: 'Inn',
+    map: inn,
+    ...indoors,
+    people: {
+      i: {
+        name: 'Hilde',
+        colors: { hair: '#b0603a', shirt: '#6a8a5a' },
+        lines: [
+          'Welcome to the inn.',
+          'The cave north of the village? It is different every time you climb down.',
+          'Nobody can explain it. Most stop asking.',
+        ],
+      },
+      p: {
+        name: 'Pip',
+        colors: { hair: '#e0c070', shirt: '#b05a5a' },
+        lines: [
+          'I went down the cave stairs once!',
+          'There was a goblin with a crown. I ran straight back up.',
+          'The stairs are right where you arrive. Just step on them again.',
+        ],
+      },
+    },
+  },
   dungeon: {
     name: 'Dungeon',
     maps: dungeons,

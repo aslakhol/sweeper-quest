@@ -1,8 +1,8 @@
 W W W W W W W W W W W
 W B B _ S S S _ B B W
-W _ _ _ _ _ _ _ _ _ W
+W _ _ _ _ i _ _ _ _ W
 W _ O O _ _ _ O O _ W
 W _ O O _ _ _ O O _ W
-W _ _ _ _ _ _ _ _ _ W
+W _ _ _ _ _ _ _ _ p W
 W _ _ _ _ _ _ _ _ _ W
 W W W W W < W W W W W

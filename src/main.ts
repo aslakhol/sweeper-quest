@@ -7,6 +7,7 @@ import {
   type Note,
   neighbors,
   numberAt,
+  type Person,
   type Point,
   planWalk,
   powerThresholds,
@@ -48,6 +49,7 @@ app.innerHTML = `
   </ul>
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin</span><span class="goblin-key">4 · Chief</span></div>
   <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
+  <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
@@ -177,6 +179,9 @@ function handleEvents(events: GameEvent[]): void {
         effects = [];
         status.textContent = areas[world.area].name;
         break;
+      case 'talk':
+        talk(event.person);
+        break;
       case 'win':
         effects.push({
           kind: 'text',
@@ -191,6 +196,28 @@ function handleEvents(events: GameEvent[]): void {
   }
   if (events.length) stop();
 }
+const talkDialog = element<HTMLDialogElement>('#talk');
+let conversation: { person: Person; line: number } | undefined;
+function showLine(): void {
+  if (!conversation) return;
+  element('#talk-name').textContent = conversation.person.name;
+  element('#talk-line').textContent = conversation.person.lines[conversation.line];
+}
+function talk(person: Person): void {
+  conversation = { person, line: 0 };
+  showLine();
+  openDialog('#talk');
+}
+// A tap anywhere moves the conversation on; the last line closes it.
+talkDialog.addEventListener('click', () => {
+  if (!conversation) return;
+  conversation.line++;
+  if (conversation.line < conversation.person.lines.length) showLine();
+  else talkDialog.close();
+});
+talkDialog.addEventListener('close', () => {
+  conversation = undefined;
+});
 function move(target: Point): boolean {
   const before = game.player;
   // Clues already on screen around a kill drop; point them out.

@@ -169,6 +169,14 @@ describe('routes and notes', () => {
     expect(step(game, p(1, 0))).toEqual([{ type: 'travel', to: 'cave' }]);
     expect(game.player).toEqual(p(1, 0));
   });
+  it('talks to a person instead of stepping onto them, walking up to them first', () => {
+    const person = { name: 'Ada', lines: ['Hi'], colors: { hair: '#000', shirt: '#fff' } };
+    const game = createGame('@ , , a', { legend: { people: { a: person } } });
+    expect(planWalk(game, p(3, 0))).toEqual([p(1, 0), p(2, 0), p(3, 0)]);
+    game.player = p(2, 0);
+    expect(step(game, p(3, 0))).toEqual([{ type: 'talk', person }]);
+    expect(game.player).toEqual(p(2, 0));
+  });
   it('does not route through a visible living monster', () => {
     const game = createGame('@ s .');
     for (const tile of game.tiles) tile.revealed = true;

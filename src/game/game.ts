@@ -32,12 +32,19 @@ export type Tile = Point & {
   monster?: Monster;
   // The map that stepping onto this tile leads to.
   exit?: string;
+  person?: Person;
+};
+export type Person = {
+  name: string;
+  lines: readonly string[];
+  colors: { hair: string; shirt: string };
 };
 // Symbols a particular map adds on top of the shared ones.
 export type Legend = {
-  // How hidden floor and monster tiles are drawn.
+  // How hidden floor, and the ground under monsters and people, is drawn.
   floor?: Tile['look'];
   exits?: Record<string, { to: string; look: Tile['look'] }>;
+  people?: Record<string, Person>;
 };
 // The hero's stats travel with the player from map to map.
 export type Hero = { health: number; maxHealth: number; power: number; xp: number };
@@ -56,7 +63,8 @@ export type GameEvent =
   | { type: 'levelUp'; at: Point; power: number }
   | { type: 'death' }
   | { type: 'win' }
-  | { type: 'travel'; to: string };
+  | { type: 'travel'; to: string }
+  | { type: 'talk'; person: Person };
 
 const grounds = {
   '.': { terrain: 'floor', look: 'grass', revealed: false },
@@ -115,6 +123,9 @@ export function createGame(
     row.map((symbol, x): Tile => {
       const exit = legend.exits?.[symbol];
       if (exit) return { x, y, terrain: 'floor', look: exit.look, revealed: true, exit: exit.to };
+      const person = legend.people?.[symbol];
+      if (person)
+        return { x, y, terrain: 'floor', look: legend.floor ?? 'grass', revealed: true, person };
       if (isKey(monsters, symbol)) {
         const monster = monsters[symbol];
         // The chief is the visible goal; every other monster hides until fought.
@@ -243,6 +254,7 @@ export function step(game: Game, target: Point): GameEvent[] {
   if (game.lost || !canStep(game, game.player, target)) return [];
   const tile = tileAt(game, target);
   if (!tile) return [];
+  if (tile.person) return [{ type: 'talk', person: tile.person }];
   const events: GameEvent[] = [];
   if (tile.monster?.alive) {
     tile.revealed = true;
@@ -285,8 +297,8 @@ export function step(game: Game, target: Point): GameEvent[] {
 
 // A single breadth-first search visits only known, unoccupied floor tiles.
 // Unknown contents never influence the route or the stopping position.
-// A hidden target that borders reachable known ground is entered at the end of the walk;
-// otherwise the walk stops on the known tile closest to it.
+// A hidden target or a person that borders reachable known ground is stepped into at the end
+// of the walk; otherwise the walk stops on the known tile closest to a hidden target.
 export function planWalk(game: Game, target: Point): Point[] | null {
   const targetTile = tileAt(game, target);
   if (targetTile?.terrain !== 'floor') return null;
@@ -301,7 +313,7 @@ export function planWalk(game: Game, target: Point): Point[] | null {
       closest = current;
       break;
     }
-    if (!targetTile.revealed && canStep(game, current, target)) {
+    if ((!targetTile.revealed || targetTile.person) && canStep(game, current, target)) {
       closest = current;
       enter = true;
       break;
@@ -317,6 +329,7 @@ export function planWalk(game: Game, target: Point): Point[] | null {
         !canStep(game, current, next) ||
         !next.revealed ||
         next.monster?.alive ||
+        next.person ||
         // Walking over an exit would leave the map partway.
         (next.exit && !same(next, target))
       )
@@ -325,7 +338,7 @@ export function planWalk(game: Game, target: Point): Point[] | null {
       queue.push(next);
     }
   }
-  if (targetTile.revealed && !same(closest, target)) return null;
+  if (targetTile.revealed && !enter && !same(closest, target)) return null;
   const path: Point[] = [];
   let current: Point | null = closest;
   while (current && !same(current, game.player)) {

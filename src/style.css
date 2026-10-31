@@ -233,3 +233,37 @@ dialog button {
 .goblin-key {
   color: #d3ae79;
 }
+.talk {
+  margin: auto auto max(16px, env(safe-area-inset-bottom));
+  width: min(calc(100% - 20px), 560px);
+  padding: 16px 18px 12px;
+  border-radius: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+.talk::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+.talk-name {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #d7bd7e;
+}
+.talk p {
+  margin: 6px 0 0;
+  min-height: 3.1em;
+  font-size: 16px;
+  color: #e6e9d9;
+}
+.talk .talk-next {
+  display: block;
+  width: auto;
+  min-height: 32px;
+  margin: 0 0 0 auto;
+  padding: 0 12px;
+  background: none;
+  color: #d7bd7e;
+}

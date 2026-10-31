@@ -2,22 +2,29 @@ import { readFileSync } from 'node:fs';
 import { expect, type Page, test } from '@playwright/test';
 import { cameraTarget, layout } from '../src/render';
 
-const mapRows = readFileSync(new URL('../src/maps/village.txt', import.meta.url), 'utf8')
-  .trim()
-  .split('\n')
-  .map((row) => row.trim().split(/\s+/));
-const map = { width: mapRows[0].length, height: mapRows.length };
+function size(file: string) {
+  const rows = readFileSync(new URL(`../src/maps/${file}`, import.meta.url), 'utf8')
+    .trim()
+    .split('\n')
+    .map((row) => row.trim().split(/\s+/));
+  return { width: rows[0].length, height: rows.length };
+}
+// Map sizes by the area name that starts the board's label.
+const maps: Record<string, ReturnType<typeof size>> = {
+  Village: size('village.txt'),
+  Inn: size('inn.txt'),
+};
 
 // Aim where the camera comes to rest once it has caught up with the player.
 async function tile(page: Page, x: number, y: number) {
   await page.waitForTimeout(300);
   const label = (await page.locator('canvas').getAttribute('aria-label')) ?? '';
-  const [, column, row] = /column (\d+), row (\d+)/.exec(label) ?? [];
+  const [, area, column, row] = /^(.+?)\. Player column (\d+), row (\d+)/.exec(label) ?? [];
   const player = { x: Number(column) - 1, y: Number(row) - 1 };
   const box = await page.locator('canvas').boundingBox();
   if (!box) throw new Error('Board is not visible');
   const { tile, left, top } = layout(
-    cameraTarget(map, player, box.width, box.height),
+    cameraTarget(maps[area], player, box.width, box.height),
     box.width,
     box.height,
   );
@@ -90,6 +97,29 @@ test('a far hidden target next to known ground is walked to and entered', async 
   await position(page, 15, 22);
   await tap(page, 12, 19, isMobile);
   await position(page, 12, 19);
+});
+
+test('a door leads into a house where you can talk to people', async ({ page, isMobile }) => {
+  await tap(page, 27, 16, isMobile);
+  await expect(page.locator('canvas')).toHaveAttribute(
+    'aria-label',
+    /^Inn\. Player column 6, row 8\./,
+  );
+  await tap(page, 5, 2, isMobile);
+  const talk = page.locator('#talk');
+  await expect(talk).toContainText('Hilde');
+  await expect(talk).toContainText('Welcome to the inn.');
+  await talk.click();
+  await expect(talk).toContainText('different every time');
+  await talk.click();
+  await talk.getByRole('button', { name: 'Continue' }).click();
+  await expect(talk).not.toBeVisible();
+  await position(page, 4, 3);
+  await tap(page, 5, 7, isMobile);
+  await expect(page.locator('canvas')).toHaveAttribute(
+    'aria-label',
+    /^Village\. Player column 28, row 17\./,
+  );
 });
 
 test('quick keys and two-key diagonals each move once', async ({ page }) => {

@@ -2,6 +2,7 @@ import {
   type Game,
   type Monster,
   numberAt,
+  type Person,
   type Point,
   same,
   type Tile,
@@ -80,6 +81,20 @@ const hero = [
   '  bbbsst ',
   '  b b  t ',
   '  d d    ',
+];
+const person = [
+  '   hhh   ',
+  '  hhhhh  ',
+  '  hfffh  ',
+  '  fdfdf  ',
+  '  fffff  ',
+  '   fff   ',
+  '  sssss  ',
+  ' sssssss ',
+  ' fsssssf ',
+  '  ppppp  ',
+  '  pp pp  ',
+  '  dd dd  ',
 ];
 const slime = [
   '   ggg   ',
@@ -383,6 +398,17 @@ function drawGround(ctx: CanvasRenderingContext2D, game: Game, tile: Tile, x: nu
   }
 }
 
+function drawPerson(ctx: CanvasRenderingContext2D, { colors }: Person, x: number, y: number) {
+  sprite(
+    ctx,
+    person,
+    { h: colors.hair, f: '#e3c399', d: '#29362a', s: colors.shirt, p: '#4a4a5a' },
+    x + 15,
+    y + 12,
+    2,
+  );
+}
+
 export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -413,6 +439,10 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
     const y = tile.y * TILE_SIZE;
     drawGround(ctx, game, tile, x, y);
     if (tile.terrain !== 'floor') continue;
+    if (tile.person) {
+      drawPerson(ctx, tile.person, x, y);
+      continue;
+    }
     if (!tile.revealed) {
       if (tile.note) {
         ctx.strokeStyle = '#bba577';
