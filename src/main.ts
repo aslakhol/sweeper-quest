@@ -43,12 +43,11 @@ app.innerHTML = `
     <li>Tap a distant tile to walk over known ground. A hidden tile next to known ground is entered at the end of the walk.</li>
     <li>Choose a note, then tap a hidden tile to mark it. Number keys 1–5 mark the tile under the mouse, or pick that note. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
     <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
-    <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. Defeat the crowned chief to win.</li>
+    <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. The crowned chief is level 4.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
   </ul>
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin</span><span class="goblin-key">4 · Chief</span></div>
   <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
-  <dialog id="win-dialog"><h2>Goblin chief defeated</h2><p>Power <span id="win-power">3</span>, <span id="win-health">10</span> hearts left.</p><div class="dialog-actions"><button data-restart>Play again</button></div></dialog>
   <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
@@ -171,9 +170,14 @@ function handleEvents(events: GameEvent[]): void {
         openDialog('#death-dialog');
         break;
       case 'win':
-        element('#win-power').textContent = String(game.hero.power);
-        element('#win-health').textContent = String(game.hero.health);
-        openDialog('#win-dialog');
+        effects.push({
+          kind: 'text',
+          at: game.player,
+          text: 'Chief defeated!',
+          color: '#f3d794',
+          started: performance.now(),
+        });
+        status.textContent = 'Goblin chief defeated.';
         break;
     }
   }
@@ -393,9 +397,8 @@ function restart(): void {
   status.textContent = '';
   for (const dialog of document.querySelectorAll('dialog')) dialog.close();
 }
-// A finished run can only start over or move on.
-for (const id of ['#death-dialog', '#win-dialog'])
-  element(id).addEventListener('cancel', (event) => event.preventDefault());
+// A finished run can only start over.
+element('#death-dialog').addEventListener('cancel', (event) => event.preventDefault());
 for (const button of document.querySelectorAll('[data-restart]'))
   button.addEventListener('click', restart);
 function frame(time: number): void {
