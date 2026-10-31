@@ -29,7 +29,7 @@ Resolve the questions below, then build the overworld and room/reset rules, shop
 3. **Economy and rewards.** Decide how coins return with a shop, whether healing is available, and how heart pieces or containers affect current health. Define bomb XP and reward behavior.
 4. **Multi-tile clues.** Deduplicate the boss in neighboring sums. Define clues inside its footprint and where the player and remains go after victory.
 5. **Resets.** Decide which pickups and exploration state persist in grass and dungeons, and when notes clear. Retaining notes against regenerated layouts can mislead players.
-6. **Mobile panning and routing.** The camera follows the player; looking ahead still needs panning without accidental movement or notes. Refine distant hidden targeting to require a reachable revealed neighbor before auto-walking.
+6. **Mobile panning and routing.** The camera follows the player; looking ahead still needs panning without accidental movement or notes. Decide whether a distant hidden target with no reachable revealed neighbor should walk at all.
 
 ## Later
 

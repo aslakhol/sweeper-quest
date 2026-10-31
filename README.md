@@ -39,7 +39,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 - Fights always resolve and move you onto the tile. A monster at or below your power costs nothing. A stronger one first costs its level times the levels it has over you, in hearts. You have 10 hearts and they do not refill.
 - Each kill earns its level in XP. Power rises to 2 at 10 XP and to 3 at 26 XP.
 - Running out of hearts is game over; start the village over. Start over is also in the menu, along with the rules and monster levels.
-- Tap a distant revealed tile to walk there. A distant hidden tile routes only to the nearest reachable revealed floor. Tap again from beside the hidden tile to enter it.
+- Tap a distant revealed tile to walk there. Tapping a distant hidden tile that borders reachable revealed floor walks beside it and steps in, fighting whatever is there. A hidden tile with no such neighbor routes only to the nearest reachable revealed floor.
 - Number keys 1–5 mark the hidden tile under the mouse right away. Anywhere else they pick that note tool. Choose a note tool with its button or a number key, then tap a hidden tile to mark it. The tool then returns to movement; hold Shift while clicking to keep marking. Marking a tile with the note it already has clears it, and a different note replaces it. Long press or right-click cycles 1–5, then clear. Notes do not prevent movement.
 - Escape stops auto-walk and clears the note tool. New input, fights, dialogs, and loss of focus stop auto-walk too.
 

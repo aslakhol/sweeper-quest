@@ -33,7 +33,7 @@ Move in eight directions by tapping an adjacent tile, using WASD or arrow keys, 
 
 Tapping a distant revealed tile walks there over known, unoccupied floor. Auto-walk advances quickly, roughly 60–80 ms per tile, and stops on combat, discoveries or pickups that need attention, new input, or a dialog. An unreachable target briefly flashes.
 
-A distant hidden target must never cause an unconfirmed step into danger. The intended refinement is to walk to a reachable revealed neighbor of that target, then require a second tap to enter it. If no such neighbor is reachable, do not walk. The demo still routes to the geometrically closest reachable revealed tile, which may not border the target; that is a known limitation.
+Tapping a distant hidden target that borders reachable revealed floor walks to the nearest such neighbor and steps in, the same as tapping it from next door. Requiring a second tap felt clumsy after a long walk. A hidden target with no reachable revealed neighbor still routes to the geometrically closest reachable revealed tile; whether it should walk at all is open.
 
 Notes are guesses on hidden floor, not movement barriers. Provide levels 1–5, danger, and an eraser along the bottom of the screen. Choosing a note and marking a tile returns to movement; hold Shift on desktop to keep marking. Placing the same note again clears it; another note replaces it. Long press or right-click cycles 1 through 5, then clear. Number keys mark the hidden tile under the pointer directly, or select the tool when no eligible tile is hovered. Touch usability remains a requirement as the note UI evolves.
 

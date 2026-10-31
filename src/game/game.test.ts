@@ -140,7 +140,15 @@ describe('combat and progression', () => {
 });
 
 describe('routes and notes', () => {
-  it('walks along revealed tiles and leaves the hidden destination for a separate action', () => {
+  it('walks to a hidden target that borders known ground and steps into it', () => {
+    const game = createGame('@ . s .');
+    expect(tileAt(game, p(2, 0))?.revealed).toBe(false);
+    const route = planWalk(game, p(2, 0));
+    expect(route).toEqual([p(1, 0), p(2, 0)]);
+    for (const tile of route ?? []) step(game, tile);
+    expect(game.player).toEqual(p(2, 0));
+  });
+  it('stops on known ground short of a hidden target that borders no known ground', () => {
     const game = createGame('@ . s . .');
     expect(planWalk(game, p(4, 0))).toEqual([p(1, 0)]);
     const route = planWalk(game, p(4, 0)) ?? [];

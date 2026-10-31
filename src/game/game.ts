@@ -233,6 +233,8 @@ export function step(game: Game, target: Point): GameEvent[] {
 
 // A single breadth-first search visits only known, unoccupied floor tiles.
 // Unknown contents never influence the route or the stopping position.
+// A hidden target that borders reachable known ground is entered at the end of the walk;
+// otherwise the walk stops on the known tile closest to it.
 export function planWalk(game: Game, target: Point): Point[] | null {
   const targetTile = tileAt(game, target);
   if (targetTile?.terrain !== 'floor') return null;
@@ -240,17 +242,23 @@ export function planWalk(game: Game, target: Point): Point[] | null {
   const queue: Point[] = [game.player];
   const previous = new Map<number, Point | null>([[key(game.player), null]]);
   let closest = game.player;
+  let enter = false;
   for (let index = 0; index < queue.length; index++) {
     const current = queue[index];
+    if (same(current, target)) {
+      closest = current;
+      break;
+    }
+    if (!targetTile.revealed && canStep(game, current, target)) {
+      closest = current;
+      enter = true;
+      break;
+    }
     if (
       Math.hypot(current.x - target.x, current.y - target.y) <
       Math.hypot(closest.x - target.x, closest.y - target.y)
     )
       closest = current;
-    if (same(current, target)) {
-      closest = current;
-      break;
-    }
     for (const next of neighbors(game, current)) {
       if (
         previous.has(key(next)) ||
@@ -264,12 +272,13 @@ export function planWalk(game: Game, target: Point): Point[] | null {
     }
   }
   if (targetTile.revealed && !same(closest, target)) return null;
-  if (same(closest, game.player)) return same(target, game.player) ? [] : null;
   const path: Point[] = [];
   let current: Point | null = closest;
   while (current && !same(current, game.player)) {
     path.push({ x: current.x, y: current.y });
     current = previous.get(key(current)) ?? null;
   }
-  return path.reverse();
+  path.reverse();
+  if (enter) path.push({ x: target.x, y: target.y });
+  return path.length || same(target, game.player) ? path : null;
 }

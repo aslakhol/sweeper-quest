@@ -81,18 +81,13 @@ test('stronger monsters cost hearts until the run ends', async ({ page, isMobile
   await position(page, 26, 22);
 });
 
-test('a far hidden target stops on known ground and needs a new tap', async ({
+test('a far hidden target next to known ground is walked to and entered', async ({
   page,
   isMobile,
 }) => {
   await enterMeadow(page, isMobile);
   await tap(page, 15, 22, isMobile);
   await position(page, 15, 22);
-  await tap(page, 12, 19, isMobile);
-  await position(page, 13, 20);
-  // Leave enough time for an accidental extra queued step to happen.
-  await page.waitForTimeout(250);
-  await position(page, 13, 20);
   await tap(page, 12, 19, isMobile);
   await position(page, 12, 19);
 });

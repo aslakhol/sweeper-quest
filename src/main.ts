@@ -40,7 +40,7 @@ app.innerHTML = `
   <dialog id="menu-dialog"><h2>How to play</h2><ul>
     <li>Tap a neighboring tile to move or fight. Numbers sum the levels of living monsters in the eight neighboring tiles.</li>
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
-    <li>Tap a distant tile to walk over known ground. Tap again when next to hidden ground to enter it.</li>
+    <li>Tap a distant tile to walk over known ground. A hidden tile next to known ground is entered at the end of the walk.</li>
     <li>Choose a note, then tap a hidden tile to mark it. Number keys 1–5 mark the tile under the mouse, or pick that note. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
     <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
     <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. Defeat the crowned chief to win.</li>
@@ -212,7 +212,7 @@ function activate(target: Point, keepTool = false): void {
   }
   path = route;
   lastWalk = performance.now();
-  status.textContent = tileAt(game, target)?.revealed
+  status.textContent = same(route[route.length - 1], target)
     ? 'Walking…'
     : 'Walking to the edge. Tap again beside the hidden tile to enter.';
 }
