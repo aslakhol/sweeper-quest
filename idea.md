@@ -47,7 +47,7 @@ Kills grant XP immediately. Current tuning awards XP equal to monster level, sta
 
 Slimes are level 1, bats level 2, and goblins level 3. The demo's visible chief is level 4; the planned dungeon boss starts from the original level-5 proposal. These are distinct encounters. The original per-species damage and coin-drop table is superseded by level-gap damage and XP rewards.
 
-The current run starts with 10 whole hearts and has no healing. Damage is a cost deduction helps avoid. Death ends the run, with a restart and no carryover. These replace the original three quarter-counted hearts and free respawn with retained progress. A many-area adventure may revisit respawning and persistence, but the original rules are not automatically reinstated.
+The current run starts with 10 whole hearts. Mum's home-cooked meal in the village restores them all, as often as you walk back; whether that should be limited is open. Damage is a cost deduction helps avoid. Death ends the run, with a restart and no carryover. These replace the original three quarter-counted hearts and free respawn with retained progress. A many-area adventure may revisit respawning and persistence, but the original rules are not automatically reinstated.
 
 Kills need clear feedback: reveal the enemy, show the hit and defeat, then move the hero in. Show damage, XP and level-ups, and make changed clues noticeable. Keep remains subtle enough to preserve the puzzle.
 

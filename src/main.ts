@@ -182,6 +182,16 @@ function handleEvents(events: GameEvent[]): void {
       case 'talk':
         talk(event.person);
         break;
+      case 'heal':
+        effects.push({
+          kind: 'text',
+          at: event.at,
+          text: `+${event.amount} ♥`,
+          color: '#a5c97c',
+          started: performance.now(),
+        });
+        status.textContent = `Hearts restored: +${event.amount}.`;
+        break;
       case 'win':
         effects.push({
           kind: 'text',

@@ -25,7 +25,7 @@ Resolve the questions below, then build the overworld and room/reset rules, shop
 ## Decisions before Phase 2
 
 1. **Progression.** XP from kills is settled. Define curves through powers 4 and 5, reward placements, and the effect of repeatable grass encounters on progression.
-2. **Health and death.** The core test has finite health, no healing, and game over on death. Decide how this extends across areas, whether respawning returns, and what survives death. Do not assume the original free respawn and retained progress.
+2. **Health and death.** The core test has finite health, free full healing from Mum in the village, and game over on death. Decide how this extends across areas, whether respawning returns, and what survives death. Do not assume the original free respawn and retained progress.
 3. **Economy and rewards.** Decide how coins return with a shop, whether healing is available, and how heart pieces or containers affect current health. Define bomb XP and reward behavior.
 4. **Multi-tile clues.** Deduplicate the boss in neighboring sums. Define clues inside its footprint and where the player and remains go after victory.
 5. **Resets.** Decide which pickups and exploration state persist in grass and dungeons, and when notes clear. Retaining notes against regenerated layouts can mislead players.

@@ -177,6 +177,22 @@ describe('routes and notes', () => {
     expect(step(game, p(3, 0))).toEqual([{ type: 'talk', person }]);
     expect(game.player).toEqual(p(2, 0));
   });
+  it('restores every heart when talking to someone who heals', () => {
+    const mum = {
+      name: 'Mum',
+      lines: ['Eat up'],
+      colors: { hair: '#000', shirt: '#fff' },
+      heals: true,
+    };
+    const game = createGame('@ m', { legend: { people: { m: mum } } });
+    game.hero.health = 4;
+    expect(step(game, p(1, 0))).toEqual([
+      { type: 'talk', person: mum },
+      { type: 'heal', at: p(1, 0), amount: 6 },
+    ]);
+    expect(game.hero.health).toBe(10);
+    expect(step(game, p(1, 0))).toEqual([{ type: 'talk', person: mum }]);
+  });
   it('does not route through a visible living monster', () => {
     const game = createGame('@ s .');
     for (const tile of game.tiles) tile.revealed = true;

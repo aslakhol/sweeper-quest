@@ -38,6 +38,8 @@ export type Person = {
   name: string;
   lines: readonly string[];
   colors: { hair: string; shirt: string };
+  // Talking to them restores every heart.
+  heals?: boolean;
 };
 // Symbols a particular map adds on top of the shared ones.
 export type Legend = {
@@ -64,7 +66,8 @@ export type GameEvent =
   | { type: 'death' }
   | { type: 'win' }
   | { type: 'travel'; to: string }
-  | { type: 'talk'; person: Person };
+  | { type: 'talk'; person: Person }
+  | { type: 'heal'; at: Point; amount: number };
 
 const grounds = {
   '.': { terrain: 'floor', look: 'grass', revealed: false },
@@ -254,7 +257,15 @@ export function step(game: Game, target: Point): GameEvent[] {
   if (game.lost || !canStep(game, game.player, target)) return [];
   const tile = tileAt(game, target);
   if (!tile) return [];
-  if (tile.person) return [{ type: 'talk', person: tile.person }];
+  if (tile.person) {
+    const events: GameEvent[] = [{ type: 'talk', person: tile.person }];
+    const amount = game.hero.maxHealth - game.hero.health;
+    if (tile.person.heals && amount) {
+      game.hero.health = game.hero.maxHealth;
+      events.push({ type: 'heal', at: target, amount });
+    }
+    return events;
+  }
   const events: GameEvent[] = [];
   if (tile.monster?.alive) {
     tile.revealed = true;

@@ -36,7 +36,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 
 - Tap a neighboring tile to move or fight. Arrow keys and WASD work too. Combine directions for diagonals, or use Q/E/Z/C.
 - Numbers sum the levels of living monsters in the eight neighboring tiles. Zeros are blank and open their whole connected empty area plus its bordering numbers.
-- Fights always resolve and move you onto the tile. A monster at or below your power costs nothing. A stronger one first costs its level times the levels it has over you, in hearts. You have 10 hearts and they do not refill.
+- Fights always resolve and move you onto the tile. A monster at or below your power costs nothing. A stronger one first costs its level times the levels it has over you, in hearts. You have 10 hearts. Talking to Mum at home (the north-east house) gives you a meal that restores them all.
 - Each kill earns its level in XP. Power rises to 2 at 10 XP and to 3 at 26 XP.
 - Step onto a door to go inside, and onto the doormat to come back out. The cave stairs north of the village lead to one of ten dungeon floors, picked at random and fresh each time; the stairs you arrive on lead back up. The village and houses keep their state while you are away, and your hearts, power and XP come with you.
 - Walk into a person, or tap them from across the room, to talk. Tap anywhere to show the next line.

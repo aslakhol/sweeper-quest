@@ -1,7 +1,7 @@
 import type { Legend } from '../game/game';
 import elderHouse from './elder-house.txt?raw';
+import home from './home.txt?raw';
 import inn from './inn.txt?raw';
-import smithy from './smithy.txt?raw';
 import village from './village.txt?raw';
 
 // An area with several maps picks one at random and starts it fresh on every visit.
@@ -24,7 +24,7 @@ export const areas = {
     map: village,
     exits: {
       1: { to: 'elder-house', look: 'door' },
-      2: { to: 'smithy', look: 'door' },
+      2: { to: 'home', look: 'door' },
       3: { to: 'inn', look: 'door' },
       '>': { to: 'dungeon', look: 'stairs' },
     },
@@ -46,18 +46,18 @@ export const areas = {
       },
     },
   },
-  smithy: {
-    name: 'Smithy',
-    map: smithy,
+  home: {
+    name: 'Home',
+    map: home,
     ...indoors,
     people: {
       m: {
-        name: 'Torvald the smith',
-        colors: { hair: '#3a2a20', shirt: '#7a4a3a' },
+        name: 'Mum',
+        colors: { hair: '#8a5a3a', shirt: '#c08a9a' },
+        heals: true,
         lines: [
-          'No swords for sale. Strength comes from the fight, not the forge.',
-          'Every creature you beat makes you stronger. Pick fights you can win.',
-          'And if you must guess, guess where a slime would be.',
+          'There you are! Sit down, dinner is ready.',
+          'Eat up. You need your strength out there.',
         ],
       },
     },
