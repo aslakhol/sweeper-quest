@@ -222,9 +222,6 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
   const fight = view.effects.find((effect) => effect.kind === 'fight');
   const px = game.player.x * TILE_SIZE;
   const py = game.player.y * TILE_SIZE;
-  ctx.strokeStyle = '#d6c28a';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(px + 2, py + 2, 44, 44);
   if (fight) {
     const t = view.time - fight.started;
     const fx = fight.from.x * TILE_SIZE;
