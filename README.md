@@ -2,6 +2,8 @@
 
 A portrait, touch-first Minesweeper RPG prototype. Ten generated 11×15 clearings each hide 31 monsters: 16 level-1 slimes, 10 level-2 bats and 5 level-3 goblins. Earn XP from kills to raise your power, and defeat the visible level-4 goblin chief before your hearts run out. Each win moves on to the next clearing.
 
+For the intended adventure and current design direction, start with [idea.md](idea.md). The clearings below are a test bed for that game.
+
 ## Run locally
 
 Use Node 24 and pnpm (the version is pinned in `package.json`; `corepack enable` picks it up). The [Vite guide](https://vite.dev/guide/) documents the underlying dev server.
