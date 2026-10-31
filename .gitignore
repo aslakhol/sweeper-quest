@@ -28,6 +28,9 @@ playwright-report/
 test-results/
 artifacts/
 
+# Local playtest output
+output/
+
 # Local deployment settings and secrets
 .vercel/
 .env
