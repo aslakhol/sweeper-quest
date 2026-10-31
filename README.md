@@ -4,22 +4,22 @@ A portrait, touch-first Minesweeper RPG prototype. Ten generated 11×15 clearing
 
 ## Run locally
 
-Use Node 24 and npm. The [Vite guide](https://vite.dev/guide/) documents the underlying dev server.
+Use Node 24 and pnpm (the version is pinned in `package.json`; `corepack enable` picks it up). The [Vite guide](https://vite.dev/guide/) documents the underlying dev server.
 
 ```sh
-npm ci
-npm run dev
+pnpm install
+pnpm dev
 ```
 
 Open the URL printed by Vite. The server listens on the local network so a phone on the same Wi-Fi can use your computer's network address and the same port.
 
 ```sh
-npm run check       # TypeScript, Biome, rule tests, production build
-npx playwright install chromium
-npm run test:e2e    # Mouse, keyboard, and emulated phone input
-npm run test:watch
-npm run format
-npm run preview    # Serve the most recent dist/ build
+pnpm check                       # TypeScript, Biome, rule tests, production build
+pnpm exec playwright install chromium
+pnpm test:e2e                    # Mouse, keyboard, and emulated phone input
+pnpm test:watch
+pnpm format
+pnpm preview                     # Serve the most recent dist/ build
 ```
 
 GitHub Actions runs the checks and browser tests on pushes and pull requests.

@@ -12,7 +12,7 @@
     "test:watch": "vitest",
     "lint": "biome check .",
     "format": "biome check --write .",
-    "check": "npm run typecheck && npm run lint && npm test && npm run build",
+    "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build",
     "test:e2e": "playwright test"
   },
   "devDependencies": {
@@ -23,6 +23,7 @@
     "vite": "^8.3.4",
     "vitest": "^5.0.5"
   },
+  "packageManager": "pnpm@11.22.0",
   "engines": {
     "node": ">=22.12.0"
   }
