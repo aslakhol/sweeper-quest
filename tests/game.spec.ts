@@ -134,3 +134,15 @@ test('shift keeps the note tool out', async ({ page, isMobile }) => {
   await expect(page.getByRole('status')).toHaveText('Column 5, row 10: note cleared.');
   await expect(tool).toHaveAttribute('aria-pressed', 'false');
 });
+
+test('number keys pick and put away a note tool', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Number keys need a keyboard');
+  const tool = page.getByRole('button', { name: 'Mark level 2' });
+  await page.keyboard.press('2');
+  await expect(tool).toHaveAttribute('aria-pressed', 'true');
+  await tap(page, 4, 9, false);
+  await expect(page.getByRole('status')).toHaveText('Column 5, row 10: marked 2.');
+  await page.keyboard.press('2');
+  await page.keyboard.press('2');
+  await expect(tool).toHaveAttribute('aria-pressed', 'false');
+});

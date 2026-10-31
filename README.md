@@ -38,7 +38,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 - Each kill earns its level in XP. Power rises to 2 at 10 XP and to 3 at 26 XP. The map holds 51 XP besides the chief.
 - Running out of hearts is game over; start the same clearing over. After the tenth clearing, play returns to the first.
 - Tap a distant revealed tile to walk there. A distant hidden tile routes only to the nearest reachable revealed floor. Tap again from beside the hidden tile to enter it.
-- Choose a note tool, then tap hidden tiles. Choose the same tool again to return to movement. Long press or right-click cycles 1–5, then clear. Notes do not prevent movement.
+- Choose a note tool with its button or the number keys 1–5, then tap a hidden tile to mark it. The tool then returns to movement; hold Shift while clicking to keep marking. Marking a tile with the note it already has clears it, and a different note replaces it. Long press or right-click cycles 1–5, then clear. Notes do not prevent movement.
 - Escape stops auto-walk and clears the note tool. New input, fights, dialogs, and loss of focus stop auto-walk too.
 
 ## Code map

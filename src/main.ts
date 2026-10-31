@@ -45,7 +45,7 @@ app.innerHTML = `
     <li>Tap a neighboring tile to move or fight. Numbers sum the levels of living monsters in the eight neighboring tiles.</li>
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. Tap again when next to hidden ground to enter it.</li>
-    <li>Choose a note, then tap a hidden tile to mark it. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
+    <li>Choose a note, then tap a hidden tile to mark it. Number keys 1–5 pick a note. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
     <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
     <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. The crowned chief is level 4.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
@@ -336,6 +336,13 @@ window.addEventListener('keydown', (event) => {
   if (event.key === 'Escape') {
     stop();
     selectNote(null);
+    return;
+  }
+  // Physical keys, so Shift+3 still picks 3 on layouts where it types a symbol.
+  const digit = /^(?:Digit|Numpad)([1-5])$/.exec(event.code)?.[1];
+  const tool = noteTools.find((note) => String(note) === digit);
+  if (tool !== undefined) {
+    if (!event.repeat) selectNote(tool);
     return;
   }
   const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
