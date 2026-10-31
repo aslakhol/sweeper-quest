@@ -8,6 +8,8 @@ export type Monster = {
 };
 export type Tile = Point & {
   terrain: 'floor' | 'wall' | 'water';
+  // How the tile is drawn. Only terrain affects the rules.
+  look: 'grass' | 'path' | 'rock' | 'tree' | 'roof' | 'house' | 'door' | 'fence' | 'water';
   revealed: boolean;
   note?: Note;
   monster?: Monster;
@@ -31,6 +33,19 @@ export type GameEvent =
   | { type: 'death' }
   | { type: 'win' };
 
+const grounds = {
+  '.': { terrain: 'floor', look: 'grass', revealed: false },
+  '@': { terrain: 'floor', look: 'grass', revealed: true },
+  ',': { terrain: 'floor', look: 'grass', revealed: true },
+  '=': { terrain: 'floor', look: 'path', revealed: true },
+  '#': { terrain: 'wall', look: 'rock', revealed: true },
+  T: { terrain: 'wall', look: 'tree', revealed: true },
+  '^': { terrain: 'wall', look: 'roof', revealed: true },
+  H: { terrain: 'wall', look: 'house', revealed: true },
+  D: { terrain: 'wall', look: 'door', revealed: true },
+  F: { terrain: 'wall', look: 'fence', revealed: true },
+  '~': { terrain: 'water', look: 'water', revealed: true },
+} as const satisfies Record<string, Pick<Tile, 'terrain' | 'look' | 'revealed'>>;
 const monsters = {
   s: { kind: 'slime', level: 1, goal: false },
   b: { kind: 'bat', level: 2, goal: false },
@@ -41,6 +56,10 @@ const monsters = {
 // Total XP needed for each power, starting at power 1. Each kill earns its level in XP.
 export const powerThresholds = [0, 10, 26] as const;
 
+function isKey<T extends object>(object: T, key: string): key is Extract<keyof T, string> {
+  return Object.hasOwn(object, key);
+}
+
 export function createGame(source: string): Game {
   const rows = source
     .trim()
@@ -50,20 +69,20 @@ export function createGame(source: string): Game {
   if (rows.some((row) => row.length !== width)) throw new Error('Map rows must have equal widths.');
   const tiles = rows.flatMap((row, y) =>
     row.map((symbol, x): Tile => {
-      if (!['#', '~', '.', '@', 's', 'b', 'g', 'G'].includes(symbol)) {
-        throw new Error(`Unknown map symbol "${symbol}" at ${x},${y}.`);
-      }
-      return {
-        x,
-        y,
-        terrain: symbol === '#' ? 'wall' : symbol === '~' ? 'water' : 'floor',
+      if (isKey(monsters, symbol)) {
+        const monster = monsters[symbol];
         // The chief is the visible goal; every other monster hides until fought.
-        revealed: symbol === '#' || symbol === '~' || symbol === 'G',
-        monster:
-          symbol === 's' || symbol === 'b' || symbol === 'g' || symbol === 'G'
-            ? { ...monsters[symbol], alive: true }
-            : undefined,
-      };
+        return {
+          x,
+          y,
+          terrain: 'floor',
+          look: 'grass',
+          revealed: monster.goal,
+          monster: { ...monster, alive: true },
+        };
+      }
+      if (isKey(grounds, symbol)) return { x, y, ...grounds[symbol] };
+      throw new Error(`Unknown map symbol "${symbol}" at ${x},${y}.`);
     }),
   );
   const starts = rows.flatMap((row, y) =>

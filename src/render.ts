@@ -1,4 +1,12 @@
-import { type Game, type Monster, numberAt, type Point, same } from './game/game';
+import {
+  type Game,
+  type Monster,
+  numberAt,
+  type Point,
+  same,
+  type Tile,
+  tileAt,
+} from './game/game';
 
 export const TILE_SIZE = 48;
 export type Effect =
@@ -166,6 +174,137 @@ function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number) {
   );
 }
 
+function rects(
+  ctx: CanvasRenderingContext2D,
+  color: string,
+  x: number,
+  y: number,
+  list: number[][],
+) {
+  ctx.fillStyle = color;
+  for (const [dx, dy, w, h] of list) ctx.fillRect(x + dx, y + dy, w, h);
+}
+const lawn = (tile: Point) => ((tile.x + tile.y) % 2 ? '#31443b' : '#34473e');
+
+// Ground keeps a one-pixel grid gap for counting; buildings fill their tile to join up.
+function drawGround(ctx: CanvasRenderingContext2D, game: Game, tile: Tile, x: number, y: number) {
+  const joins = (dx: number, dy: number) =>
+    tileAt(game, { x: tile.x + dx, y: tile.y + dy })?.look === tile.look;
+  ctx.fillStyle = '#16231f';
+  ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
+  switch (tile.look) {
+    case 'grass':
+      if (tile.revealed) {
+        ctx.fillStyle = lawn(tile);
+        ctx.fillRect(x + 1, y + 1, 46, 46);
+        return;
+      }
+      // Tall grass hides whatever has not been found yet.
+      rects(ctx, '#21332a', x, y, [[1, 1, 46, 46]]);
+      for (const [bx, by] of [
+        [8 + (tile.y % 3) * 4, 30],
+        [26 - (tile.x % 3) * 3, 16],
+        [30, 36 - (tile.y % 2) * 6],
+      ])
+        rects(ctx, '#33503a', x, y, [
+          [bx, by - 7, 2, 9],
+          [bx - 3, by - 4, 2, 6],
+          [bx + 3, by - 5, 2, 7],
+        ]);
+      return;
+    case 'path':
+      rects(ctx, (tile.x + tile.y) % 2 ? '#4d4535' : '#504737', x, y, [[1, 1, 46, 46]]);
+      rects(ctx, '#5f5643', x, y, [
+        [10 + (tile.y % 4) * 6, 12, 4, 3],
+        [30 - (tile.x % 3) * 5, 32, 5, 3],
+      ]);
+      return;
+    case 'rock':
+      rects(ctx, '#293b32', x, y, [[2, 2, 44, 44]]);
+      rects(ctx, '#354b3c', x, y, [[4, 3, 40, 4]]);
+      rects(ctx, '#213228', x, y, [
+        [4, 25, 40, 2],
+        [23, 4, 2, 21],
+      ]);
+      if ((tile.x * 7 + tile.y) % 3 === 0)
+        rects(ctx, '#4b6140', x, y, [
+          [6, 5, 10, 3],
+          [6, 8, 4, 5],
+        ]);
+      return;
+    case 'water':
+      rects(ctx, '#315c68', x, y, [[1, 1, 46, 46]]);
+      rects(ctx, '#568a8d', x, y, [[10, 22, 20, 2]]);
+      return;
+    case 'tree':
+      rects(ctx, lawn(tile), x, y, [[1, 1, 46, 46]]);
+      rects(ctx, '#1d2b23', x, y, [[8, 38, 32, 6]]);
+      rects(ctx, '#4a3a2a', x, y, [[20, 30, 8, 12]]);
+      rects(ctx, '#22402c', x, y, [
+        [12, 3, 24, 4],
+        [6, 7, 36, 22],
+        [12, 29, 24, 4],
+      ]);
+      rects(ctx, '#2d5536', x, y, [
+        [12, 7, 22, 16],
+        [16, 23, 14, 4],
+      ]);
+      rects(ctx, '#3b6a40', x, y, [[14, 9, 9, 6]]);
+      return;
+    case 'roof':
+      rects(ctx, '#7d4536', x, y, [[0, 0, 48, 48]]);
+      rects(ctx, '#673629', x, y, [
+        [0, 10, 48, 2],
+        [0, 22, 48, 2],
+        [0, 34, 48, 2],
+        [tile.x % 2 ? 12 : 36, 0, 2, 10],
+        [tile.x % 2 ? 36 : 12, 12, 2, 10],
+        [tile.x % 2 ? 12 : 36, 24, 2, 10],
+      ]);
+      if (!joins(0, -1)) rects(ctx, '#9b5a45', x, y, [[0, 0, 48, 5]]);
+      if (!joins(0, 1)) rects(ctx, '#4e2a22', x, y, [[0, 42, 48, 6]]);
+      if (!joins(-1, 0)) rects(ctx, '#5a3027', x, y, [[0, 0, 3, 48]]);
+      if (!joins(1, 0)) rects(ctx, '#5a3027', x, y, [[45, 0, 3, 48]]);
+      return;
+    case 'house':
+    case 'door':
+      rects(ctx, '#b49e77', x, y, [[0, 0, 48, 48]]);
+      rects(ctx, '#a08a64', x, y, [
+        [0, 12, 48, 2],
+        [0, 26, 48, 2],
+      ]);
+      rects(ctx, '#6c5f4f', x, y, [[0, 42, 48, 6]]);
+      if (tile.look === 'house') {
+        rects(ctx, '#5e4a33', x, y, [[13, 13, 22, 18]]);
+        rects(ctx, '#3e5f6b', x, y, [[16, 16, 16, 12]]);
+        rects(ctx, '#6f95a0', x, y, [[18, 18, 4, 4]]);
+        return;
+      }
+      rects(ctx, '#3f2c1e', x, y, [[11, 8, 26, 40]]);
+      rects(ctx, '#5b3f2a', x, y, [[14, 11, 20, 37]]);
+      rects(ctx, '#4b3423', x, y, [[23, 11, 2, 37]]);
+      rects(ctx, '#d8b46a', x, y, [[28, 30, 3, 3]]);
+      return;
+    case 'fence':
+      rects(ctx, lawn(tile), x, y, [[1, 1, 46, 46]]);
+      if (joins(-1, 0))
+        rects(ctx, '#7a5e3e', x, y, [
+          [0, 18, 24, 4],
+          [0, 30, 24, 4],
+        ]);
+      if (joins(1, 0))
+        rects(ctx, '#7a5e3e', x, y, [
+          [24, 18, 24, 4],
+          [24, 30, 24, 4],
+        ]);
+      if (joins(0, -1)) rects(ctx, '#7a5e3e', x, y, [[22, 0, 4, 24]]);
+      if (joins(0, 1)) rects(ctx, '#7a5e3e', x, y, [[22, 24, 4, 24]]);
+      rects(ctx, '#9c7a50', x, y, [[19, 12, 10, 28]]);
+      rects(ctx, '#b8956a', x, y, [[19, 12, 10, 3]]);
+      return;
+  }
+}
+
 export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
@@ -194,36 +333,9 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
     if (!visible(tile)) continue;
     const x = tile.x * TILE_SIZE;
     const y = tile.y * TILE_SIZE;
-    ctx.fillStyle = '#16231f';
-    ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
-    if (tile.terrain === 'wall') {
-      ctx.fillStyle = '#293b32';
-      ctx.fillRect(x + 2, y + 2, 44, 44);
-      ctx.fillStyle = '#354b3c';
-      ctx.fillRect(x + 4, y + 3, 40, 4);
-      ctx.fillStyle = '#213228';
-      ctx.fillRect(x + 4, y + 25, 40, 2);
-      ctx.fillRect(x + 23, y + 4, 2, 21);
-      ctx.fillStyle = '#4b6140';
-      if ((tile.x * 7 + tile.y) % 3 === 0) {
-        ctx.fillRect(x + 6, y + 5, 10, 3);
-        ctx.fillRect(x + 6, y + 8, 4, 5);
-      }
-      continue;
-    }
-    if (tile.terrain === 'water') {
-      ctx.fillStyle = '#315c68';
-      ctx.fillRect(x + 1, y + 1, 46, 46);
-      ctx.fillStyle = '#568a8d';
-      ctx.fillRect(x + 10, y + 22, 20, 2);
-      continue;
-    }
-    ctx.fillStyle = tile.revealed ? ((tile.x + tile.y) % 2 ? '#31443b' : '#34473e') : '#202f29';
-    ctx.fillRect(x + 1, y + 1, 46, 46);
+    drawGround(ctx, game, tile, x, y);
+    if (tile.terrain !== 'floor') continue;
     if (!tile.revealed) {
-      ctx.fillStyle = '#304137';
-      ctx.fillRect(x + 14 + (tile.y % 3) * 5, y + 22, 2, 5);
-      ctx.fillRect(x + 17 + (tile.y % 3) * 5, y + 20, 2, 6);
       if (tile.note) {
         ctx.strokeStyle = '#bba577';
         ctx.lineWidth = 1;

@@ -84,6 +84,16 @@ describe('map and clues', () => {
     expect(canStep(game, game.player, p(1, 1))).toBe(false);
     expect(canStep(game, game.player, p(0, 1))).toBe(false);
   });
+  it('starts village ground revealed and blocks buildings, trees and fences', () => {
+    const game = createGame(', = . s\nT ^ H D\n@ F . .');
+    expect(game.tiles.filter((tile) => !tile.revealed).map((tile) => [tile.x, tile.y])).toEqual([
+      [2, 0],
+      [3, 0],
+      [2, 2],
+      [3, 2],
+    ]);
+    expect(game.tiles.filter((tile) => tile.terrain === 'wall')).toHaveLength(5);
+  });
 });
 
 describe('combat and progression', () => {
