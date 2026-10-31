@@ -24,7 +24,9 @@ export type Tile = Point & {
     | 'mat'
     | 'table'
     | 'bed'
-    | 'shelf';
+    | 'shelf'
+    | 'cave'
+    | 'stairs';
   revealed: boolean;
   note?: Note;
   monster?: Monster;
@@ -33,6 +35,8 @@ export type Tile = Point & {
 };
 // Symbols a particular map adds on top of the shared ones.
 export type Legend = {
+  // How hidden floor and monster tiles are drawn.
+  floor?: Tile['look'];
   exits?: Record<string, { to: string; look: Tile['look'] }>;
 };
 // The hero's stats travel with the player from map to map.
@@ -118,11 +122,13 @@ export function createGame(
           x,
           y,
           terrain: 'floor',
-          look: 'grass',
+          look: legend.floor ?? 'grass',
           revealed: monster.goal,
           monster: { ...monster, alive: true },
         };
       }
+      if (symbol === '.' && legend.floor)
+        return { x, y, terrain: 'floor', look: legend.floor, revealed: false };
       if (isKey(grounds, symbol)) return { x, y, ...grounds[symbol] };
       throw new Error(`Unknown map symbol "${symbol}" at ${x},${y}.`);
     }),

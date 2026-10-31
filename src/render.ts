@@ -212,6 +212,28 @@ function drawGround(ctx: CanvasRenderingContext2D, game: Game, tile: Tile, x: nu
           [bx + 3, by - 5, 2, 7],
         ]);
       return;
+    case 'cave':
+      if (tile.revealed) {
+        rects(ctx, (tile.x + tile.y) % 2 ? '#3a3d37' : '#3d403a', x, y, [[1, 1, 46, 46]]);
+        return;
+      }
+      rects(ctx, '#232723', x, y, [[1, 1, 46, 46]]);
+      rects(ctx, '#30352f', x, y, [
+        [9 + (tile.y % 3) * 5, 30, 7, 4],
+        [27 - (tile.x % 3) * 3, 14, 6, 4],
+        [31, 34 - (tile.y % 2) * 8, 5, 3],
+      ]);
+      return;
+    case 'stairs':
+      rects(ctx, '#293b32', x, y, [[1, 1, 46, 46]]);
+      rects(ctx, '#0c1210', x, y, [[6, 6, 36, 36]]);
+      rects(ctx, '#56614f', x, y, [
+        [8, 34, 32, 4],
+        [11, 26, 26, 4],
+        [14, 18, 20, 4],
+        [17, 10, 14, 4],
+      ]);
+      return;
     case 'path':
       rects(ctx, (tile.x + tile.y) % 2 ? '#4d4535' : '#504737', x, y, [[1, 1, 46, 46]]);
       rects(ctx, '#5f5643', x, y, [

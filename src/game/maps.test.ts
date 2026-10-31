@@ -82,12 +82,12 @@ describe.each(dungeons.map((map, index) => ({ map, name: `dungeon ${index + 1}` 
   '$name',
   ({ map }) => {
     it('opens with an empty area around the start', () => {
-      const game = createGame(map);
+      const game = createGame(map, { legend: areas.dungeon, from: 'village' });
       expect(numberAt(game, game.player)).toBe(0);
     });
 
     it('can be won by careful deduction with a few forced guesses', () => {
-      const game = createGame(map);
+      const game = createGame(map, { legend: areas.dungeon, from: 'village' });
       const { actions, guesses } = playCarefully(game);
       expect(game.won).toBe(true);
       expect(game.hero.health).toBeLessThan(game.hero.maxHealth);
@@ -103,5 +103,6 @@ describe('village', () => {
     const game = createGame(areas.village.map, { legend: areas.village });
     playCarefully(game);
     expect(game.won).toBe(true);
-  });
+    // The solver re-plans routes across a large map after every move.
+  }, 20_000);
 });
