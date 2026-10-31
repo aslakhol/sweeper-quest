@@ -25,36 +25,30 @@ if (!app) throw new Error('Missing app element.');
 const levelNotes = [1, 2, 3, 4, 5] as const;
 const noteTools = [...levelNotes, 'danger', 'erase'] as const;
 app.innerHTML = `
-  <header><div><div class="eyebrow">Field test · 02</div><h1>Sweeper Quest</h1></div><button class="help-button" id="help" aria-label="How to play">?</button></header>
   <section aria-label="Player stats" class="stats">
     <div class="health" id="hearts" role="img"></div>
     <div class="stat" id="power" aria-label="Power"><span class="stat-icon" aria-hidden="true">⚔</span><span id="power-value">1</span></div>
     <div class="stat" id="xp" aria-label="Experience"><span class="stat-icon" aria-hidden="true">✦</span><span id="xp-value">0/10</span></div>
+    <button class="menu-button" id="menu" aria-label="Menu">☰</button>
   </section>
-  <div class="board-top"><span id="map-name">Clearing 1</span></div>
   <div class="board-wrap"><canvas tabindex="0" aria-label="Game board. Move with arrow keys or WASD. Use Q, E, Z, C for diagonals." aria-describedby="status"></canvas></div>
   <section class="notes" aria-label="Tile notes">
-    <div class="notes-heading"><span>Mark a tile</span><span id="note-mode">Tap to move</span></div>
-    <div class="note-buttons">
-      ${noteTools.map((note) => `<button class="note-button" data-note="${note}" aria-label="${note === 'erase' ? 'Erase notes' : note === 'danger' ? 'Mark danger' : `Mark level ${note}`}" aria-pressed="false">${note === 'danger' ? '!' : note === 'erase' ? '⌫' : note}</button>`).join('')}
-    </div>
+    ${noteTools.map((note) => `<button class="note-button" data-note="${note}" aria-label="${note === 'erase' ? 'Erase notes' : note === 'danger' ? 'Mark danger' : `Mark level ${note}`}" aria-pressed="false">${note === 'danger' ? '!' : note === 'erase' ? '⌫' : note}</button>`).join('')}
   </section>
-  <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin</span><span class="goblin-key">4 · Chief</span></div>
-  <div class="objective"><span class="objective-icon" aria-hidden="true">◇</span><div><div class="objective-label">Your quest</div><div id="objective">Defeat the goblin chief</div></div></div>
-  <p id="status" role="status" aria-live="polite">Numbers sum nearby levels. Notes mark suspected monsters.</p>
-  <footer><span>02 / THE CLEARING</span><button class="reset" id="restart">Start over ↻</button></footer>
-  <dialog id="help-dialog"><h2>How to play</h2><ul>
+  <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
+  <dialog id="menu-dialog"><h2>How to play</h2><ul>
     <li>Tap a neighboring tile to move or fight. Numbers sum the levels of living monsters in the eight neighboring tiles.</li>
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. Tap again when next to hidden ground to enter it.</li>
     <li>Choose a note, then tap a hidden tile to mark it. Number keys 1–5 mark the tile under the mouse, or pick that note. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
     <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
-    <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. The crowned chief is level 4.</li>
+    <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. Defeat the crowned chief to win.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
-  </ul><button data-close>Back to the clearing</button></dialog>
-  <dialog id="win-dialog"><div class="eyebrow">Quest complete</div><h2>Goblin chief defeated</h2><p>Power <span id="win-power">3</span>, <span id="win-health">10</span> hearts left.</p><div class="dialog-actions"><button id="next-map">Next clearing</button></div></dialog>
-  <dialog id="death-dialog"><div class="eyebrow">Game over</div><h2>You fell in the clearing</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
-  <dialog id="restart-dialog"><h2>Start a new quest?</h2><p>This clears your power and explored tiles.</p><div class="dialog-actions"><button class="secondary" data-close>Keep playing</button><button data-restart>Start over</button></div></dialog>
+  </ul>
+  <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin</span><span class="goblin-key">4 · Chief</span></div>
+  <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
+  <dialog id="win-dialog"><h2>Goblin chief defeated</h2><p>Power <span id="win-power">3</span>, <span id="win-health">10</span> hearts left.</p><div class="dialog-actions"><button id="next-map">Next clearing</button></div></dialog>
+  <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
   const value = document.querySelector<T>(selector);
@@ -66,8 +60,6 @@ const board = element<HTMLDivElement>('.board-wrap');
 const status = element<HTMLParagraphElement>('#status');
 const hearts = element<HTMLDivElement>('#hearts');
 const power = element<HTMLSpanElement>('#power-value');
-const objective = element<HTMLDivElement>('#objective');
-const noteMode = element<HTMLSpanElement>('#note-mode');
 const noteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-note]')];
 let mapIndex = 0;
 let game = createGame(maps[mapIndex]);
@@ -113,8 +105,6 @@ function updateHud(): void {
     'aria-label',
     next === undefined ? `${game.xp} XP` : `${game.xp} of ${next} XP to the next power`,
   );
-  element('#map-name').textContent = `Clearing ${mapIndex + 1} / ${maps.length}`;
-  objective.textContent = game.won ? 'Goblin chief defeated' : 'Defeat the goblin chief';
 }
 function stop(): void {
   pendingChord = false;
@@ -310,14 +300,6 @@ function selectNote(note: typeof selectedNote): void {
   selectedNote = selectedNote === note ? null : note;
   for (const button of noteButtons)
     button.setAttribute('aria-pressed', String(button.dataset.note === String(selectedNote)));
-  noteMode.textContent =
-    selectedNote === null
-      ? 'Tap to move'
-      : selectedNote === 'erase'
-        ? 'Tap to erase'
-        : selectedNote === 'danger'
-          ? 'Mark danger'
-          : `Mark level ${selectedNote}`;
 }
 for (const button of noteButtons) {
   button.addEventListener('click', () => {
@@ -392,8 +374,7 @@ document.addEventListener('visibilitychange', () => {
     cancelPress();
   }
 });
-element('#help').addEventListener('click', () => openDialog('#help-dialog'));
-element('#restart').addEventListener('click', () => openDialog('#restart-dialog'));
+element('#menu').addEventListener('click', () => openDialog('#menu-dialog'));
 for (const button of document.querySelectorAll('[data-close]'))
   button.addEventListener('click', () => button.closest('dialog')?.close());
 function restart(): void {
@@ -404,7 +385,7 @@ function restart(): void {
   flash = undefined;
   selectNote(null);
   updateHud();
-  status.textContent = 'Numbers sum nearby levels. Notes mark suspected monsters.';
+  status.textContent = '';
   for (const dialog of document.querySelectorAll('dialog')) dialog.close();
 }
 // A finished run can only start over or move on.

@@ -63,9 +63,9 @@ test('stronger monsters cost hearts until the run ends', async ({ page, isMobile
     await position(page, fromX, fromY);
     await tap(page, x, y, isMobile);
   }
-  await expect(page.getByRole('heading', { name: 'You fell in the clearing' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('heading', { name: 'You fell in the clearing' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
   await page.locator('#death-dialog').getByRole('button', { name: 'Start over' }).click();
   await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '10 of 10 hearts');
   await position(page, 5, 12);

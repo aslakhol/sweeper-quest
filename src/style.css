@@ -46,36 +46,6 @@ button:hover {
   padding: 26px 20px 24px;
   padding-bottom: max(24px, env(safe-area-inset-bottom));
 }
-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 22px;
-}
-.eyebrow {
-  font-size: 10px;
-  letter-spacing: 2.8px;
-  color: #a8b59b;
-  text-transform: uppercase;
-  font-weight: 700;
-}
-h1 {
-  font-family: Fraunces, Georgia, serif;
-  font-size: 34px;
-  line-height: 1.1;
-  font-weight: 500;
-  margin: 7px 0 0;
-  letter-spacing: -1.2px;
-}
-.help-button {
-  width: 38px;
-  min-height: 38px;
-  border-radius: 50%;
-  font-family: Georgia, serif;
-  font-size: 20px;
-  background: transparent;
-  color: #c4cdb5;
-}
 .stats {
   display: flex;
   align-items: center;
@@ -109,19 +79,6 @@ h1 {
 .stat-icon {
   font-size: 20px;
   color: #d7bd7e;
-}
-.board-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 14px;
-  background: #1c2c24;
-  border: 1px solid #40503d;
-  border-top: 0;
-  font-size: 11px;
-  letter-spacing: 1.3px;
-  text-transform: uppercase;
-  color: #aebda0;
 }
 .board-wrap {
   padding: 7px;
@@ -172,23 +129,6 @@ canvas {
   border-top: 0;
   border-radius: 0 0 12px 12px;
   background: #203128;
-}
-.notes-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 9px;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: #aebda0;
-}
-#note-mode {
-  color: #dfc88f;
-  text-transform: none;
-  letter-spacing: 0;
-}
-.note-buttons {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 6px;
@@ -204,55 +144,6 @@ canvas {
   color: #24362a;
   border-color: #e8d4a4;
   box-shadow: 0 0 0 2px #d4bd8620;
-}
-.objective {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 17px 4px 12px;
-}
-.objective-icon {
-  color: #d3bd82;
-  font-size: 24px;
-}
-.objective-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
-  color: #99ac92;
-  margin-bottom: 4px;
-}
-#objective {
-  font-size: 14px;
-  color: #d4dec9;
-}
-#status {
-  font-size: 12px;
-  min-height: 32px;
-  line-height: 1.5;
-  color: #a8b89e;
-  padding: 0 4px;
-  margin: 0;
-}
-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid #384a39;
-  margin-top: 10px;
-  padding-top: 12px;
-  font-size: 10px;
-  color: #91a28b;
-  letter-spacing: 1px;
-}
-.reset {
-  font-size: 11px;
-  border: 0;
-  background: none;
-  min-height: 32px;
-  padding: 4px 0;
-  color: #bdc9ae;
-  letter-spacing: 0;
 }
 dialog {
   background: #24372b;
@@ -313,16 +204,10 @@ dialog button {
   #app {
     padding: 16px 12px;
   }
-  header {
-    margin-bottom: 16px;
-  }
-  h1 {
-    font-size: 30px;
-  }
   .stats {
     padding: 12px;
   }
-  .note-buttons {
+  .notes {
     gap: 4px;
   }
 }
@@ -338,33 +223,11 @@ dialog button {
   padding-top: 18px;
   padding-bottom: 16px;
 }
-header {
-  margin-bottom: 14px;
-}
-.eyebrow {
-  font-size: 9px;
-  letter-spacing: 2px;
-}
-h1 {
-  font-size: 32px;
-  margin-top: 4px;
-}
 .stats {
   padding: 11px 14px;
 }
-.board-top {
-  padding: 8px 12px;
-}
 .notes {
   padding: 10px 12px 12px;
-}
-.objective {
-  padding-top: 12px;
-  padding-bottom: 8px;
-}
-footer {
-  margin-top: 6px;
-  padding-top: 6px;
 }
 
 .bestiary {
@@ -381,4 +244,20 @@ footer {
 }
 .goblin-key {
   color: #d3ae79;
+}
+.menu-button {
+  width: 38px;
+  min-height: 38px;
+  font-size: 18px;
+  background: transparent;
+  border: 0;
+  color: #c4cdb5;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
