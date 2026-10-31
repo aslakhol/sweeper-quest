@@ -178,6 +178,16 @@ export function step(game: Game, target: Point): GameEvent[] {
       return events;
     }
     tile.monster.alive = false;
+    // Removing a monster can turn previously revealed neighboring clues into zeros.
+    for (const neighbor of neighbors(game, tile)) {
+      if (
+        neighbor.revealed &&
+        neighbor.terrain === 'floor' &&
+        !neighbor.monster?.alive &&
+        numberAt(game, neighbor) === 0
+      )
+        revealStep(game, neighbor);
+    }
     game.xp += tile.monster.level;
     const power = powerThresholds.filter((threshold) => game.xp >= threshold).length;
     if (power > game.power) {

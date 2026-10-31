@@ -50,6 +50,32 @@ describe('map and clues', () => {
     expect(tileAt(game, p(1, 2))?.revealed).toBe(true);
     expect(tileAt(game, p(3, 2))?.revealed).toBe(false);
   });
+  it('expands a revealed clue that becomes zero after a kill, even if the fought tile is nonzero', () => {
+    const game = createGame(`
+      # # # # # #
+      # . . s . #
+      # @ s . . #
+      # . . . . #
+      # # # # # #
+    `);
+    expect(numberAt(game, game.start)).toBe(1);
+    expect(tileAt(game, p(1, 1))?.revealed).toBe(false);
+    setNote(game, p(1, 1), 'danger');
+
+    step(game, p(2, 2));
+
+    expect(numberAt(game, game.player)).toBe(1);
+    expect(numberAt(game, game.start)).toBe(0);
+    expect(tileAt(game, p(1, 1))?.revealed).toBe(true);
+    expect(tileAt(game, p(1, 1))?.note).toBeUndefined();
+    expect(tileAt(game, p(3, 1))).toMatchObject({ revealed: false, monster: { alive: true } });
+  });
+  it('does not expand from a visible living monster after a neighboring kill', () => {
+    const game = createGame('@ s G . .');
+    step(game, p(1, 0));
+    expect(numberAt(game, p(2, 0))).toBe(0);
+    expect(tileAt(game, p(3, 0))?.revealed).toBe(false);
+  });
   it('shows walls and water from the start and blocks their corners', () => {
     const game = createGame('@ # .\n~ . .\n. . .');
     expect(tileAt(game, p(1, 0))?.revealed).toBe(true);
