@@ -96,17 +96,16 @@ test('quick keys and two-key diagonals each move once', async ({ page }) => {
   await position(page, 5, 9);
 });
 
-test('note tool stays selected and a long press marks without moving', async ({
+test('a note tool marks one tile and a long press marks without moving', async ({
   page,
   isMobile,
 }) => {
-  await page.getByRole('button', { name: 'Mark level 3' }).click();
+  const tool = page.getByRole('button', { name: 'Mark level 3' });
+  await tool.click();
   await tap(page, 4, 9, isMobile);
   await expect(page.getByRole('status')).toHaveText('Column 5, row 10: marked 3.');
-  await tap(page, 5, 9, isMobile);
-  await expect(page.getByRole('status')).toHaveText('Column 6, row 10: marked 3.');
+  await expect(tool).toHaveAttribute('aria-pressed', 'false');
   await position(page, 5, 12);
-  await page.getByRole('button', { name: 'Mark level 3' }).click();
   const point = await tile(page, 4, 9);
   const session = await page.context().newCDPSession(page);
   await session.send('Input.dispatchTouchEvent', {
@@ -119,4 +118,19 @@ test('note tool stays selected and a long press marks without moving', async ({
   await position(page, 5, 12);
   await page.mouse.click(point.x, point.y, { button: 'right' });
   await expect(page.getByRole('status')).toHaveText('Column 5, row 10: marked 5.');
+});
+
+test('shift keeps the note tool out', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Shift needs a keyboard');
+  const tool = page.getByRole('button', { name: 'Mark level 3' });
+  await tool.click();
+  await page.keyboard.down('Shift');
+  await tap(page, 4, 9, false);
+  await tap(page, 5, 9, false);
+  await page.keyboard.up('Shift');
+  await expect(page.getByRole('status')).toHaveText('Column 6, row 10: marked 3.');
+  await expect(tool).toHaveAttribute('aria-pressed', 'true');
+  await tap(page, 4, 9, false);
+  await expect(page.getByRole('status')).toHaveText('Column 5, row 10: note cleared.');
+  await expect(tool).toHaveAttribute('aria-pressed', 'false');
 });

@@ -45,7 +45,7 @@ app.innerHTML = `
     <li>Tap a neighboring tile to move or fight. Numbers sum the levels of living monsters in the eight neighboring tiles.</li>
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. Tap again when next to hidden ground to enter it.</li>
-    <li>Choose a note, then tap hidden tiles. Choose it again to move. Hold or right-click a tile to cycle 1–5.</li>
+    <li>Choose a note, then tap a hidden tile to mark it. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
     <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
     <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. The crowned chief is level 4.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
@@ -195,11 +195,13 @@ function move(target: Point): boolean {
   updateHud();
   return events.length === 0 && !same(before, game.player);
 }
-function activate(target: Point): void {
+// Shift keeps the note tool out for marking several tiles in a row.
+function activate(target: Point, keepTool = false): void {
   stop();
   if (selectedNote) {
     if (selectedNote === 'erase') setNote(game, target, undefined);
     else toggleNote(game, target, selectedNote);
+    if (!keepTool) selectNote(null);
     reportNote(target);
     return;
   }
@@ -274,7 +276,7 @@ canvas.addEventListener('pointerup', (event) => {
   if (press?.id !== event.pointerId) return;
   const current = press;
   cancelPress();
-  if (current && !current.consumed) activate(current.point);
+  if (current && !current.consumed) activate(current.point, event.shiftKey);
 });
 canvas.addEventListener('pointercancel', cancelPress);
 canvas.addEventListener('lostpointercapture', cancelPress);
