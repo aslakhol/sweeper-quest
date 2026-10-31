@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { expect, type Page, test } from '@playwright/test';
 
-const mapRows = readFileSync(new URL('../src/maps/training.txt', import.meta.url), 'utf8')
+const mapRows = readFileSync(new URL('../src/maps/clearing-01.txt', import.meta.url), 'utf8')
   .trim()
   .split('\n')
   .map((row) => row.trim().split(/\s+/));

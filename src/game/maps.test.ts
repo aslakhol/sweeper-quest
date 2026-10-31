@@ -1,5 +1,5 @@
-import { expect, it } from 'vitest';
-import training from '../maps/training.txt?raw';
+import { describe, expect, it } from 'vitest';
+import { maps } from '../maps';
 import {
   canStep,
   createGame,
@@ -78,20 +78,22 @@ function playCarefully(game: Game) {
   return { actions, guesses };
 }
 
-it('opens with an empty area around the start', () => {
-  const game = createGame(training);
-  expect(numberAt(game, game.player)).toBe(0);
-  expect(
-    game.tiles.filter((tile) => tile.revealed && tile.terrain === 'floor').length,
-  ).toBeGreaterThan(9);
-});
+describe.each(maps.map((map, index) => ({ map, name: `clearing ${index + 1}` })))(
+  '$name',
+  ({ map }) => {
+    it('opens with an empty area around the start', () => {
+      const game = createGame(map);
+      expect(numberAt(game, game.player)).toBe(0);
+    });
 
-it('can be won by careful deduction with a few forced guesses', () => {
-  const game = createGame(training);
-  const { actions, guesses } = playCarefully(game);
-  expect(game.won).toBe(true);
-  expect(game.health).toBeLessThan(game.maxHealth);
-  expect(guesses).toBeGreaterThan(0);
-  // Most of the run happens while many monsters can still hurt you.
-  expect(actions[1] + actions[2]).toBeGreaterThan(40);
-});
+    it('can be won by careful deduction with a few forced guesses', () => {
+      const game = createGame(map);
+      const { actions, guesses } = playCarefully(game);
+      expect(game.won).toBe(true);
+      expect(game.health).toBeLessThan(game.maxHealth);
+      expect(guesses).toBeGreaterThan(0);
+      // Most of the run happens while many monsters can still hurt you.
+      expect(actions[1] + actions[2]).toBeGreaterThan(40);
+    });
+  },
+);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import training from '../maps/training.txt?raw';
+import { maps } from '../maps';
 import {
   canStep,
   createGame,
@@ -15,8 +15,8 @@ import {
 const p = (x: number, y: number) => ({ x, y });
 
 describe('map and clues', () => {
-  it('loads the hand-authored map and keeps monsters hidden', () => {
-    const game = createGame(training);
+  it('loads the first clearing and keeps monsters hidden', () => {
+    const game = createGame(maps[0]);
     expect([game.width, game.height]).toEqual([11, 15]);
     expect(game.player).toEqual(p(5, 12));
     const monsters = game.tiles.filter((tile) => tile.monster);

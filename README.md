@@ -1,6 +1,6 @@
 # Sweeper Quest
 
-A portrait, touch-first Minesweeper RPG prototype. The 11×15 demo hides 31 monsters: 16 level-1 slimes, 10 level-2 bats and 5 level-3 goblins. Earn XP from kills to raise your power, and defeat the visible level-4 goblin chief before your hearts run out.
+A portrait, touch-first Minesweeper RPG prototype. Ten generated 11×15 clearings each hide 31 monsters: 16 level-1 slimes, 10 level-2 bats and 5 level-3 goblins. Earn XP from kills to raise your power, and defeat the visible level-4 goblin chief before your hearts run out. Each win moves on to the next clearing.
 
 ## Run locally
 
@@ -36,7 +36,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 - Numbers sum the levels of living monsters in the eight neighboring tiles. Zeros are blank and open their whole connected empty area plus its bordering numbers.
 - Fights always resolve and move you onto the tile. A monster at or below your power costs nothing. A stronger one first costs its level times the levels it has over you, in hearts. You have 10 hearts and they do not refill.
 - Each kill earns its level in XP. Power rises to 2 at 10 XP and to 3 at 26 XP. The map holds 51 XP besides the chief.
-- Running out of hearts is game over; start over from a fresh map.
+- Running out of hearts is game over; start the same clearing over. After the tenth clearing, play returns to the first.
 - Tap a distant revealed tile to walk there. A distant hidden tile routes only to the nearest reachable revealed floor. Tap again from beside the hidden tile to enter it.
 - Choose a note tool, then tap hidden tiles. Choose the same tool again to return to movement. Long press or right-click cycles 1–5, then clear. Notes do not prevent movement.
 - Escape stops auto-walk and clears the note tool. New input, fights, dialogs, and loss of focus stop auto-walk too.
@@ -45,10 +45,11 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 
 | File | Responsibility |
 | --- | --- |
-| `src/maps/training.txt` | The demo map, edited as whitespace-separated symbols |
+| `src/maps/clearing-*.txt` | The ten clearings in play order, edited as whitespace-separated symbols |
+| `src/maps/index.ts` | Loads every clearing file in name order |
 | `src/game/game.ts` | Validated map loading, state, clues, combat, XP, reveal rules, notes, and route planning |
 | `src/game/game.test.ts` | Rule and progression tests with small maps |
-| `src/game/training.test.ts` | Plays the demo with a solver that narrows hidden levels from visible clues |
+| `src/game/maps.test.ts` | Plays every clearing with a solver that narrows hidden levels from visible clues |
 | `src/main.ts` | DOM controls, touch and keyboard input, 75 ms auto-walk, event feedback |
 | `src/render.ts` | Canvas tiles, pixel sprites, fight animation, remains, route dots, and popups |
 | `src/style.css` | Portrait layout and HTML controls |
@@ -71,7 +72,7 @@ Rows must have equal widths and exactly one `@`. Coordinates in code start at ze
 | `g` | Level-3 goblin |
 | `G` | Level-4 goblin chief, visible from the start; killing it completes the quest |
 
-[`docs/decisions.md`](docs/decisions.md) records why the game works this way. The map was picked from generated candidates: a careful solver that only narrows hidden levels from visible clues wins it with a couple of forced guesses, spends most of the run below power 3, and levels up with weaker monsters still alive. A player who bumps tiles at random does not survive.
+[`docs/decisions.md`](docs/decisions.md) records why the game works this way. The clearings are the ten best of 300 generated candidates: a careful solver that only narrows hidden levels from visible clues wins each with a few forced guesses, spends most of the run below power 3, and levels up with weaker monsters still alive. A player who bumps tiles at random does not survive. They double as a test bank for rule changes.
 
 Clues count living monsters only and update after kills. Monsters stay hidden until fought. Diagonal movement is blocked if either bordering cardinal tile is wall or water. The nearest revealed tile uses straight-line distance; ties keep the shortest known route. Routing does not read hidden contents.
 

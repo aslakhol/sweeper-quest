@@ -2,7 +2,7 @@
 
 ## Phase 1: core loop
 
-The 11×15 demo hides 31 monsters at levels 1–3 around a visible level-4 chief. Kills earn XP that raises power; fights always resolve and cost hearts when the monster is stronger; running out of hearts is game over. Zeros flood open. A map test plays it with a solver that only uses visible clues. See [decisions.md](decisions.md) for the reasoning and first tuning values.
+Ten generated 11×15 clearings, played in sequence, each hide 31 monsters at levels 1–3 around a visible level-4 chief. Kills earn XP that raises power; fights always resolve and cost hearts when the monster is stronger; running out of hearts is game over. Zeros flood open. A map test plays each clearing with a solver that only uses visible clues. See [decisions.md](decisions.md) for the reasoning and first tuning values.
 
 This phase does not include rooms, tall grass, a shop, inventory items, dungeons, or saved games.
 

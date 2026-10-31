@@ -15,7 +15,7 @@ import {
   step,
   tileAt,
 } from './game/game';
-import map from './maps/training.txt?raw';
+import { maps } from './maps';
 import { draw, type Effect, effectDuration } from './render';
 
 const app = document.querySelector<HTMLElement>('#app');
@@ -28,7 +28,7 @@ app.innerHTML = `
     <div class="stat" id="power" aria-label="Power"><span class="stat-icon" aria-hidden="true">⚔</span><span id="power-value">1</span></div>
     <div class="stat" id="xp" aria-label="Experience"><span class="stat-icon" aria-hidden="true">✦</span><span id="xp-value">0/10</span></div>
   </section>
-  <div class="board-top"><span>The old clearing</span></div>
+  <div class="board-top"><span id="map-name">Clearing 1</span></div>
   <div class="board-wrap"><canvas tabindex="0" aria-label="Game board. Move with arrow keys or WASD. Use Q, E, Z, C for diagonals." aria-describedby="status"></canvas></div>
   <section class="notes" aria-label="Tile notes">
     <div class="notes-heading"><span>Mark a tile</span><span id="note-mode">Tap to move</span></div>
@@ -49,7 +49,7 @@ app.innerHTML = `
     <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. The crowned chief is level 4.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
   </ul><button data-close>Back to the clearing</button></dialog>
-  <dialog id="win-dialog"><div class="eyebrow">Quest complete</div><h2>Goblin chief defeated</h2><p>Power <span id="win-power">3</span>, <span id="win-health">10</span> hearts left.</p><div class="dialog-actions"><button class="secondary" data-close>Keep exploring</button><button data-restart>Start over</button></div></dialog>
+  <dialog id="win-dialog"><div class="eyebrow">Quest complete</div><h2>Goblin chief defeated</h2><p>Power <span id="win-power">3</span>, <span id="win-health">10</span> hearts left.</p><div class="dialog-actions"><button id="next-map">Next clearing</button></div></dialog>
   <dialog id="death-dialog"><div class="eyebrow">Game over</div><h2>You fell in the clearing</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
   <dialog id="restart-dialog"><h2>Start a new quest?</h2><p>This clears your power and explored tiles.</p><div class="dialog-actions"><button class="secondary" data-close>Keep playing</button><button data-restart>Start over</button></div></dialog>
 `;
@@ -66,7 +66,8 @@ const power = element<HTMLSpanElement>('#power-value');
 const objective = element<HTMLDivElement>('#objective');
 const noteMode = element<HTMLSpanElement>('#note-mode');
 const noteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-note]')];
-let game = createGame(map);
+let mapIndex = 0;
+let game = createGame(maps[mapIndex]);
 let selectedNote: Note | 'erase' | null = null;
 let path: Point[] = [];
 let effects: Effect[] = [];
@@ -108,6 +109,7 @@ function updateHud(): void {
     'aria-label',
     next === undefined ? `${game.xp} XP` : `${game.xp} of ${next} XP to the next power`,
   );
+  element('#map-name').textContent = `Clearing ${mapIndex + 1} / ${maps.length}`;
   objective.textContent = game.won ? 'Goblin chief defeated' : 'Defeat the goblin chief';
 }
 function stop(): void {
@@ -172,6 +174,8 @@ function handleEvents(events: GameEvent[]): void {
       case 'win':
         element('#win-power').textContent = String(game.power);
         element('#win-health').textContent = String(game.health);
+        element('#next-map').textContent =
+          mapIndex === maps.length - 1 ? 'Back to clearing 1' : 'Next clearing';
         openDialog('#win-dialog');
         break;
     }
@@ -372,7 +376,7 @@ for (const button of document.querySelectorAll('[data-close]'))
 function restart(): void {
   stop();
   cancelPress();
-  game = createGame(map);
+  game = createGame(maps[mapIndex]);
   effects = [];
   flash = undefined;
   selectNote(null);
@@ -380,8 +384,13 @@ function restart(): void {
   status.textContent = 'Numbers sum nearby levels. Notes mark suspected monsters.';
   for (const dialog of document.querySelectorAll('dialog')) dialog.close();
 }
-// A finished run can only start over.
-element('#death-dialog').addEventListener('cancel', (event) => event.preventDefault());
+// A finished run can only start over or move on.
+for (const id of ['#death-dialog', '#win-dialog'])
+  element(id).addEventListener('cancel', (event) => event.preventDefault());
+element('#next-map').addEventListener('click', () => {
+  mapIndex = (mapIndex + 1) % maps.length;
+  restart();
+});
 for (const button of document.querySelectorAll('[data-restart]'))
   button.addEventListener('click', restart);
 function frame(time: number): void {

@@ -53,4 +53,4 @@ Starting values, to be changed after playing:
 - **Health** is 10 whole hearts.
 - **XP** per kill equals the monster's level. Power 2 at 10 XP, power 3 at 26 XP.
 - **The chief** is level 4 and visible from the start, so the goal has a place on the map.
-- **The demo map** has 16 slimes, 10 bats and 5 goblins (51 XP). It was picked from generated candidates using a solver that only uses visible clues. The solver wins with 2 forced guesses and 4 hearts left, spending 35 actions at power 1, 30 at power 2 and 11 at power 3. At each level-up, 7 and then 5 weaker monsters are still alive.
+- **The clearings** each have 16 slimes, 10 bats and 5 goblins (51 XP). They are the top 10 of 300 generated candidates, ranked first by how rarely random bumping wins (never, for all ten) and then by how long a solver that only uses visible clues spends below power 3. On every clearing that solver wins with 1–3 forced guesses and 2–6 hearts left, and still has 5–10 weaker monsters alive at each level-up. The first clearing is the original demo map.
