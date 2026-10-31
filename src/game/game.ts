@@ -150,6 +150,10 @@ export function setNote(game: Game, point: Point, note: Note | undefined): void 
   if (!tile || tile.revealed || tile.terrain !== 'floor') return;
   tile.note = note;
 }
+// Placing the note a tile already has removes it; a different note replaces it.
+export function toggleNote(game: Game, point: Point, note: Note): void {
+  setNote(game, point, tileAt(game, point)?.note === note ? undefined : note);
+}
 export function cycleNote(game: Game, point: Point): void {
   const note = tileAt(game, point)?.note;
   const next =

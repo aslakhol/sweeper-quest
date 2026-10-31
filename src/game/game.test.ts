@@ -10,6 +10,7 @@ import {
   setNote,
   step,
   tileAt,
+  toggleNote,
 } from './game';
 
 const p = (x: number, y: number) => ({ x, y });
@@ -170,6 +171,15 @@ describe('routes and notes', () => {
     setNote(game, target, undefined);
     setNote(game, game.start, 5);
     expect(tileAt(game, game.start)?.note).toBeUndefined();
+  });
+  it('removes a note placed twice and replaces it with a different one', () => {
+    const game = createGame('@ s .');
+    const target = p(2, 0);
+    toggleNote(game, target, 2);
+    toggleNote(game, target, 3);
+    expect(tileAt(game, target)?.note).toBe(3);
+    toggleNote(game, target, 3);
+    expect(tileAt(game, target)?.note).toBeUndefined();
   });
   it('notes never block movement and disappear when revealed', () => {
     const game = createGame('@ . . s');

@@ -14,6 +14,7 @@ import {
   setNote,
   step,
   tileAt,
+  toggleNote,
 } from './game/game';
 import { maps } from './maps';
 import { draw, type Effect, effectDuration } from './render';
@@ -197,7 +198,8 @@ function move(target: Point): boolean {
 function activate(target: Point): void {
   stop();
   if (selectedNote) {
-    setNote(game, target, selectedNote === 'erase' ? undefined : selectedNote);
+    if (selectedNote === 'erase') setNote(game, target, undefined);
+    else toggleNote(game, target, selectedNote);
     reportNote(target);
     return;
   }
