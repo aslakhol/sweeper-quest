@@ -1,6 +1,6 @@
 # Sweeper Quest
 
-A touch-first Minesweeper RPG prototype. The map fills the screen and a camera follows you around a 34×30 village. West of the village fence, a tall-grass meadow hides slimes (level 1), bats (level 2) and goblins (level 3). Earn XP from kills to raise your power, and defeat the visible level-4 goblin chief in the far corner before your hearts run out. The three houses can be entered and have people to talk to, and stairs in the north lead down to a random dungeon floor on every trip.
+A touch-first Minesweeper RPG prototype. The map fills the screen and a camera follows you around a small connected world: a 34×30 village, a tall-grass meadow behind its west fence, a cave to the north and a wood to the east. Slimes (level 1), bats (level 2) and goblins (level 3) hide on tiles and sum into the clues. Kills give nothing. You grow by finding hidden whetstones and heart pieces, which open more of the world. The three houses can be entered and have people to talk to.
 
 For the intended adventure and current design direction, start with [idea.md](idea.md). The village is a scratch map for trying out a full-screen world, not a designed area.
 
@@ -36,9 +36,9 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 
 - Tap a neighboring tile to move or fight. Arrow keys and WASD work too. Combine directions for diagonals, or use Q/E/Z/C.
 - Numbers sum the levels of living monsters in the eight neighboring tiles. Zeros are blank and open their whole connected empty area plus its bordering numbers.
-- Fights always resolve and move you onto the tile. A monster at or below your power costs nothing. A stronger one first costs its level times the levels it has over you, in hearts. You have 10 hearts. Talking to Mum at home (the north-east house) gives you a meal that restores them all.
-- Each kill earns its level in XP. Power rises to 2 at 10 XP and to 3 at 26 XP.
-- Step onto a door to go inside, and onto the doormat to come back out. The cave stairs north of the village lead to one of ten dungeon floors, picked at random and fresh each time; the stairs you arrive on lead back up. The village and houses keep their state while you are away, and your hearts, power and XP come with you.
+- Fights always resolve and move you onto the tile. A monster at or below your power costs nothing. A stronger one first costs its level times the levels it has over you, in hearts. You start with 3 hearts. Talking to Mum at home (the north-east house) gives you a meal that restores them all.
+- Four whetstones raise your power by one, and four heart pieces add a filled heart. They lie hidden on tiles and are picked up by walking onto them. Chiefs are visible, and drop a whole heart or a greatstone worth four whetstones.
+- Step onto a door to go inside, and onto the doormat to come back out. The stairs north of the village lead to the cave, and the path at the east edge leads to the wood. Every map keeps its state while you are away, and your hearts and power come with you.
 - Walk into a person, or tap them from across the room, to talk. Tap anywhere to show the next line.
 - Defeating a goblin chief does not end the run.
 - Running out of hearts is game over; start the village over. Start over is also in the menu, along with the rules and monster levels.
@@ -50,13 +50,13 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 
 | File | Responsibility |
 | --- | --- |
-| `src/maps/*.txt` | The village, three house interiors and ten dungeon floors, edited as whitespace-separated symbols |
+| `src/maps/*.txt` | The village, three house interiors, the cave and the wood, edited as whitespace-separated symbols |
 | `src/maps/index.ts` | Areas: each one's map or maps, exits, people and their lines |
 | `src/game/world.ts` | Which area you are in, travel between areas, and the visited maps that keep their state |
-| `src/game/game.ts` | Validated map loading, state, clues, combat, XP, reveal rules, notes, and route planning |
+| `src/game/game.ts` | Validated map loading, state, clues, combat, finds, reveal rules, notes, and route planning |
 | `src/game/game.test.ts` | Rule and progression tests with small maps |
 | `src/game/world.test.ts` | Exits link up both ways, and travel keeps or refreshes maps |
-| `src/game/maps.test.ts` | Plays the village and every dungeon floor with a solver that narrows hidden levels from visible clues |
+| `src/game/maps.test.ts` | Tours the whole world with a solver that narrows hidden levels from visible clues |
 | `src/main.ts` | HUD, touch and keyboard input, camera easing, 75 ms auto-walk, event feedback |
 | `src/render.ts` | Camera layout, canvas tiles, pixel sprites, fight animation, remains, route dots, and popups |
 | `src/style.css` | Full-screen canvas, HUD and dialogs |
@@ -89,13 +89,16 @@ Rows must have equal widths. The village has exactly one `@`; maps you only reac
 | `s` | Level-1 slime |
 | `b` | Level-2 bat |
 | `g` | Level-3 goblin |
-| `G` | Level-4 goblin chief, visible from the start |
+| `G` | Level-3 goblin chief, visible from the start; drops a heart |
+| `C` | Level-3 goblin chief, visible from the start; drops a greatstone |
+| `*` | Hidden whetstone |
+| `+` | Hidden heart piece |
 
 Everything except floor and monsters is always visible and blocks movement. Monsters sit on hidden floor.
 
 Each area in `src/maps/index.ts` adds its own symbols on top of these. Exits (digits in the village, `>` for the cave, `<` for the way back) are revealed floor that move you to another area when stepped on; auto-walk never crosses one on the way somewhere else. People are revealed floor you talk to instead of entering. An area can also change how hidden floor is drawn, such as stone in the dungeon.
 
-[`docs/decisions.md`](docs/decisions.md) records why the game works this way. The village meadow is not balanced; the careful solver wins it without guessing. A slime beside each gate keeps the village's open ground from flooding into the meadow at the start. The dungeon floors are the clearings from the first playtest, the ten best of 300 generated candidates: a careful solver that only narrows hidden levels from visible clues wins each with a few forced guesses, spends most of the run below power 3, and levels up with weaker monsters still alive. A player who bumps tiles at random does not survive. They double as a test bank for rule changes.
+[`docs/decisions.md`](docs/decisions.md) records why the game works this way. The meadow, wood and cave were generated on hand-drawn terrain and open in layers: about 40–50% of each can be proven free from the clues at power 1, about 80–85% at power 2 and all of it at power 3. The solver gets stuck at power 1 in the village, reaches power 2 only by visiting another area, then finds everything and beats both chiefs. Finds are far denser than the final game should be.
 
 Clues count living monsters only and update after kills. Monsters stay hidden until fought. A diagonal step is blocked only when both bordering cardinal tiles block movement. The nearest revealed tile uses straight-line distance; ties keep the shortest known route. Routing does not read hidden contents.
 

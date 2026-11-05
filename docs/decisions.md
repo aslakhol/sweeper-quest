@@ -1,3 +1,20 @@
+# Decisions
+
+## Finds replace XP
+
+XP clicked on small maps, where going from weak to strong fits inside one board. On a larger map it broke: the tall grass held 121 XP against the 26 needed for max power, and at power 3 no ordinary dungeon monster could hurt you. More levels would only delay that. Starting each region at power 1 was rejected because a character should not lose strength in an RPG.
+
+- **Kills give nothing.** Monsters are in the way. The reward is exploring, as in Zelda and Minesweeper.
+- **Power and hearts come from finds.** Four whetstones raise power; four heart pieces add a heart. Chiefs can drop a whole one: a greatstone or a heart.
+- **Whetstones, not shards.** Sharpening fits what power does: the same sword now cuts through what used to hurt you. A find is small enough that collecting four feels natural.
+- **Level-ups are rare.** There should be a lot of game between them, so heart pieces, tools and secrets carry the everyday rewards.
+- **Most finds are hidden.** Showing them all would remove the mystery. Maps hint with terrain, rumours and rings of monsters.
+- **One world, not stages.** It holds more pieces than you need, and being stuck in one region and returning stronger is intended. Solvers check the whole world, not each region.
+- **Hearts start at 3** so early damage is scary. Mum's full heal stays for now, and death is not settled.
+- **Maps with finds are fixed.** Regenerated floors could be farmed.
+
+The rest of this document records the first playtest. Its XP, health and clearing notes are superseded by the above.
+
 # Decisions after the first playtest
 
 The Phase 1 demo is winnable without reading a single clue. A bot that bumps the nearest unknown tile wins in about 105 taps with one free death. The first shard bundle is reachable in 7 taps, after which 16 of 19 monsters are harmless. These decisions aim to make deduction the way you survive, not an optional extra.

@@ -2,11 +2,11 @@
 
 ## The game we are building
 
-A touch-first exploration RPG built around Mamono-style Minesweeper deduction. Read clues to locate monsters you can safely beat, earn XP, grow stronger, and open paths into more dangerous areas. Health lets you take calculated risks when the clues do not give a safe answer. Exploration rewards include heart upgrades and tools that unlock new places.
+A touch-first exploration RPG built around Mamono-style Minesweeper deduction. Read clues to find a safe way through, explore a connected world, and discover what lies hidden in it. Kills only clear the way; the reward is exploring. Strength comes from rare finds, and hearts decide how many mistakes you can afford.
 
 Deduction must matter. Walking blindly into every hidden tile should not be a reliable way to win. Leveling up should open useful choices while leaving some weaker monsters alive, rather than require finding the last safe enemy.
 
-The intended game has a connected overworld, a village, meadows, repeatable grass zones, and dungeons. The current small clearings are a test bed for the opening puzzle and combat loop. Their dimensions, monster counts, sequence, and reset between maps do not define the eventual world structure.
+The intended game is one connected world with a village, meadows, caves and many regions, not a series of stages. Getting stuck in one place, leaving, and returning stronger is part of the design. The current world is a small test of that structure, and its size and number of finds do not define the final game.
 
 This document combines the original adventure plan with subsequent playtest decisions. Rules below are the current direction; values labeled as tuning or proposals remain adjustable. [README.md](README.md) describes the implemented demo. [docs/decisions.md](docs/decisions.md) records the playtest rationale, and [docs/roadmap.md](docs/roadmap.md) tracks development stages.
 
@@ -15,7 +15,7 @@ This document combines the original adventure plan with subsequent playtest deci
 - Web first, touch first. All essential actions work on a phone; keyboard and mouse also work.
 - TypeScript, Vite, and HTML Canvas, with pnpm. Keep game rules separate from rendering and input.
 - Maps are editable text files. Extend the format with explicit room, zone, entrance, and spawn metadata when those systems are built.
-- The map fills the screen and the camera follows the player, with health, power, XP, a menu and note tools floating on top. Deliberate panning without accidental moves or notes is still open.
+- The map fills the screen and the camera follows the player, with health, power, pieces, a menu and note tools floating on top. Deliberate panning without accidental moves or notes is still open.
 
 ## Board and deduction
 
@@ -43,21 +43,27 @@ A fight is one action. At or below your power, the enemy dies without hurting yo
 
 Current damage tuning is `monster level × max(0, monster level − player power)` hearts. At power 1 a bat costs 2 hearts and a goblin costs 6; at power 2 a goblin costs 3. Reaching zero health is lethal: no kill, XP, or movement is awarded for that attack.
 
-Kills grant XP immediately. Current tuning awards XP equal to monster level, starts power at 1, reaches power 2 at 10 total XP, and power 3 at 26. Sword shards and item-based power thresholds are removed. Tune each area to contain roughly 1.5 times the XP needed for its intended progression so players have choices. Higher-power thresholds are still to be designed.
+Power stays with the character and never resets. Four whetstones raise it by one, and a chief can drop a greatstone worth all four. Four heart pieces add a heart, and a chief can drop a whole heart. A new heart also refills your health. Kills give nothing.
 
-Slimes are level 1, bats level 2, and goblins level 3. The demo's visible chief is level 4; the planned dungeon boss starts from the original level-5 proposal. These are distinct encounters. The original per-species damage and coin-drop table is superseded by level-gap damage and XP rewards.
+Level-ups are rare, with a lot of game between them. Keep the ladder short, around power 5 or 6, so each one is an event and clues stay small. Heart pieces, tools and secrets set the everyday rhythm of rewards. Each power needs a large part of the world designed for it.
 
-The current run starts with 10 whole hearts. Mum's home-cooked meal in the village restores them all, as often as you walk back; whether that should be limited is open. Damage is a cost deduction helps avoid. Death ends the run, with a restart and no carryover. These replace the original three quarter-counted hearts and free respawn with retained progress. A many-area adventure may revisit respawning and persistence, but the original rules are not automatically reinstated.
+The world holds more pieces than you need, so you can move on without finding everything. Most finds are hidden. Maps hint at them with terrain, with rumours from people, and with clues: a ring of monsters around an empty spot makes the numbers climb and invites a look.
 
-Kills need clear feedback: reveal the enemy, show the hit and defeat, then move the hero in. Show damage, XP and level-ups, and make changed clues noticeable. Keep remains subtle enough to preserve the puzzle.
+Maps open in layers. At each power, part of the map can be proven free from the clues; the rest waits until you are stronger. A clue at or below your power proves all its neighbours safe, so a new level reopens places you left behind without any extra mechanic. Weaker monsters still add to clues, and killing them cleans up the sums. Check this across the whole world: being stuck in one region is fine, being stuck everywhere is not.
+
+Slimes are level 1, bats level 2, and goblins level 3. Chiefs are visible and currently level 3, because the test world only reaches power 3. The planned dungeon boss starts from the original level-5 proposal.
+
+The hero starts with 3 hearts so early damage is scary. Hearts are a failsafe: at power P, about 2P + 1 hearts survives one mistake against a monster one level above you, and hearts beyond that are breathing room. Each level-up eats some of it, because stronger monsters hit harder. A monster two levels above you is lethal early on, so early maps must not force guesses you cannot survive. Mum's home-cooked meal in the village restores all hearts, as often as you walk back; a shop or a smaller meal may change that. Death ends the run for now. The final rule will be closer to a reset than a full wipe, and is deliberately undecided.
+
+Kills need clear feedback: reveal the enemy, show the hit and defeat, then move the hero in. Show damage, finds and level-ups, and make changed clues noticeable. Keep remains subtle enough to preserve the puzzle.
 
 ## Phase 1: prove the core loop
 
-Build and tune the deduction, movement, notes, combat, and XP loop before expanding the world. The goal is to infer safe fights, gain power, and defeat a stronger visible goal monster with limited health.
+Build and tune the deduction, movement, notes, combat, and find-driven progression before expanding the world. The goal is to infer safe routes, find what makes you stronger, and return to places that were out of reach.
 
-The present bank of small clearings tests varied monster arrangements, open zero regions, forced guesses, and level-up timing. It is not a commitment to a game made only of sequential puzzle boards.
+The present small world tests layered maps, finds and returning stronger. It compresses what should be a long stretch of play, so finds are far denser than in the final game.
 
-This phase succeeds when careful clue reading reliably outperforms random exploration, leveling changes which fights are safe, and spending health is a meaningful choice. A low-power player may beat a stronger goal by paying health; the original requirement to fetch a particular shard first no longer applies. Test both touch and desktop input, and use clue-based solvers to check map balance without giving them hidden information.
+This phase succeeds when careful clue reading reliably outperforms random exploration, a new level reopens old places in a satisfying way, and spending health is a meaningful choice. Test both touch and desktop input, and use clue-based solvers to check the world without giving them hidden information.
 
 ## Phase 2: one complete mini adventure
 
@@ -68,9 +74,9 @@ Aim for a roughly 10–15 minute journey from the village to a dungeon boss, wit
 A hand-authored area of about 24×32 tiles:
 
 - **Village in the south:** revealed and safe, with the start, a shop, and a house with an indoor room. The house tests interiors and room boundaries, not a different zero-reveal mode.
-- **Meadow in the middle:** slimes, bats, and stronger threats arranged for deduction and XP progression. Hide heart upgrades and tools as exploration rewards. The original two heart pieces can remain a placement proposal; the three sword-shard spots become reward locations, with their contents still to choose.
-- **Tall grass in the west:** a repeatable zone with fixed monster spawns. The original design restores fog and respawns monsters when you leave. Reconcile repeatable XP and any currency rewards with the progression budget before implementing it.
-- **Cave entrance in the north:** leads to the dungeon. Strong, visible monsters gate routes through combat cost rather than a hidden XP requirement. Tools can separately unlock exploration gates.
+- **Meadow in the middle:** slimes, bats, and stronger threats arranged in layers. Hide whetstones, heart pieces and tools as exploration rewards.
+- **Tall grass in the west:** the first region you can only partly clear. Monsters do not respawn, and there is no grinding to do.
+- **Cave entrance in the north:** leads to the dungeon. Clues and monster levels gate routes. Tools can separately unlock exploration gates.
 
 ### Shop and items
 
@@ -81,27 +87,27 @@ The original shop is a proposal to revisit, not settled balance:
 | Item | Original proposal | Decision needed |
 | --- | --- | --- |
 | Potion | 5 coins, restores 2 hearts | Whether limited healing fits the health budget |
-| Bomb | 8 coins, reveals 3×3; kills enemies at or below power and exposes stronger ones | XP credit and interaction with the combat rules |
+| Bomb | 8 coins, reveals 3×3; kills enemies at or below power and exposes stronger ones | Interaction with the combat rules |
 | Heart piece | 15 coins, sold once; four pieces add one max heart | Pieces versus whole containers, pricing, and whether max-health gains heal |
 
-Exploration should reward heart containers and tools rather than direct power increases. Currency rewards, if restored, should be predictable rather than random, following the original economy intent.
+Coins and other extras do not tie directly into progression, apart from perhaps a single whetstone in the shop. Currency rewards, if restored, should be predictable rather than random, following the original economy intent.
 
 ### Dungeon and boss
 
-Start with an approximately 8×8 dungeon generated on entry, containing bats, goblins, and a chest. Replace the original chest's sword shard with a health or tool reward; its exact contents remain open. The original plan resets the dungeon on exit or death. Finalize that alongside the adventure's persistence rules.
+Dungeons with finds are fixed maps, because a layout rebuilt on every visit would let you farm them. Random floors could return later with extras such as coins. Replace the original chest's sword shard with a health or tool reward; its exact contents remain open.
 
 A 2×2 level-5 boss occupies four tiles but counts as one monster in neighboring clue sums. Deduplicate its contribution when several occupied tiles touch the same clue. Rules for clues within its footprint, movement after victory, and remains still need definition.
 
-The boss follows the same combat model: power 5 would make it safe; lower power can win if the player survives the damage. Tune the XP curve and health budget together. Its planned reward remains a heart container and a Lantern. For this adventure, the Lantern opens the next-zone gate.
+The boss follows the same combat model: power 5 would make it safe; lower power can win if the player survives the damage. Tune power and hearts together. Its planned reward remains a heart container and a Lantern. For this adventure, the Lantern opens the next-zone gate.
 
 ### Persistence and completion
 
-Add inventory and a HUD for health, power, XP, and relevant items or currency. Save progress locally so a phone session can be resumed. Saving is separate from deciding what survives death. Define the persistent and resettable state for overworld exploration, rewards, grass, dungeon layouts, monsters, and notes first.
+Add inventory and a HUD for health, power, pieces, and relevant items or currency. Save progress locally so a phone session can be resumed. Saving is separate from deciding what survives death. Define the persistent and resettable state for exploration, finds, monsters, and notes first.
 
-The adventure is complete when village exploration, deduction, XP progression, useful rewards, and the boss form one coherent journey. Keep the player's health budget meaningful across that journey. The current demo's map transitions and resets are not the final persistence design.
+The adventure is complete when village exploration, deduction, finds, and the boss form one coherent journey. Keep the player's health budget meaningful across that journey. The current map transitions are not the final persistence design.
 
 ## Open decisions and later scope
 
-Before Phase 2, settle the many-area run/death model, healing and heart upgrades, XP through power 5, repeatable farming, the shop economy, room/zone reset boundaries, multi-tile boss behavior, and mobile panning controls.
+Before Phase 2, settle how far power goes, healing and the shop economy, room/zone reset boundaries, multi-tile boss behavior, and mobile panning controls. Death can wait.
 
 Later zones can introduce swamp, ice, or darkness. Traversal items such as boots or a shovel, an Infinite Minesweeper-style number display option, and a distinct hardcore mode remain outside this prototype. The current test's game-over rule alone does not settle the eventual difficulty modes.
