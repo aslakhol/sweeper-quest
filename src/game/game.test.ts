@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { areas, dungeons } from '../maps';
+import { areas } from '../maps';
 import {
   canStep,
   createGame,
@@ -18,10 +18,10 @@ const p = (x: number, y: number) => ({ x, y });
 const sturdy = () => ({ ...createHero(), health: 10, maxHealth: 10 });
 
 describe('map and clues', () => {
-  it('loads the first dungeon and keeps monsters hidden', () => {
-    const game = createGame(dungeons[0], { legend: areas.dungeon, from: 'village' });
-    expect([game.width, game.height]).toEqual([11, 15]);
-    expect(game.player).toEqual(p(5, 12));
+  it('loads a map and keeps its monsters hidden', () => {
+    const game = createGame(areas.cave.map, { legend: areas.cave, from: 'village' });
+    expect([game.width, game.height]).toEqual([15, 17]);
+    expect(game.player).toEqual(p(7, 16));
     const monsters = game.tiles.filter((tile) => tile.monster);
     expect(monsters.filter((tile) => tile.revealed).map((tile) => tile.monster?.goal)).toEqual([
       true,

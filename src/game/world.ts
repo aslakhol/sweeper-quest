@@ -1,4 +1,4 @@
-import { type Area, areas } from '../maps';
+import { areas } from '../maps';
 import { arrive, createGame, type Game } from './game';
 
 export type AreaId = keyof typeof areas;
@@ -14,17 +14,15 @@ export function createWorld(): World {
 }
 
 // Maps keep their state between visits, and the hero comes along.
-// Areas with several maps, like the dungeon, start a random one fresh each time.
-export function travel(world: World, to: string, random = Math.random): void {
+export function travel(world: World, to: string): void {
   if (!isArea(to)) throw new Error(`Unknown area "${to}".`);
   const from = world.area;
-  const area: Area = areas[to];
+  const area = areas[to];
   let game = world.visited.get(to);
   if (game) arrive(game, from);
   else {
-    const map = 'map' in area ? area.map : area.maps[Math.floor(random() * area.maps.length)];
-    game = createGame(map, { legend: area, hero: world.game.hero, from });
-    if ('map' in area) world.visited.set(to, game);
+    game = createGame(area.map, { legend: area, hero: world.game.hero, from });
+    world.visited.set(to, game);
   }
   world.area = to;
   world.game = game;

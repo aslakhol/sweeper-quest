@@ -25,16 +25,15 @@ describe('world', () => {
     expect(world.game).toBe(village);
     expect(world.game.player).toEqual(door);
   });
-  it('goes down to a fresh dungeon floor on every trip', () => {
+  it('keeps a map as you left it when you return', () => {
     const world = createWorld();
-    travel(world, 'dungeon', () => 0);
-    const first = world.game;
-    first.hero.power = 2;
-    expect(tileAt(first, first.player)?.exit).toBe('village');
+    travel(world, 'cave');
+    const cave = world.game;
+    cave.hero.power = 2;
     travel(world, 'village');
-    expect(tileAt(world.game, world.game.player)?.exit).toBe('dungeon');
-    travel(world, 'dungeon', () => 0.99);
-    expect(world.game).not.toBe(first);
+    expect(tileAt(world.game, world.game.player)?.exit).toBe('cave');
+    travel(world, 'cave');
+    expect(world.game).toBe(cave);
     expect(world.game.hero.power).toBe(2);
   });
 });

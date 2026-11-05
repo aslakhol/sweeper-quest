@@ -1,20 +1,12 @@
 import type { Legend } from '../game/game';
+import cave from './cave.txt?raw';
 import elderHouse from './elder-house.txt?raw';
 import home from './home.txt?raw';
 import inn from './inn.txt?raw';
 import village from './village.txt?raw';
+import wood from './wood.txt?raw';
 
-// An area with several maps picks one at random and starts it fresh on every visit.
-export type Area = Legend & { name: string } & ({ map: string } | { maps: string[] });
-// Generated dungeon floors.
-const files = import.meta.glob<string>('./dungeon-*.txt', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-});
-export const dungeons = Object.keys(files)
-  .sort()
-  .map((path) => files[path]);
+export type Area = Legend & { name: string; map: string };
 
 const indoors = { floor: 'wood', exits: { '<': { to: 'village', look: 'mat' } } } as const;
 
@@ -26,7 +18,8 @@ export const areas = {
       1: { to: 'elder-house', look: 'door' },
       2: { to: 'home', look: 'door' },
       3: { to: 'inn', look: 'door' },
-      '>': { to: 'dungeon', look: 'stairs' },
+      4: { to: 'wood', look: 'path' },
+      '>': { to: 'cave', look: 'stairs' },
     },
   },
   'elder-house': {
@@ -41,7 +34,8 @@ export const areas = {
           'A visitor! Mind the tall grass west of the fence.',
           'The numbers out there add up the strength of the creatures around them.',
           'A slime counts one, a bat two, a goblin three.',
-          'Their chief waits in the far corner. Grow strong before you face him.',
+          'Their chief waits in the far corner, and you are no match for him yet.',
+          'Whetstones lie out in the wild. Four would put a real edge on that sword.',
         ],
       },
     },
@@ -72,8 +66,8 @@ export const areas = {
         colors: { hair: '#b0603a', shirt: '#6a8a5a' },
         lines: [
           'Welcome to the inn.',
-          'The cave north of the village? It is different every time you climb down.',
-          'Nobody can explain it. Most stop asking.',
+          'Goblins and bats crowd around whatever they are hiding.',
+          'If the numbers climb around an empty spot, it is worth a look.',
         ],
       },
       p: {
@@ -87,10 +81,15 @@ export const areas = {
       },
     },
   },
-  dungeon: {
-    name: 'Dungeon',
-    maps: dungeons,
+  cave: {
+    name: 'Cave',
+    map: cave,
     floor: 'cave',
     exits: { '<': { to: 'village', look: 'stairs' } },
+  },
+  wood: {
+    name: 'Wood',
+    map: wood,
+    exits: { '<': { to: 'village', look: 'path' } },
   },
 } satisfies Record<string, Area>;
