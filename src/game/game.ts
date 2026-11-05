@@ -5,7 +5,9 @@ export type Monster = {
   level: number;
   alive: boolean;
   goal: boolean;
+  drop?: Find;
 };
+export type Find = 'whetstone' | 'greatstone' | 'heartPiece' | 'heart';
 export type Tile = Point & {
   terrain: 'floor' | 'wall' | 'water';
   // How the tile is drawn. Only terrain affects the rules.
@@ -30,6 +32,8 @@ export type Tile = Point & {
   revealed: boolean;
   note?: Note;
   monster?: Monster;
+  // Lies hidden on the tile until someone walks onto it.
+  find?: Find;
   // The map that stepping onto this tile leads to.
   exit?: string;
   person?: Person;
@@ -49,7 +53,13 @@ export type Legend = {
   people?: Record<string, Person>;
 };
 // The hero's stats travel with the player from map to map.
-export type Hero = { health: number; maxHealth: number; power: number; xp: number };
+export type Hero = {
+  health: number;
+  maxHealth: number;
+  power: number;
+  whetstones: number;
+  heartPieces: number;
+};
 export type Game = {
   width: number;
   height: number;
@@ -62,12 +72,14 @@ export type Game = {
 };
 export type GameEvent =
   | { type: 'fight'; from: Point; at: Point; monster: Monster; damage: number }
-  | { type: 'levelUp'; at: Point; power: number }
   | { type: 'death' }
   | { type: 'win' }
   | { type: 'travel'; to: string }
   | { type: 'talk'; person: Person }
-  | { type: 'heal'; at: Point; amount: number };
+  | { type: 'heal'; at: Point; amount: number }
+  | { type: 'find'; at: Point; find: Find }
+  | { type: 'powerUp'; at: Point; power: number }
+  | { type: 'heartUp'; at: Point; maxHealth: number };
 
 const grounds = {
   '.': { terrain: 'floor', look: 'grass', revealed: false },
@@ -91,18 +103,27 @@ const monsters = {
   s: { kind: 'slime', level: 1, goal: false },
   b: { kind: 'bat', level: 2, goal: false },
   g: { kind: 'goblin', level: 3, goal: false },
-  G: { kind: 'goblin', level: 4, goal: true },
+  G: { kind: 'goblin', level: 3, goal: true, drop: 'heart' },
+  C: { kind: 'goblin', level: 3, goal: true, drop: 'greatstone' },
 } as const;
+const findSymbols = { '*': 'whetstone', '+': 'heartPiece' } as const;
 
-// Total XP needed for each power, starting at power 1. Each kill earns its level in XP.
-export const powerThresholds = [0, 10, 26] as const;
+// Four pieces make one level of power or one heart. A greatstone or a heart counts as all four.
+export const piecesPerUpgrade = 4;
+const startingHearts = 3;
 
 function isKey<T extends object>(object: T, key: string): key is Extract<keyof T, string> {
   return Object.hasOwn(object, key);
 }
 
 export function createHero(): Hero {
-  return { health: 10, maxHealth: 10, power: 1, xp: 0 };
+  return {
+    health: startingHearts,
+    maxHealth: startingHearts,
+    power: 1,
+    whetstones: 0,
+    heartPieces: 0,
+  };
 }
 
 // A map entered from another starts the player on the exit leading back there.
@@ -141,6 +162,15 @@ export function createGame(
           monster: { ...monster, alive: true },
         };
       }
+      if (isKey(findSymbols, symbol))
+        return {
+          x,
+          y,
+          terrain: 'floor',
+          look: legend.floor ?? 'grass',
+          revealed: false,
+          find: findSymbols[symbol],
+        };
       if (symbol === '.' && legend.floor)
         return { x, y, terrain: 'floor', look: legend.floor, revealed: false };
       if (isKey(grounds, symbol)) return { x, y, ...grounds[symbol] };
@@ -253,6 +283,27 @@ export function cycleNote(game: Game, point: Point): void {
 export function fightDamage(game: Game, monster: Monster): number {
   return monster.level * Math.max(0, monster.level - game.hero.power);
 }
+function collect(game: Game, at: Point, find: Find): GameEvent[] {
+  const { hero } = game;
+  const events: GameEvent[] = [{ type: 'find', at, find }];
+  if (find === 'whetstone' || find === 'greatstone') {
+    hero.whetstones += find === 'whetstone' ? 1 : piecesPerUpgrade;
+    const power = 1 + Math.floor(hero.whetstones / piecesPerUpgrade);
+    if (power > hero.power) {
+      hero.power = power;
+      events.push({ type: 'powerUp', at, power });
+    }
+  } else {
+    hero.heartPieces += find === 'heartPiece' ? 1 : piecesPerUpgrade;
+    const maxHealth = startingHearts + Math.floor(hero.heartPieces / piecesPerUpgrade);
+    if (maxHealth > hero.maxHealth) {
+      hero.maxHealth = maxHealth;
+      hero.health = maxHealth;
+      events.push({ type: 'heartUp', at, maxHealth });
+    }
+  }
+  return events;
+}
 // Fights always resolve: the monster dies unless its damage kills you first.
 export function step(game: Game, target: Point): GameEvent[] {
   if (game.lost || !canStep(game, game.player, target)) return [];
@@ -290,19 +341,18 @@ export function step(game: Game, target: Point): GameEvent[] {
       )
         revealStep(game, neighbor);
     }
-    game.hero.xp += tile.monster.level;
-    const power = powerThresholds.filter((threshold) => game.hero.xp >= threshold).length;
-    if (power > game.hero.power) {
-      game.hero.power = power;
-      events.push({ type: 'levelUp', at: target, power });
-    }
     if (tile.monster.goal && !game.won) {
       game.won = true;
       events.push({ type: 'win' });
     }
+    if (tile.monster.drop) events.push(...collect(game, target, tile.monster.drop));
   }
   game.player = { x: target.x, y: target.y };
   revealStep(game, target);
+  if (tile.find) {
+    events.push(...collect(game, target, tile.find));
+    delete tile.find;
+  }
   if (tile.exit) events.push({ type: 'travel', to: tile.exit });
   return events;
 }

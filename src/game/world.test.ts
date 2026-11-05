@@ -16,10 +16,10 @@ describe('world', () => {
     const door = { x: 21, y: 6 };
     const village = world.game;
     village.player = { x: 21, y: 7 };
-    village.hero.health = 7;
+    village.hero.health = 2;
     expect(step(village, door)).toEqual([{ type: 'travel', to: 'elder-house' }]);
     travel(world, 'elder-house');
-    expect(world.game.hero.health).toBe(7);
+    expect(world.game.hero.health).toBe(2);
     expect(tileAt(world.game, world.game.player)?.exit).toBe('village');
     travel(world, 'village');
     expect(world.game).toBe(village);
@@ -29,12 +29,12 @@ describe('world', () => {
     const world = createWorld();
     travel(world, 'dungeon', () => 0);
     const first = world.game;
-    first.hero.xp = 5;
+    first.hero.power = 2;
     expect(tileAt(first, first.player)?.exit).toBe('village');
     travel(world, 'village');
     expect(tileAt(world.game, world.game.player)?.exit).toBe('dungeon');
     travel(world, 'dungeon', () => 0.99);
     expect(world.game).not.toBe(first);
-    expect(world.game.hero.xp).toBe(5);
+    expect(world.game.hero.power).toBe(2);
   });
 });

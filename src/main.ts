@@ -3,14 +3,15 @@ import {
   canNote,
   cycleNote,
   distance,
+  type Find,
   type GameEvent,
   type Note,
   neighbors,
   numberAt,
   type Person,
   type Point,
+  piecesPerUpgrade,
   planWalk,
-  powerThresholds,
   same,
   setNote,
   step,
@@ -30,7 +31,8 @@ app.innerHTML = `
     <div class="health" id="hearts" role="img"></div>
     <div class="stat-row">
       <div class="stat" id="power" aria-label="Power"><span class="stat-icon" aria-hidden="true">⚔</span><span id="power-value">1</span></div>
-      <div class="stat" id="xp" aria-label="Experience"><span class="stat-icon" aria-hidden="true">✦</span><span id="xp-value">0/10</span></div>
+      <div class="stat" id="whetstones"><span class="stat-icon" aria-hidden="true">◆</span><span id="whetstones-value">0/4</span></div>
+      <div class="stat" id="heart-pieces"><span class="stat-icon" aria-hidden="true">♥</span><span id="heart-pieces-value">0/4</span></div>
     </div>
   </section>
   <button class="menu-button hud" id="menu" aria-label="Menu">☰</button>
@@ -44,10 +46,10 @@ app.innerHTML = `
     <li>Tap a distant tile to walk over known ground. A hidden tile next to known ground is entered at the end of the walk.</li>
     <li>Choose a note, then tap a hidden tile to mark it. Number keys 1–5 mark the tile under the mouse, or pick that note. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
     <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
-    <li>Each kill earns XP equal to the monster's level. Power rises at 10 and 26 XP. The crowned chief is level 4.</li>
+    <li>Four whetstones raise your power. Four heart pieces add a heart. Chiefs drop a whole one.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
   </ul>
-  <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin</span><span class="goblin-key">4 · Chief</span></div>
+  <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin and chief</span></div>
   <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
@@ -105,13 +107,12 @@ function updateHud(): void {
   hearts.setAttribute('aria-label', `${game.hero.health} of ${game.hero.maxHealth} hearts`);
   power.textContent = String(game.hero.power);
   element('#power').setAttribute('aria-label', `Power ${game.hero.power}`);
-  const next = powerThresholds[game.hero.power];
-  element('#xp-value').textContent =
-    next === undefined ? String(game.hero.xp) : `${game.hero.xp}/${next}`;
-  element('#xp').setAttribute(
-    'aria-label',
-    next === undefined ? `${game.hero.xp} XP` : `${game.hero.xp} of ${next} XP to the next power`,
-  );
+  const whetstones = `${game.hero.whetstones % piecesPerUpgrade}/${piecesPerUpgrade}`;
+  element('#whetstones-value').textContent = whetstones;
+  element('#whetstones').setAttribute('aria-label', `${whetstones} whetstones`);
+  const heartPieces = `${game.hero.heartPieces % piecesPerUpgrade}/${piecesPerUpgrade}`;
+  element('#heart-pieces-value').textContent = heartPieces;
+  element('#heart-pieces').setAttribute('aria-label', `${heartPieces} heart pieces`);
 }
 function stop(): void {
   pendingChord = false;
@@ -141,6 +142,12 @@ function announce(at: Point, text: string, color = '#f3d794'): void {
   nextAnnouncement = started + 600;
   effects.push({ kind: 'text', at, text, color, started });
 }
+const findNames: Record<Find, string> = {
+  whetstone: 'Whetstone',
+  greatstone: 'Greatstone',
+  heartPiece: 'Heart piece',
+  heart: 'Heart',
+};
 function handleEvents(events: GameEvent[]): void {
   for (const event of events) {
     switch (event.type) {
@@ -166,10 +173,6 @@ function handleEvents(events: GameEvent[]): void {
           ? `Level ${event.monster.level} ${event.monster.kind}: −${event.damage} ♥`
           : `Level ${event.monster.level} ${event.monster.kind} defeated.`;
         break;
-      case 'levelUp':
-        announce(event.at, 'Level up!');
-        status.textContent = `Power ${event.power}. Level ${event.power} monsters are now free to fight.`;
-        break;
       case 'death':
         openDialog('#death-dialog');
         break;
@@ -186,6 +189,18 @@ function handleEvents(events: GameEvent[]): void {
       case 'heal':
         announce(event.at, 'Healed!', '#a5c97c');
         status.textContent = `Hearts restored: +${event.amount}.`;
+        break;
+      case 'find':
+        announce(event.at, findNames[event.find], '#e8ce95');
+        status.textContent = `Found: ${findNames[event.find]}.`;
+        break;
+      case 'powerUp':
+        announce(event.at, 'Power up!');
+        status.textContent = `Power ${event.power}. Level ${event.power} monsters are now free to fight.`;
+        break;
+      case 'heartUp':
+        announce(event.at, 'New heart!', '#a5c97c');
+        status.textContent = `${event.maxHealth} hearts.`;
         break;
       case 'win':
         announce(game.player, 'Chief defeated!');

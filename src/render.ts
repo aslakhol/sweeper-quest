@@ -96,6 +96,16 @@ const person = [
   '  pp pp  ',
   '  dd dd  ',
 ];
+const whetstone = [
+  '    ss  ',
+  '   slls ',
+  '  slllds',
+  ' slllds ',
+  'slllds  ',
+  'dllds   ',
+  ' dds    ',
+];
+const heartPiece = ['rrr     ', 'rlrr    ', 'rrrrr   ', ' rrrrr  ', '  rrr   ', '   r    '];
 const slime = [
   '   ggg   ',
   ' ggggggg ',
@@ -187,6 +197,17 @@ function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number) {
     y + 23,
     2,
   );
+}
+
+function drawFind(
+  ctx: CanvasRenderingContext2D,
+  find: 'whetstone' | 'heartPiece',
+  x: number,
+  y: number,
+) {
+  if (find === 'whetstone')
+    sprite(ctx, whetstone, { s: '#8c9aa0', l: '#d5dde0', d: '#566268' }, x + 13, y + 22, 3);
+  else sprite(ctx, heartPiece, { r: '#e0655f', l: '#f4b5a8' }, x + 13, y + 22, 3);
 }
 
 function rects(
@@ -464,12 +485,14 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
       continue;
     }
     if (tile.monster) drawMonster(ctx, tile.monster, x, y, { remains: true });
+    if (tile.find === 'whetstone' || tile.find === 'heartPiece') drawFind(ctx, tile.find, x, y);
     const number = numberAt(game, tile);
     if (number) {
       ctx.fillStyle = colors[Math.min(number, 5)];
       ctx.font = '600 20px monospace';
-      // The player's own clue sits above the hero.
-      ctx.fillText(String(number), x + 24, same(tile, game.player) ? y + 13 : y + 25);
+      // A clue sits above the hero or a find on its tile.
+      const raised = same(tile, game.player) || tile.find;
+      ctx.fillText(String(number), x + 24, raised ? y + 13 : y + 25);
     }
   }
   for (const point of view.path) {

@@ -3,6 +3,7 @@ import { areas, dungeons } from '../maps';
 import {
   canStep,
   createGame,
+  createHero,
   cycleNote,
   numberAt,
   planWalk,
@@ -14,6 +15,7 @@ import {
 } from './game';
 
 const p = (x: number, y: number) => ({ x, y });
+const sturdy = () => ({ ...createHero(), health: 10, maxHealth: 10 });
 
 describe('map and clues', () => {
   it('loads the first dungeon and keeps monsters hidden', () => {
@@ -33,9 +35,9 @@ describe('map and clues', () => {
   });
   it('sums monster levels, including diagonals, and removes dead monsters from clues', () => {
     const game = createGame('s . b\n. @ .\n. . G');
-    expect(numberAt(game, p(1, 1))).toBe(7);
-    step(game, p(0, 0));
     expect(numberAt(game, p(1, 1))).toBe(6);
+    step(game, p(0, 0));
+    expect(numberAt(game, p(1, 1))).toBe(5);
   });
   it('floods connected zeros and their numbered border, but stops at clues and monsters', () => {
     const game = createGame('@ . . s . . .\n. . . . . . .\n. . . s . . .');
@@ -106,18 +108,18 @@ describe('combat and progression', () => {
     const [fight] = step(game, p(1, 0));
     expect(fight).toMatchObject({ type: 'fight', from: p(0, 0), at: p(1, 0), damage: 0 });
     expect(game.player).toEqual(p(1, 0));
-    expect(game.hero.health).toBe(10);
+    expect(game.hero.health).toBe(3);
     expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(false);
   });
   it('kills a stronger monster at the cost of its level times the gap', () => {
-    const game = createGame('@ g .');
+    const game = createGame('@ g .', { hero: sturdy() });
     expect(step(game, p(1, 0))).toMatchObject([{ type: 'fight', damage: 6 }]);
     expect(game.hero.health).toBe(4);
     expect(game.player).toEqual(p(1, 0));
     expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(false);
   });
   it('ends the run when a fight takes the last heart', () => {
-    const game = createGame('@ g g');
+    const game = createGame('@ g g', { hero: sturdy() });
     step(game, p(1, 0));
     expect(step(game, p(2, 0))).toMatchObject([{ type: 'fight', damage: 6 }, { type: 'death' }]);
     expect([game.hero.health, game.lost]).toEqual([0, true]);
@@ -125,21 +127,55 @@ describe('combat and progression', () => {
     expect(tileAt(game, p(2, 0))?.monster?.alive).toBe(true);
     expect(step(game, p(0, 0))).toEqual([]);
   });
-  it('shows the level-4 chief from the start and wins when it falls', () => {
-    const game = createGame('@ g G');
+  it('shows the chief from the start and wins when it falls', () => {
+    const game = createGame('@ g G', { hero: sturdy() });
     expect(tileAt(game, p(2, 0))?.revealed).toBe(true);
-    game.hero.power = 3;
+    game.hero.power = 2;
     step(game, p(1, 0));
     expect(game.won).toBe(false);
-    expect(step(game, p(2, 0))).toMatchObject([{ type: 'fight', damage: 4 }, { type: 'win' }]);
+    expect(step(game, p(2, 0))).toMatchObject([
+      { type: 'fight', damage: 3 },
+      { type: 'win' },
+      { type: 'find', find: 'heart' },
+    ]);
     expect(game.won).toBe(true);
   });
-  it('earns XP equal to monster level and raises power at the thresholds', () => {
-    const game = createGame(`@ ${'s '.repeat(9)}b . . . . . . . . . . . . . . .`);
-    for (let x = 1; x <= 9; x++) step(game, p(x, 0));
-    expect([game.hero.xp, game.hero.power]).toEqual([9, 1]);
-    expect(step(game, p(10, 0))).toContainEqual({ type: 'levelUp', at: p(10, 0), power: 2 });
-    expect([game.hero.xp, game.hero.power, game.hero.health]).toEqual([11, 2, 8]);
+  it('gives nothing for a kill', () => {
+    const game = createGame('@ s .');
+    step(game, p(1, 0));
+    expect(game.hero).toEqual(createHero());
+  });
+  it('raises power on the fourth whetstone, wherever you are', () => {
+    const game = createGame('@ * * * * s');
+    for (let x = 1; x <= 3; x++) step(game, p(x, 0));
+    expect([game.hero.whetstones, game.hero.power]).toEqual([3, 1]);
+    expect(step(game, p(4, 0))).toEqual([
+      { type: 'find', at: p(4, 0), find: 'whetstone' },
+      { type: 'powerUp', at: p(4, 0), power: 2 },
+    ]);
+    expect(tileAt(game, p(4, 0))?.find).toBeUndefined();
+    expect(step(game, p(3, 0))).toEqual([]);
+  });
+  it('adds a filled heart on the fourth heart piece', () => {
+    const game = createGame('@ + + + +');
+    game.hero.health = 1;
+    for (let x = 1; x <= 3; x++) step(game, p(x, 0));
+    expect(game.hero.health).toBe(1);
+    expect(step(game, p(4, 0))).toContainEqual({ type: 'heartUp', at: p(4, 0), maxHealth: 4 });
+    expect([game.hero.health, game.hero.maxHealth]).toEqual([4, 4]);
+  });
+  it('keeps pieces towards the next upgrade when a chief drops a whole one', () => {
+    const hero = { ...sturdy(), power: 2, whetstones: 7 };
+    const game = createGame('@ C', { hero });
+    expect(step(game, p(1, 0))).toContainEqual({ type: 'powerUp', at: p(1, 0), power: 3 });
+    expect([hero.power, hero.whetstones % 4]).toEqual([3, 3]);
+  });
+  it('hides a find until it is revealed and leaves clues alone', () => {
+    const game = createGame('@ . *');
+    expect(tileAt(game, p(2, 0))?.revealed).toBe(true);
+    expect(numberAt(game, p(1, 0))).toBe(0);
+    const hidden = createGame('@ s *');
+    expect(tileAt(hidden, p(2, 0))?.revealed).toBe(false);
   });
 });
 
@@ -189,12 +225,12 @@ describe('routes and notes', () => {
       heals: true,
     };
     const game = createGame('@ m', { legend: { people: { m: mum } } });
-    game.hero.health = 4;
+    game.hero.health = 1;
     expect(step(game, p(1, 0))).toEqual([
       { type: 'talk', person: mum },
-      { type: 'heal', at: p(1, 0), amount: 6 },
+      { type: 'heal', at: p(1, 0), amount: 2 },
     ]);
-    expect(game.hero.health).toBe(10);
+    expect(game.hero.health).toBe(3);
     expect(step(game, p(1, 0))).toEqual([{ type: 'talk', person: mum }]);
   });
   it('does not route through a visible living monster', () => {
