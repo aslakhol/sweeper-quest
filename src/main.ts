@@ -42,7 +42,7 @@ app.innerHTML = `
     ${noteTools.map((note) => `<button class="note-button" data-note="${note}" aria-label="${note === 'erase' ? 'Erase notes' : note === 'danger' ? 'Mark danger' : `Mark level ${note}`}" aria-pressed="false">${note === 'danger' ? '!' : note === 'erase' ? '⌫' : note}</button>`).join('')}
   </section>
   <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
-  <dialog id="menu-dialog"><h2>How to play</h2><ul>
+  <dialog id="menu-dialog"><h2>Menu</h2><ul>
     <li>Tap a neighboring tile to move or fight. Numbers sum the levels of living monsters in the eight neighboring tiles.</li>
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. A hidden tile next to known ground is entered at the end of the walk.</li>
