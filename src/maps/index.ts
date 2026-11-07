@@ -1,4 +1,4 @@
-import type { Legend } from '../game/game';
+import type { Legend, Point } from '../game/game';
 import cave from './cave.txt?raw';
 import elderHouse from './elder-house.txt?raw';
 import home from './home.txt?raw';
@@ -6,7 +6,7 @@ import inn from './inn.txt?raw';
 import village from './village.txt?raw';
 import wood from './wood.txt?raw';
 
-export type Area = Legend & { name: string; map: string };
+export type Area = Legend & { name: string; map: string; bedside?: Point };
 
 const indoors = { floor: 'wood', exits: { '<': { to: 'village', look: 'mat' } } } as const;
 
@@ -43,12 +43,17 @@ export const areas = {
   home: {
     name: 'Home',
     map: home,
+    bedside: { x: 6, y: 2 },
     ...indoors,
     people: {
       m: {
         name: 'Mum',
         colors: { hair: '#8a5a3a', shirt: '#c08a9a' },
         heals: true,
+        wakeLines: [
+          'You are awake! They carried you back half dead.',
+          'Be more careful out there. Please.',
+        ],
         lines: [
           'There you are! Sit down, dinner is ready.',
           'Eat up. You need your strength out there.',

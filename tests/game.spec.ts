@@ -53,6 +53,19 @@ async function enterMeadow(page: Page, touch: boolean) {
   await position(page, 15, 23);
 }
 
+// A reckless route through a bat, then into a goblin that takes the last heart.
+async function fallInBattle(page: Page, touch: boolean) {
+  await enterMeadow(page, touch);
+  await tap(page, 15, 19, touch);
+  await position(page, 15, 19);
+  await tap(page, 15, 18, touch);
+  await position(page, 15, 18);
+  await tap(page, 14, 17, touch);
+  await position(page, 14, 17);
+  await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '1 of 3 hearts');
+  await tap(page, 13, 17, touch);
+}
+
 test('a fight moves you onto the tile and gives nothing', async ({ page, isMobile }) => {
   const errors: string[] = [];
   page.on('pageerror', (error) => errors.push(error.message));
@@ -65,21 +78,29 @@ test('a fight moves you onto the tile and gives nothing', async ({ page, isMobil
 });
 
 test('stronger monsters cost hearts until the run ends', async ({ page, isMobile }) => {
-  await enterMeadow(page, isMobile);
-  await tap(page, 15, 19, isMobile);
-  await position(page, 15, 19);
-  await tap(page, 15, 18, isMobile);
-  await position(page, 15, 18);
-  await tap(page, 14, 17, isMobile);
-  await position(page, 14, 17);
-  await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '1 of 3 hearts');
-  await tap(page, 13, 17, isMobile);
+  await fallInBattle(page, isMobile);
   await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
   await page.locator('#death-dialog').getByRole('button', { name: 'Start over' }).click();
   await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '3 of 3 hearts');
   await position(page, 26, 22);
+});
+
+test('continuing after a defeat wakes you at home with Mum', async ({ page, isMobile }) => {
+  await fallInBattle(page, isMobile);
+  await page.locator('#death-dialog').getByRole('button', { name: 'Continue' }).click();
+  const talk = page.locator('#talk');
+  await expect(talk).toContainText('Mum');
+  await expect(talk).toContainText('You are awake!');
+  await expect(page.locator('canvas')).toHaveAttribute(
+    'aria-label',
+    /^Home\. Player column 7, row 3\./,
+  );
+  await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '3 of 3 hearts');
+  await talk.click();
+  await talk.click();
+  await expect(talk).not.toBeVisible();
 });
 
 test('a far hidden target next to known ground is walked to and entered', async ({

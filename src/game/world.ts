@@ -14,9 +14,8 @@ export function createWorld(): World {
 }
 
 // Maps keep their state between visits, and the hero comes along.
-export function travel(world: World, to: string): void {
+export function travel(world: World, to: string, from: string = world.area): void {
   if (!isArea(to)) throw new Error(`Unknown area "${to}".`);
-  const from = world.area;
   const area = areas[to];
   let game = world.visited.get(to);
   if (game) arrive(game, from);
@@ -26,4 +25,12 @@ export function travel(world: World, to: string): void {
   }
   world.area = to;
   world.game = game;
+}
+
+// A defeat costs the walk back: you wake beside your bed with every heart, and the map stays as it was.
+export function wakeAtHome(world: World): void {
+  world.game.lost = false;
+  world.game.hero.health = world.game.hero.maxHealth;
+  travel(world, 'home', 'village');
+  world.game.player = { ...areas.home.bedside };
 }

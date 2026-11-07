@@ -25,7 +25,7 @@ Resolve the questions below, then build the overworld and room/reset rules, shop
 ## Decisions before Phase 2
 
 1. **Progression.** Found whetstones and heart pieces are settled. Define how far power goes and how many finds the world holds.
-2. **Health and death.** The core test has finite health, free full healing from Mum in the village, and game over on death. Death can wait; the final rule should be a reset, not a full wipe.
+2. **Health and death.** The core test has finite health, free full healing from Mum in the village, and game over on death. Death costs the walk back from home; decide whether it should cost more.
 3. **Economy and rewards.** Decide how coins return with a shop, how healing is priced, and whether the shop sells a whetstone. Define bomb behavior.
 4. **Multi-tile clues.** Deduplicate the boss in neighboring sums. Define clues inside its footprint and where the player and remains go after victory.
 5. **Resets.** Monsters and finds stay gone. Decide when notes clear.

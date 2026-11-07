@@ -10,7 +10,8 @@ XP clicked on small maps, where going from weak to strong fits inside one board.
 - **Level-ups are rare.** There should be a lot of game between them, so heart pieces, tools and secrets carry the everyday rewards.
 - **Most finds are hidden.** Showing them all would remove the mystery. Maps hint with terrain, rumours and rings of monsters.
 - **One world, not stages.** It holds more pieces than you need, and being stuck in one region and returning stronger is intended. Solvers check the whole world, not each region.
-- **Hearts start at 3** so early damage is scary. Mum's full heal stays for now, and death is not settled.
+- **Hearts start at 3** so early damage is scary. Mum's full heal stays for now.
+- **Death costs the walk back.** Game over offers Continue, which wakes you at home with the world unchanged. It is still a failure: maps are never balanced around dying.
 - **Maps with finds are fixed.** Regenerated floors could be farmed.
 
 The rest of this document records the first playtest. Its XP, health and clearing notes are superseded by the above.

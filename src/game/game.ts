@@ -44,6 +44,8 @@ export type Person = {
   colors: { hair: string; shirt: string };
   // Finishing a conversation with them restores every heart.
   heals?: boolean;
+  // What they say when you wake up after a defeat.
+  wakeLines?: readonly string[];
 };
 // Symbols a particular map adds on top of the shared ones.
 export type Legend = {

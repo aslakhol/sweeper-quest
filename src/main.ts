@@ -19,7 +19,7 @@ import {
   tileAt,
   toggleNote,
 } from './game/game';
-import { createWorld, travel } from './game/world';
+import { createWorld, travel, wakeAtHome } from './game/world';
 import { areas } from './maps';
 import { cameraTarget, draw, type Effect, effectDuration, layout } from './render';
 
@@ -53,7 +53,7 @@ app.innerHTML = `
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin and chief</span></div>
   <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
-  <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button data-restart>Start over</button></div></dialog>
+  <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button id="continue">Continue</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
   const value = document.querySelector<T>(selector);
@@ -149,6 +149,12 @@ const findNames: Record<Find, string> = {
   heartPiece: 'Heart piece',
   heart: 'Heart',
 };
+function changeMap(): void {
+  game = world.game;
+  camera = settledCamera();
+  effects = [];
+  status.textContent = areas[world.area].name;
+}
 function handleEvents(events: GameEvent[]): void {
   for (const event of events) {
     switch (event.type) {
@@ -179,10 +185,7 @@ function handleEvents(events: GameEvent[]): void {
         break;
       case 'travel':
         travel(world, event.to);
-        game = world.game;
-        camera = settledCamera();
-        effects = [];
-        status.textContent = areas[world.area].name;
+        changeMap();
         break;
       case 'talk':
         talk(event.person);
@@ -212,14 +215,14 @@ function handleEvents(events: GameEvent[]): void {
   if (events.length) stop();
 }
 const talkDialog = element<HTMLDialogElement>('#talk');
-let conversation: { person: Person; line: number } | undefined;
+let conversation: { person: Person; lines: readonly string[]; line: number } | undefined;
 function showLine(): void {
   if (!conversation) return;
   element('#talk-name').textContent = conversation.person.name;
-  element('#talk-line').textContent = conversation.person.lines[conversation.line];
+  element('#talk-line').textContent = conversation.lines[conversation.line];
 }
-function talk(person: Person): void {
-  conversation = { person, line: 0 };
+function talk(person: Person, lines = person.lines): void {
+  conversation = { person, lines, line: 0 };
   showLine();
   openDialog('#talk');
 }
@@ -227,7 +230,7 @@ function talk(person: Person): void {
 talkDialog.addEventListener('click', () => {
   if (!conversation) return;
   conversation.line++;
-  if (conversation.line < conversation.person.lines.length) showLine();
+  if (conversation.line < conversation.lines.length) showLine();
   else talkDialog.close();
 });
 talkDialog.addEventListener('close', () => {
@@ -450,7 +453,15 @@ function restart(): void {
   status.textContent = '';
   for (const dialog of document.querySelectorAll('dialog')) dialog.close();
 }
-// A finished run can only start over.
+element('#continue').addEventListener('click', () => {
+  element<HTMLDialogElement>('#death-dialog').close();
+  wakeAtHome(world);
+  changeMap();
+  updateHud();
+  const mum = areas.home.people.m;
+  talk(mum, mum.wakeLines);
+});
+// Game over needs an answer.
 element('#death-dialog').addEventListener('cancel', (event) => event.preventDefault());
 for (const button of document.querySelectorAll('[data-restart]'))
   button.addEventListener('click', restart);

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { areas } from '../maps';
 import { step, tileAt } from './game';
-import { type AreaId, createWorld, travel } from './world';
+import { type AreaId, createWorld, travel, wakeAtHome } from './world';
 
 describe('world', () => {
   it('every exit leads to a map with exactly one exit back', () => {
@@ -35,5 +35,19 @@ describe('world', () => {
     travel(world, 'cave');
     expect(world.game).toBe(cave);
     expect(world.game.hero.power).toBe(2);
+  });
+  it('wakes beside the bed after a defeat, leaving the map you fell on as it was', () => {
+    const world = createWorld();
+    travel(world, 'cave');
+    const cave = world.game;
+    cave.hero.health = 0;
+    cave.lost = true;
+    wakeAtHome(world);
+    expect(world.area).toBe('home');
+    expect(world.game.player).toEqual(areas.home.bedside);
+    expect(world.game.hero.health).toBe(world.game.hero.maxHealth);
+    expect(cave.lost).toBe(false);
+    travel(world, 'village');
+    expect(tileAt(world.game, world.game.player)?.exit).toBe('home');
   });
 });

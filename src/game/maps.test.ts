@@ -121,6 +121,7 @@ describe('the world', () => {
     expect(hero.power).toBe(3);
     expect(hero.maxHealth).toBeGreaterThanOrEqual(5);
     for (const game of world.visited.values()) {
+      expect(game.lost).toBe(false);
       expect(finds(game)).toBe(0);
       expect(chiefsAlive(game)).toBe(0);
     }
