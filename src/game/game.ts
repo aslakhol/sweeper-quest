@@ -28,7 +28,8 @@ export type Tile = Point & {
     | 'bed'
     | 'shelf'
     | 'cave'
-    | 'stairs';
+    | 'stairs'
+    | 'gate';
   revealed: boolean;
   note?: Note;
   monster?: Monster;

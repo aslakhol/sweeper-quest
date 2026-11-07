@@ -18,7 +18,7 @@ export const areas = {
       1: { to: 'elder-house', look: 'door' },
       2: { to: 'home', look: 'door' },
       3: { to: 'inn', look: 'door' },
-      4: { to: 'wood', look: 'path' },
+      4: { to: 'wood', look: 'gate' },
       '>': { to: 'cave', look: 'stairs' },
     },
   },
@@ -95,6 +95,6 @@ export const areas = {
   wood: {
     name: 'Wood',
     map: wood,
-    exits: { '<': { to: 'village', look: 'path' } },
+    exits: { '<': { to: 'village', look: 'gate' } },
   },
 } satisfies Record<string, Area>;

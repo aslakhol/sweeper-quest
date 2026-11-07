@@ -270,6 +270,26 @@ function drawGround(ctx: CanvasRenderingContext2D, game: Game, tile: Tile, x: nu
         [17, 10, 14, 4],
       ]);
       return;
+    case 'gate':
+      // A timber arch over a dark trail, so an exit through the trees reads from a distance.
+      rects(ctx, '#0c1210', x, y, [[1, 1, 46, 46]]);
+      rects(ctx, '#3b3528', x, y, [
+        [19, 18, 10, 30],
+        [15, 34, 18, 14],
+      ]);
+      rects(ctx, '#6f5436', x, y, [
+        [4, 8, 7, 40],
+        [37, 8, 7, 40],
+      ]);
+      rects(ctx, '#8d6e47', x, y, [[0, 3, 48, 9]]);
+      rects(ctx, '#a98a5c', x, y, [[0, 3, 48, 2]]);
+      rects(ctx, '#4f7d4f', x, y, [
+        [12, 12, 8, 4],
+        [28, 12, 7, 6],
+        [6, 1, 9, 3],
+        [32, 1, 10, 3],
+      ]);
+      return;
     case 'path':
       rects(ctx, (tile.x + tile.y) % 2 ? '#4d4535' : '#504737', x, y, [[1, 1, 46, 46]]);
       rects(ctx, '#5f5643', x, y, [
