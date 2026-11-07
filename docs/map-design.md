@@ -1,0 +1,117 @@
+# Map design
+
+How the puzzle works, how maps are built, and what we know so far about making them good. Rules are taken from `src/game/game.ts`, which wins if this document disagrees. The reasons behind the design are in [decisions.md](decisions.md).
+
+## The game in brief
+
+You walk a connected world of hidden tiles. Monsters hide on tiles and sum into clues. Kills give nothing. You grow only by finding hidden items: four whetstones raise your power, four heart pieces add a heart. Level-ups should be rare, so most play happens at one fixed power. Maps are not boards to clear; they are places you explore, get stuck in, leave, and return to stronger.
+
+## Exact rules
+
+### Clues
+
+- A clue is the sum of the levels of living monsters on the eight neighbouring tiles. It excludes the tile itself.
+- Clues count through anything. A wall, tree, fence or water tile between you and a monster does not block it.
+- Clues change. A kill lowers every clue around it, so a number on screen is always the current one, not a fixed fact from when it was revealed.
+- Every revealed floor tile shows its clue, including village ground and exits. Zeros are drawn blank.
+- A living monster's tile shows no clue. A dead monster leaves faint remains and shows its clue like any other tile.
+- Finds, people and exits add nothing to clues.
+- Visible chiefs do add to clues, so their level has to be subtracted when reading around them.
+
+### Revealing
+
+- Stepping onto a tile reveals it.
+- A zero floods: it opens every connected zero and the numbered tiles bordering them, in all eight directions, without revealing living monsters.
+- A kill that turns a revealed clue into zero floods from that tile too.
+- **Floods pass through any floor, not just hidden floor.** A zero on the village lawn flows through an open fence gap into the tall grass, which is why each grass entrance holds a slime.
+- Floods ignore the diagonal movement rule, so they can reveal ground you cannot walk to yet.
+- A flood reveals finds but does not collect them. You pick one up by walking onto it.
+- Walls, trees, fences and water are always visible and never flood.
+
+### Moving and fighting
+
+- You move in eight directions. A diagonal step is blocked only when both tiles beside it block movement.
+- Stepping onto a hidden monster starts a fight. Fights always resolve in one action and move you onto the tile.
+- A monster at or below your power costs nothing.
+- A stronger one costs `level × (level − power)` hearts first. If that takes your last heart you lose: the monster lives and you do not move.
+- Auto-walk only crosses known ground, and tapping a hidden tile beside known ground walks there and steps in.
+- Notes are the player's own marks on hidden tiles, levels 1–5 and "danger". They never block movement or affect the rules.
+- Game over offers Continue, which wakes you at home with all hearts and the world unchanged. Maps must never rely on it: dying counts as failure.
+
+### Numbers today
+
+| Monster | Level | Cost at power 1 | Power 2 | Power 3 |
+| --- | --- | --- | --- | --- |
+| Slime | 1 | 0 | 0 | 0 |
+| Bat | 2 | 2 | 0 | 0 |
+| Goblin | 3 | 6 | 3 | 0 |
+| Chief (visible) | 3 | 6 | 3 | 0 |
+
+The hero starts on 3 hearts, so at power 1 one bat is survivable, a second is not, and a goblin is lethal. Whoever draws maps must treat a wrong guess as possibly fatal, especially early. Later levels cost more: a monster one level above you costs `power + 1`, so about `2 × power + 1` hearts survive one mistake. The planned ladder stops around power 5 or 6, and note tools already go up to 5.
+
+## How this differs from classic Minesweeper
+
+Most advice about Minesweeper boards needs translating:
+
+- **Safe means "level at or below my power", not "empty".** A hidden tile is safe when the clues cap its possible level. The rule of thumb: a clue at or below your power makes all its neighbours safe, because no single neighbour can be higher than the clue.
+- **Clues are weighted sums, so they are ambiguous.** A 3 can be one goblin, a bat and a slime, or three slimes. Classic counting patterns such as 1-2-1 do not carry over directly.
+- **The board changes as you solve it.** Killing a free monster removes noise from nearby clues, so clearing weak monsters is a deduction tool, not only a reward.
+- **There are no flags or mine counts.** The player does not know how many monsters remain, and nothing checks their notes.
+- **The goal is a route, not a full clear.** Nothing requires clearing a map, and a player may leave at any time and come back stronger. A board that is stuck is not a failed board.
+- **A guess can be paid for.** A wrong guess costs hearts rather than always ending the game, so hearts are a budget for uncertainty.
+- **Power changes what is solvable.** The same board is a different puzzle at each power, and a map is designed as all of those puzzles at once.
+- **Terrain is part of the puzzle.** Walls limit how many tiles can sit around a clue, and chokepoints decide where a route must go.
+- **Maps are large and scroll.** A camera follows the player, so only part of the map is on screen at once.
+
+## Layers
+
+At each power, part of a map can be proven free using only visible clues. That share is its layer. It is the main measure of a map today.
+
+| Map | Size | Hidden floor | Slimes | Bats | Goblins | Density | Open at power 1 | Power 2 | Power 3 |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Tall grass | 14×26 of the 34×30 village | 332 | 21 | 44 | 30 | 29% | 61% | 89% | 100% |
+| Wood | 20×22 | 310 | 13 | 41 | 28 | 26% | 44% | 85% | 100% |
+| Cave | 15×17 | 170 | 8 | 26 | 15 | 29% | 42% | 79% | 100% |
+
+`maps.test.ts` holds every map to these ranges: 35–65% at power 1, 70–95% at power 2, and 100% at power 3. Change the ranges deliberately if the design moves, not to make a map pass.
+
+The world test also checks that:
+
+- the village alone cannot give you power 2, so being stuck sends you elsewhere
+- every find and chief can be reached without a guess, a hit from a hidden monster, or a death, by touring all maps repeatedly
+
+This test world holds 7 whetstones and 6 heart pieces, because it compresses a long stretch of play into a short test. Real maps should hold far fewer.
+
+## Hints for hidden finds
+
+Most finds are hidden and should stay that way. A player needs a reason to look, without being shown the answer:
+
+- **Clues:** a ring of bats around an empty centre makes the numbers climb around nothing. Two heart pieces sit in rings today, and Hilde at the inn hints at them.
+- **Terrain:** a gap in the trees, a walled pocket, an island you cannot reach yet.
+- **People:** rumours about something out in the world.
+
+## Tools
+
+`pnpm maps [candidates] [output directory]` regenerates the village, wood and cave. Walls, water, exits and chiefs come from the existing map files. Each candidate scatters monsters with density and strength growing with walking distance from the entrances, stamps in rings and gate slimes, and is scored against its layer targets. Finds then go on ground that first opens at the power named in the script, spread apart and preferring tiles beside clues. Settings for each map are at the top of `scripts/generate-maps.ts`. Without an output directory it overwrites the maps, and any changed map drops existing saves.
+
+`src/game/solver.ts` has the deduction. It narrows each hidden tile to a range of levels, one clue at a time, using only what the player can see. `highestHiddenLevel` there must be raised when maps hide stronger monsters.
+
+## Known weaknesses
+
+- **Layers measure how much opens, not whether finding it is fun.** A map can hit its targets and still be dull. Nothing measures how interesting a deduction is. The village's 61% at power 1 may be too generous.
+- **The solver is deliberately simple.** It reads clues one at a time and never combines two to rule out a case, so a good player can prove more than it can. Its shares are lower bounds, and it cannot tell an easy move from a hard one.
+- **Monster placement is random.** Danger grows with distance and rings are stamped on, but there is no authored structure such as belts, gates or set-piece patterns.
+- **Rings may be too obvious or too rare to teach anything.** We have not tested this with players.
+- **Only levels 1–3 exist.** We do not yet know how readable clues stay at levels 4–6.
+
+## Open questions
+
+These are the questions to answer next:
+
+1. What makes a deduction satisfying here, given weighted sums, and which classic ideas survive the translation?
+2. What density and mix of levels make good puzzles at each power? 26–29% is well above classic expert's 21%, but most of ours is free at higher power.
+3. How should a map be structured so that long stretches at one power stay varied?
+4. Should forced guesses exist at all? If so, when, and what should they risk at 3 hearts?
+5. How can we measure puzzle quality, so the generator can rank maps on more than layer size? A stronger solver would help here.
+6. Which set pieces are worth having as reusable patterns, and how should a map teach them?
+7. How much should clues hint at finds, and what makes a hint feel earned?
