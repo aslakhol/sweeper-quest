@@ -5,6 +5,7 @@ import {
   distance,
   type Find,
   type GameEvent,
+  heal,
   type Note,
   neighbors,
   numberAt,
@@ -230,7 +231,9 @@ talkDialog.addEventListener('click', () => {
   else talkDialog.close();
 });
 talkDialog.addEventListener('close', () => {
+  if (conversation?.person.heals) handleEvents(heal(game));
   conversation = undefined;
+  updateHud();
 });
 function move(target: Point): boolean {
   const before = game.player;

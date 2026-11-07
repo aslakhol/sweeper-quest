@@ -5,6 +5,7 @@ import {
   createGame,
   createHero,
   cycleNote,
+  heal,
   numberAt,
   planWalk,
   same,
@@ -217,7 +218,7 @@ describe('routes and notes', () => {
     expect(step(game, p(3, 0))).toEqual([{ type: 'talk', person }]);
     expect(game.player).toEqual(p(2, 0));
   });
-  it('restores every heart when talking to someone who heals', () => {
+  it('restores every heart only once the conversation is over', () => {
     const mum = {
       name: 'Mum',
       lines: ['Eat up'],
@@ -226,12 +227,11 @@ describe('routes and notes', () => {
     };
     const game = createGame('@ m', { legend: { people: { m: mum } } });
     game.hero.health = 1;
-    expect(step(game, p(1, 0))).toEqual([
-      { type: 'talk', person: mum },
-      { type: 'heal', at: p(1, 0), amount: 2 },
-    ]);
-    expect(game.hero.health).toBe(3);
     expect(step(game, p(1, 0))).toEqual([{ type: 'talk', person: mum }]);
+    expect(game.hero.health).toBe(1);
+    expect(heal(game)).toEqual([{ type: 'heal', at: p(0, 0), amount: 2 }]);
+    expect(game.hero.health).toBe(3);
+    expect(heal(game)).toEqual([]);
   });
   it('does not route through a visible living monster', () => {
     const game = createGame('@ s .');

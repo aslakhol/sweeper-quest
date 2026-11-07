@@ -42,7 +42,7 @@ export type Person = {
   name: string;
   lines: readonly string[];
   colors: { hair: string; shirt: string };
-  // Talking to them restores every heart.
+  // Finishing a conversation with them restores every heart.
   heals?: boolean;
 };
 // Symbols a particular map adds on top of the shared ones.
@@ -283,6 +283,12 @@ export function cycleNote(game: Game, point: Point): void {
 export function fightDamage(game: Game, monster: Monster): number {
   return monster.level * Math.max(0, monster.level - game.hero.power);
 }
+export function heal(game: Game): GameEvent[] {
+  const amount = game.hero.maxHealth - game.hero.health;
+  if (!amount) return [];
+  game.hero.health = game.hero.maxHealth;
+  return [{ type: 'heal', at: game.player, amount }];
+}
 function collect(game: Game, at: Point, find: Find): GameEvent[] {
   const { hero } = game;
   const events: GameEvent[] = [{ type: 'find', at, find }];
@@ -310,13 +316,7 @@ export function step(game: Game, target: Point): GameEvent[] {
   const tile = tileAt(game, target);
   if (!tile) return [];
   if (tile.person) {
-    const events: GameEvent[] = [{ type: 'talk', person: tile.person }];
-    const amount = game.hero.maxHealth - game.hero.health;
-    if (tile.person.heals && amount) {
-      game.hero.health = game.hero.maxHealth;
-      events.push({ type: 'heal', at: target, amount });
-    }
-    return events;
+    return [{ type: 'talk', person: tile.person }];
   }
   const events: GameEvent[] = [];
   if (tile.monster?.alive) {
