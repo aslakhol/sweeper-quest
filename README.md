@@ -20,6 +20,7 @@ pnpm check                       # TypeScript, Biome, rule tests, production bui
 pnpm exec playwright install chromium
 pnpm test:e2e                    # Mouse, keyboard, and emulated phone input
 pnpm test:watch
+pnpm maps                        # Regenerate the outdoor maps
 pnpm format
 pnpm preview                     # Serve the most recent dist/ build
 ```
@@ -58,7 +59,9 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 | `src/game/save.ts` | Saves and restores the world as JSON in `localStorage` |
 | `src/game/game.test.ts` | Rule and progression tests with small maps |
 | `src/game/world.test.ts` | Exits link up both ways, and travel keeps or refreshes maps |
-| `src/game/maps.test.ts` | Tours the whole world with a solver that narrows hidden levels from visible clues |
+| `src/game/solver.ts` | Narrows hidden levels from visible clues and measures how a map opens at each power |
+| `src/game/maps.test.ts` | Tours the whole world with the solver and holds each map to its layers |
+| `scripts/generate-maps.ts` | Places monsters and finds on hand-drawn terrain |
 | `src/main.ts` | HUD, touch and keyboard input, camera easing, 75 ms auto-walk, event feedback |
 | `src/render.ts` | Camera layout, canvas tiles, pixel sprites, fight animation, remains, route dots, and popups |
 | `src/style.css` | Full-screen canvas, HUD and dialogs |
@@ -100,7 +103,7 @@ Everything except floor and monsters is always visible and blocks movement. Mons
 
 Each area in `src/maps/index.ts` adds its own symbols on top of these. Exits (digits in the village, `>` for the cave, `<` for the way back) are revealed floor that move you to another area when stepped on; auto-walk never crosses one on the way somewhere else. People are revealed floor you talk to instead of entering. An area can also change how hidden floor is drawn, such as stone in the dungeon.
 
-[`docs/decisions.md`](docs/decisions.md) records why the game works this way. The meadow, wood and cave were generated on hand-drawn terrain and open in layers: about 40–50% of each can be proven free from the clues at power 1, about 80–85% at power 2 and all of it at power 3. The solver gets stuck at power 1 in the village, reaches power 2 only by visiting another area, then finds everything and beats both chiefs. Finds are far denser than the final game should be.
+[`docs/decisions.md`](docs/decisions.md) records why the game works this way. [`docs/map-design.md`](docs/map-design.md) has the exact puzzle rules, how maps open in layers, and how to generate them. Finds are far denser than the final game should be.
 
 Clues count living monsters only and update after kills. Monsters stay hidden until fought. A diagonal step is blocked only when both bordering cardinal tiles block movement. The nearest revealed tile uses straight-line distance; ties keep the shortest known route. Routing does not read hidden contents.
 

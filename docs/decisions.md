@@ -13,32 +13,29 @@ XP clicked on small maps, where going from weak to strong fits inside one board.
 - **Hearts start at 3** so early damage is scary. Mum's full heal stays for now.
 - **Death costs the walk back.** Game over offers Continue, which wakes you at home with the world unchanged. It is still a failure: maps are never balanced around dying.
 - **Maps with finds are fixed.** Regenerated floors could be farmed.
+- **Grinding is not possible, on purpose.** Monsters do not respawn, and a stuck player goes exploring instead.
+- **Maps open in layers.** Each power opens part of a map, and a new level reopens old places with no extra mechanic. See [map-design.md](map-design.md).
 
-The rest of this document records the first playtest. Its XP, health and clearing notes are superseded by the above.
+### Rejected
 
-# Decisions after the first playtest
+- **XP with more levels.** It delays the problem and pushes clues and damage up with it.
+- **Resetting power per region.** It kept the small-map feel but makes no sense for a character in an RPG.
+- **XP capped by items.** It stops over-levelling, but every new region would need a whole ladder above the cap.
+- **Showing every find from the start.** It gives direction but removes the mystery. A rare visible teaser is fine.
+- **Spare pieces per stage.** Spares are counted across the world. There are no stages.
 
-The Phase 1 demo is winnable without reading a single clue. A bot that bumps the nearest unknown tile wins in about 105 taps with one free death. The first shard bundle is reachable in 7 taps, after which 16 of 19 monsters are harmless. These decisions aim to make deduction the way you survive, not an optional extra.
+The original shards failed because they were too easy to reach: the first bundle took 7 taps and made 16 of 19 monsters harmless. Keeping finds rare and hidden is what fixes that, not the name.
 
-## Run structure
 
-- **Death is game over.** Show a game over screen with Start over. Nothing carries between runs. A respawn mechanic may return once the game has many areas.
-- **Health does not refill** within a run. Health is the resource that deduction protects.
+## First playtest
 
-## Progression
-
-- **Power comes from XP earned by kills.** Stronger monsters give more XP. Shards are removed.
-- **Each area holds about 1.5× the XP needed to level up through it**, so players level up after clearing most of the deducible monsters rather than hunting for the last slime.
-- **Areas are gated by visible monsters, not XP thresholds.** A row of high-level monsters blocks a path. You can fight through, but only by spending more health than you have.
-- **Exploration rewards are heart containers and tools**, not power.
-
-This answers roadmap decisions 1 (progression) and 2 (boss combat).
+The first demo could be won without reading a clue, so these rules make deduction the way you survive. They still stand. Its XP, run and tuning rules were replaced by the section above.
 
 ## Combat
 
 - **Fights always resolve.** Attacking a monster always kills it. If its level is above your power, you take damage. You die only if that damage exceeds your remaining health.
 - **Winning moves you onto the tile.** One tap per fight.
-- **Taps on stronger monsters are never blocked.** Taking damage to reach a level-up is a legitimate choice, and the health bar is the warning.
+- **Taps on stronger monsters are never blocked.** Taking damage to get through is a legitimate choice, and the health bar is the warning.
 
 ## Monsters and corpses
 
@@ -61,14 +58,3 @@ This answers roadmap decisions 1 (progression) and 2 (boss combat).
 
 - **Screen layout, HUD, status line and copy.** These will be redesigned from scratch later.
 - **Note tools.** Revisit once the board plays like a real deduction puzzle.
-- **Tapping a distant hidden tile.** Today it walks to the closest revealed tile in a straight line, which may not border the target. Later it should walk only when a revealed neighbor of the target is reachable.
-
-## First tuning
-
-Starting values, to be changed after playing:
-
-- **Damage** for a monster above your power is its level times the gap. A bat costs 2 hearts at power 1; a goblin costs 6 at power 1 and 3 at power 2; the chief costs 4 at power 3.
-- **Health** is 10 whole hearts.
-- **XP** per kill equals the monster's level. Power 2 at 10 XP, power 3 at 26 XP.
-- **The chief** is level 4 and visible from the start, so the goal has a place on the map.
-- **The clearings** each have 16 slimes, 10 bats and 5 goblins (51 XP). They are the top 10 of 300 generated candidates, ranked first by how rarely random bumping wins (never, for all ten) and then by how long a solver that only uses visible clues spends below power 3. On every clearing that solver wins with 1–3 forced guesses and 2–6 hearts left, and still has 5–10 weaker monsters alive at each level-up. The first clearing is the original demo map.

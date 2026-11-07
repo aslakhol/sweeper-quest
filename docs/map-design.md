@@ -13,7 +13,7 @@ You walk a connected world of hidden tiles. Monsters hide on tiles and sum into 
 - A clue is the sum of the levels of living monsters on the eight neighbouring tiles. It excludes the tile itself.
 - Clues count through anything. A wall, tree, fence or water tile between you and a monster does not block it.
 - Clues change. A kill lowers every clue around it, so a number on screen is always the current one, not a fixed fact from when it was revealed.
-- Every revealed floor tile shows its clue, including village ground and exits. Zeros are drawn blank.
+- Every revealed floor tile shows its clue, including village ground and exits, unless someone is standing there. Zeros are drawn blank.
 - A living monster's tile shows no clue. A dead monster leaves faint remains and shows its clue like any other tile.
 - Finds, people and exits add nothing to clues.
 - Visible chiefs do add to clues, so their level has to be subtracted when reading around them.

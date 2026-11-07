@@ -1,6 +1,6 @@
 # Prototype roadmap
 
-[idea.md](../idea.md) is the consolidated game plan, including the intended multi-area adventure and open design questions. This roadmap tracks implementation stages. [decisions.md](decisions.md) records the reasoning behind the first playtest changes.
+[idea.md](../idea.md) is the consolidated game plan, including the intended multi-area adventure and open design questions. This roadmap tracks implementation stages. [decisions.md](decisions.md) records the reasoning behind the design, and [map-design.md](map-design.md) covers the puzzle rules and how maps are built.
 
 ## Phase 1: core loop
 
@@ -8,17 +8,17 @@ A small connected world: a village with a tall-grass meadow to the west, a fixed
 
 This world tests layered maps and returning stronger. Its size and density of finds are not the intended structure. This phase does not include a shop, inventory, or tools.
 
-## Phase 2: starting area
+## Phase 2: grow the world
 
-Build one 10–15 minute adventure with a possible death along the way:
+Grow the test world into a connected adventure, large enough that level-ups feel rare:
 
-- A hand-authored roughly 24×32 overworld with a revealed southern village, shop, indoor room, meadow, western tall grass, and northern cave entrance. Whetstones and heart pieces are mostly hidden, and maps open in layers.
+- An overworld with a revealed village, shop, indoor rooms, meadows and caves. Terrain and landmarks are hand-drawn, monsters and finds can be generated. Whetstones and heart pieces are mostly hidden, and maps open in layers.
 - Room and zone metadata in the text map. Flood reveal is the standard rule throughout; define boundaries and transitions for the larger world.
 - Larger regions connected into one world, with enough play at each power that level-ups stay rare.
 - A thumb-friendly shop sheet and inventory. Revisit coins, potions, bombs, and heart upgrades together. The original prices and effects in [idea.md](../idea.md#shop-and-items) are proposals, not current rules.
 - A fixed dungeon with bats, goblins, and a chest containing a health or tool reward. Validate reachability.
 - A 2×2 level-5 boss, counted once in neighboring clues. Apply the same level-gap combat rule as other monsters. Reward a heart container and Lantern; the Lantern opens the next-zone gate.
-- Inventory, an appropriate HUD, and versioned localStorage saves with validation. Do not serialize animations, input state, or queued walking.
+- Inventory and an appropriate HUD.
 
 Resolve the questions below, then build the overworld and room/reset rules, shop and items, and dungeon and boss. Saves live in `localStorage` for now; a more durable store comes later.
 

@@ -4,11 +4,11 @@
 
 A touch-first exploration RPG built around Mamono-style Minesweeper deduction. Read clues to find a safe way through, explore a connected world, and discover what lies hidden in it. Kills only clear the way; the reward is exploring. Strength comes from rare finds, and hearts decide how many mistakes you can afford.
 
-Deduction must matter. Walking blindly into every hidden tile should not be a reliable way to win. Leveling up should open useful choices while leaving some weaker monsters alive, rather than require finding the last safe enemy.
+Deduction must matter. Walking blindly into every hidden tile should not be a reliable way to survive. A level-up should open new choices across the world while plenty of danger remains.
 
 The intended game is one connected world with a village, meadows, caves and many regions, not a series of stages. Getting stuck in one place, leaving, and returning stronger is part of the design. The current world is a small test of that structure, and its size and number of finds do not define the final game.
 
-This document combines the original adventure plan with subsequent playtest decisions. Rules below are the current direction; values labeled as tuning or proposals remain adjustable. [README.md](README.md) describes the implemented demo. [docs/decisions.md](docs/decisions.md) records the playtest rationale, and [docs/roadmap.md](docs/roadmap.md) tracks development stages.
+This document combines the original adventure plan with subsequent playtest decisions. [docs/map-design.md](docs/map-design.md) has the exact puzzle rules and how maps are built. Rules below are the current direction; values labeled as tuning or proposals remain adjustable. [README.md](README.md) describes the implemented demo. [docs/decisions.md](docs/decisions.md) records the playtest rationale, and [docs/roadmap.md](docs/roadmap.md) tracks development stages.
 
 ## Platform and maps
 
@@ -39,9 +39,9 @@ Notes are guesses on hidden floor, not movement barriers. Provide levels 1–5, 
 
 ## Combat, health, and progression
 
-A fight is one action. At or below your power, the enemy dies without hurting you. A stronger enemy deals damage first; if you survive, it dies and you move onto its tile. Attacking stronger enemies is allowed, including taking a deliberate hit to reach the next level. Repeated attacks against a surviving blocking enemy are no longer the combat model.
+A fight is one action. At or below your power, the enemy dies without hurting you. A stronger enemy deals damage first; if you survive, it dies and you move onto its tile. Attacking stronger enemies is allowed, including taking a deliberate hit to get through. Repeated attacks against a surviving blocking enemy are no longer the combat model.
 
-Current damage tuning is `monster level × max(0, monster level − player power)` hearts. At power 1 a bat costs 2 hearts and a goblin costs 6; at power 2 a goblin costs 3. Reaching zero health is lethal: no kill, XP, or movement is awarded for that attack.
+Current damage tuning is `monster level × max(0, monster level − player power)` hearts. At power 1 a bat costs 2 hearts and a goblin costs 6; at power 2 a goblin costs 3. Reaching zero health is lethal: the monster survives and you do not move.
 
 Power stays with the character and never resets. Four whetstones raise it by one, and a chief can drop a greatstone worth all four. Four heart pieces add a heart, and a chief can drop a whole heart. A new heart also refills your health. Kills give nothing.
 
@@ -65,13 +65,13 @@ The present small world tests layered maps, finds and returning stronger. It com
 
 This phase succeeds when careful clue reading reliably outperforms random exploration, a new level reopens old places in a satisfying way, and spending health is a meaningful choice. Test both touch and desktop input, and use clue-based solvers to check the world without giving them hidden information.
 
-## Phase 2: one complete mini adventure
+## Phase 2: grow the world
 
-Aim for a roughly 10–15 minute journey from the village to a dungeon boss, with enough danger that a death is plausible. The original area sizes are starting points, not technical limits.
+Grow the test world into a connected adventure from the village to a dungeon boss, large enough that level-ups feel rare. The area sizes below are starting points, not technical limits.
 
 ### Starting overworld
 
-A hand-authored area of about 24×32 tiles:
+Terrain and landmarks are hand-drawn. Monsters and finds can be generated and tuned; see [docs/map-design.md](docs/map-design.md).
 
 - **Village in the south:** revealed and safe, with the start, a shop, and a house with an indoor room. The house tests interiors and room boundaries, not a different zero-reveal mode.
 - **Meadow in the middle:** slimes, bats, and stronger threats arranged in layers. Hide whetstones, heart pieces and tools as exploration rewards.
@@ -88,7 +88,7 @@ The original shop is a proposal to revisit, not settled balance:
 | --- | --- | --- |
 | Potion | 5 coins, restores 2 hearts | Whether limited healing fits the health budget |
 | Bomb | 8 coins, reveals 3×3; kills enemies at or below power and exposes stronger ones | Interaction with the combat rules |
-| Heart piece | 15 coins, sold once; four pieces add one max heart | Pieces versus whole containers, pricing, and whether max-health gains heal |
+| Heart piece | 15 coins, sold once | Pricing |
 
 Coins and other extras do not tie directly into progression, apart from perhaps a single whetstone in the shop. Currency rewards, if restored, should be predictable rather than random, following the original economy intent.
 
