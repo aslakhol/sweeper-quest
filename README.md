@@ -42,6 +42,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 - Walk into a person, or tap them from across the room, to talk. Tap anywhere to show the next line.
 - Defeating a goblin chief does not end the run.
 - Running out of hearts is game over. Continue wakes you beside your bed at home with every heart, and the world stays as you left it. Start over begins a new game, and is also in the menu along with the rules and monster levels.
+- The game saves itself in the browser, so a reload or a locked computer picks up where you left off. Editing a map drops the save.
 - Tap a distant revealed tile to walk there. Tapping a distant hidden tile that borders reachable revealed floor walks beside it and steps in, fighting whatever is there. A hidden tile with no such neighbor routes only to the nearest reachable revealed floor.
 - Number keys 1–5 mark the hidden tile under the mouse right away. Anywhere else they pick that note tool. Choose a note tool with its button or a number key, then tap a hidden tile to mark it. The tool then returns to movement; hold Shift while clicking to keep marking. Marking a tile with the note it already has clears it, and a different note replaces it. Long press or right-click cycles 1–5, then clear. Notes do not prevent movement.
 - Escape stops auto-walk and clears the note tool. New input, fights, dialogs, and loss of focus stop auto-walk too.
@@ -54,6 +55,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 | `src/maps/index.ts` | Areas: each one's map or maps, exits, people and their lines |
 | `src/game/world.ts` | Which area you are in, travel between areas, and the visited maps that keep their state |
 | `src/game/game.ts` | Validated map loading, state, clues, combat, finds, reveal rules, notes, and route planning |
+| `src/game/save.ts` | Saves and restores the world as JSON in `localStorage` |
 | `src/game/game.test.ts` | Rule and progression tests with small maps |
 | `src/game/world.test.ts` | Exits link up both ways, and travel keeps or refreshes maps |
 | `src/game/maps.test.ts` | Tours the whole world with a solver that narrows hidden levels from visible clues |

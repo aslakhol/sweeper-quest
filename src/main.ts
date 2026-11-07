@@ -19,6 +19,7 @@ import {
   tileAt,
   toggleNote,
 } from './game/game';
+import { deserialize, serialize } from './game/save';
 import { createWorld, travel, wakeAtHome } from './game/world';
 import { areas } from './maps';
 import { cameraTarget, draw, type Effect, effectDuration, layout } from './render';
@@ -65,7 +66,9 @@ const status = element<HTMLParagraphElement>('#status');
 const hearts = element<HTMLDivElement>('#hearts');
 const power = element<HTMLSpanElement>('#power-value');
 const noteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-note]')];
-let world = createWorld();
+const saveKey = 'sweeper-quest-save';
+const savedGame = localStorage.getItem(saveKey);
+let world = (savedGame && deserialize(savedGame)) || createWorld();
 let game = world.game;
 let selectedNote: Note | 'erase' | null = null;
 let hovered: Point | undefined;
@@ -435,8 +438,12 @@ document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     stop();
     cancelPress();
+    save();
   }
 });
+const save = () => localStorage.setItem(saveKey, serialize(world));
+setInterval(save, 1000);
+window.addEventListener('pagehide', save);
 element('#menu').addEventListener('click', () => openDialog('#menu-dialog'));
 for (const button of document.querySelectorAll('[data-close]'))
   button.addEventListener('click', () => button.closest('dialog')?.close());
@@ -485,4 +492,5 @@ function frame(time: number): void {
   requestAnimationFrame(frame);
 }
 updateHud();
+if (game.lost) openDialog('#death-dialog');
 requestAnimationFrame(frame);

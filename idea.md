@@ -102,7 +102,7 @@ The boss follows the same combat model: power 5 would make it safe; lower power 
 
 ### Persistence and completion
 
-Add inventory and a HUD for health, power, pieces, and relevant items or currency. Save progress locally so a phone session can be resumed. Saving is separate from deciding what survives death. Define the persistent and resettable state for exploration, finds, monsters, and notes first.
+Add inventory and a HUD for health, power, pieces, and relevant items or currency. Progress is saved locally so a session can be resumed, and needs a more durable store later. Saving is separate from deciding what survives death. Define the persistent and resettable state for exploration, finds, monsters, and notes first.
 
 The adventure is complete when village exploration, deduction, finds, and the boss form one coherent journey. Keep the player's health budget meaningful across that journey. The current map transitions are not the final persistence design.
 

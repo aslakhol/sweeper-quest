@@ -6,7 +6,7 @@
 
 A small connected world: a village with a tall-grass meadow to the west, a fixed cave to the north and a wood to the east, plus enterable houses with people to talk to. Monsters of levels 1–3 hide on layered maps with visible level-3 chiefs. Kills give nothing. Hidden whetstones and heart pieces raise power and hearts, and chiefs drop a whole upgrade. Fights resolve in one action and cost hearts when the monster is stronger; the hero starts on 3 hearts. A solver tours the whole world using only visible clues.
 
-This world tests layered maps and returning stronger. Its size and density of finds are not the intended structure. This phase does not include a shop, inventory, tools, or saved games.
+This world tests layered maps and returning stronger. Its size and density of finds are not the intended structure. This phase does not include a shop, inventory, or tools.
 
 ## Phase 2: starting area
 
@@ -20,7 +20,7 @@ Build one 10–15 minute adventure with a possible death along the way:
 - A 2×2 level-5 boss, counted once in neighboring clues. Apply the same level-gap combat rule as other monsters. Reward a heart container and Lantern; the Lantern opens the next-zone gate.
 - Inventory, an appropriate HUD, and versioned localStorage saves with validation. Do not serialize animations, input state, or queued walking.
 
-Resolve the questions below, then build the overworld and room/reset rules, shop and items, and dungeon and boss. Add saving once the persistent/transient state boundary is settled.
+Resolve the questions below, then build the overworld and room/reset rules, shop and items, and dungeon and boss. Saves live in `localStorage` for now; a more durable store comes later.
 
 ## Decisions before Phase 2
 

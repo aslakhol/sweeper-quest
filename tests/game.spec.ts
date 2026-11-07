@@ -56,6 +56,9 @@ async function enterMeadow(page: Page, touch: boolean) {
 // A reckless route through a bat, then into a goblin that takes the last heart.
 async function fallInBattle(page: Page, touch: boolean) {
   await enterMeadow(page, touch);
+  await fallInBattleFromGate(page, touch);
+}
+async function fallInBattleFromGate(page: Page, touch: boolean) {
   await tap(page, 15, 19, touch);
   await position(page, 15, 19);
   await tap(page, 15, 18, touch);
@@ -84,6 +87,19 @@ test('stronger monsters cost hearts until the run ends', async ({ page, isMobile
   await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
   await page.locator('#death-dialog').getByRole('button', { name: 'Start over' }).click();
   await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '3 of 3 hearts');
+  await position(page, 26, 22);
+});
+
+test('a reload picks up where you left off until you start over', async ({ page, isMobile }) => {
+  await enterMeadow(page, isMobile);
+  await page.reload();
+  await position(page, 15, 23);
+  await fallInBattleFromGate(page, isMobile);
+  await page.reload();
+  await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
+  await page.locator('#death-dialog').getByRole('button', { name: 'Start over' }).click();
+  await position(page, 26, 22);
+  await page.reload();
   await position(page, 26, 22);
 });
 
