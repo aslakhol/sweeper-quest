@@ -1,56 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { canStep, type Game, neighbors, numberAt, step, type Tile, tileAt } from './game';
+import { areas } from '../maps';
+import { canStep, createGame, type Game, neighbors, step, type Tile } from './game';
+import { levelBounds, openLayers, reachableTiles } from './solver';
 import { type AreaId, createWorld, travel, type World } from './world';
 
-const highestHiddenLevel = 3;
-
-// Narrow each hidden tile's possible level using only visible clues, like a careful player.
-function levelBounds(game: Game) {
-  const hidden = game.tiles.filter((tile) => tile.terrain === 'floor' && !tile.revealed);
-  const low = new Map<Tile, number>(hidden.map((tile) => [tile, 0]));
-  const high = new Map<Tile, number>(hidden.map((tile) => [tile, highestHiddenLevel]));
-  const clues = game.tiles.filter(
-    (tile) => tile.revealed && tile.terrain === 'floor' && !tile.monster?.alive,
-  );
-  for (let changed = true; changed; ) {
-    changed = false;
-    for (const clue of clues) {
-      const around = neighbors(game, clue);
-      const remaining =
-        numberAt(game, clue) -
-        around
-          .filter((tile) => tile.revealed && tile.monster?.alive)
-          .reduce((sum, tile) => sum + (tile.monster?.level ?? 0), 0);
-      const unknown = around.filter((tile) => low.has(tile));
-      const lowSum = unknown.reduce((sum, tile) => sum + (low.get(tile) ?? 0), 0);
-      const highSum = unknown.reduce((sum, tile) => sum + (high.get(tile) ?? 0), 0);
-      for (const tile of unknown) {
-        const lo = low.get(tile) ?? 0;
-        const hi = high.get(tile) ?? highestHiddenLevel;
-        const nextHigh = Math.min(hi, remaining - (lowSum - lo));
-        const nextLow = Math.max(lo, remaining - (highSum - hi));
-        if (nextHigh !== hi || nextLow !== lo) {
-          high.set(tile, nextHigh);
-          low.set(tile, nextLow);
-          changed = true;
-        }
-      }
-    }
-  }
-  return high;
-}
-function reachableTiles(game: Game) {
-  const start = tileAt(game, game.player);
-  if (!start) return [];
-  const seen = new Set([start]);
-  for (const tile of seen) {
-    for (const next of neighbors(game, tile)) {
-      if (next.revealed && !next.monster?.alive && !next.exit && canStep(game, tile, next))
-        seen.add(next);
-    }
-  }
-  return [...seen];
-}
 // Walks are skipped: every tile the solver stands on is reachable over known ground.
 function moveTo(game: Game, from: Tile, target: Tile) {
   game.player = { x: from.x, y: from.y };
@@ -126,4 +79,22 @@ describe('the world', () => {
       expect(chiefsAlive(game)).toBe(0);
     }
   }, 60_000);
+
+  // How much of each map's hidden ground the clues alone prove free at powers 1, 2 and 3.
+  it.each([
+    ['village', undefined],
+    ['wood', 'village'],
+    ['cave', 'village'],
+  ] as const)('%s opens in layers', (area, from) => {
+    const game = createGame(areas[area].map, { legend: areas[area], from });
+    const hidden = game.tiles.filter((tile) => tile.terrain === 'floor' && !tile.revealed);
+    const layer = openLayers(game, 3);
+    const share = (power: number) =>
+      hidden.filter((tile) => (layer.get(tile) ?? Infinity) <= power).length / hidden.length;
+    expect(share(1)).toBeGreaterThan(0.35);
+    expect(share(1)).toBeLessThan(0.65);
+    expect(share(2)).toBeGreaterThan(0.7);
+    expect(share(2)).toBeLessThan(0.95);
+    expect(share(3)).toBe(1);
+  });
 });
