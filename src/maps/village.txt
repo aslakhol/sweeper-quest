@@ -17,14 +17,14 @@ T T g T . . g . . . . . . . . b F , , , , , , = , ^ ^ ^ ^ ^ ^ , T T
 T T . T T T T . . s . . . g . . F , , , , , , = , H H 3 H H H , T T
 T T b . b . T b . . . . T g b . F , T , , , , = , , , = , , , , T T
 T T . g b g . s . . . b T T . . F , , , , , , = = = = = = = = = 4 T
-T T . s g g . b . . . b . . s s F , , , , , , = , , , , , , , , T T
-T T g . T T g b b . b . . . . . F , , T , , , = , , , , , , , , T T
+T T . s g g $ b . . . b . . s s F , , , , , , = , , , , , , , , T T
+T T g . T T g b b . b . . $ . . F , , T , , , = , , , , , , , , T T
 T T g . b . . . ~ ~ . . . . . . F , , , , , , = , , , , , , , , T T
 T T . . b g . . ~ ~ s s . . . . F , , , , , , = , , @ , , T , , T T
 T T . . . b g . . . . . . . . s , = = = = = = = , , , , , , , , T T
 T T . g b . . . . . . . . . . . F , , , , , , , , , , , , , T , T T
 T T . g g . . b b . . T . . . . F , , , , , , , , T , , , , , , T T
 T T g . . . . . . . s . . . . . F , , , T , , , , , , , , , , , T T
-T T T . . . b b * s s . . . . g F , , , , , , , , T T , , , T T T T
+T T T . . . b b . s s $ . . . g F , , , , , , , , T T , , , T T T T
 T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T
 T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T T

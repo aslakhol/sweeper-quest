@@ -85,7 +85,7 @@ The world test also checks that:
 - the village alone cannot give you power 2, so being stuck sends you elsewhere
 - every find and chief can be reached without a guess or any damage, by touring all maps repeatedly
 
-This test world holds 8 whetstones and 6 heart pieces, counting two whetstones and a heart piece that villagers give as quest rewards. It compresses a long stretch of play into a short test. Real maps should hold far fewer.
+This test world holds 8 whetstones and 6 heart pieces, counting two whetstones and a heart piece that villagers give as quest rewards and the whetstone Bram sells. Seven coins are hidden in the village, wood and cave, two more than the whetstone costs. It compresses a long stretch of play into a short test. Real maps should hold far fewer.
 
 The eighth whetstone is in the wood at `(18, 1)`, in the north-east pocket. Both bounds and groups reach it at power 2 in the tested orders. It supplies the missing stone before either level-3 chief is defeated. The cave chief keeps its greatstone, so completing the demo can now reach power 4. This extra reward was agreed with Aslak to remove the dependency on taking damage; the monster roster still ends at level 3.
 

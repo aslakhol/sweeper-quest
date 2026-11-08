@@ -35,7 +35,7 @@ const specs: Spec[] = [
     targets: [0.6, 0.88],
     guards: [{ x: 15, y: 8 }, { x: 15, y: 23 }],
     rings: [{ x: 5, y: 12, find: '?' }],
-    finds: { 1: ['*', '*', '+'], 2: ['*'] },
+    finds: { 1: ['*', '+', '$', '$', '$'], 2: ['*'] },
   },
   {
     file: 'wood',
@@ -46,7 +46,7 @@ const specs: Spec[] = [
     density: [0.14, 0.26],
     targets: [0.45, 0.85],
     // The extra power-2 stone makes power 3 possible before the cave chief.
-    finds: { 1: ['*'], 2: ['?', '*', '*', '+'], 3: ['+'] },
+    finds: { 1: ['*'], 2: ['?', '*', '*', '+', '$', '$'], 3: ['+'] },
   },
   {
     file: 'cave',
@@ -57,7 +57,7 @@ const specs: Spec[] = [
     density: [0.16, 0.26],
     targets: [0.4, 0.8],
     rings: [{ x: 7, y: 11 }],
-    finds: { 1: ['?', '+'] },
+    finds: { 1: ['?', '+'], 2: ['$', '$'] },
   },
 ];
 
