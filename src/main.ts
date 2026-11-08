@@ -185,14 +185,17 @@ function changeMap(): void {
   effects = [];
   status.textContent = areas[world.area].name;
 }
-type Found = { find: Find; detail?: string };
 function progress(find: Find): string | undefined {
   const { hero } = game;
   if (find === 'whetstone') return `${hero.whetstones % piecesPerUpgrade}/${piecesPerUpgrade}`;
   if (find === 'heartPiece') return `${hero.heartPieces % piecesPerUpgrade}/${piecesPerUpgrade}`;
 }
+// An upgrade follows the find that earned it.
+function upgrade(event: GameEvent | undefined): string | undefined {
+  if (event?.type === 'powerUp') return `Power ${event.power}!`;
+  if (event?.type === 'heartUp') return `${event.maxHealth} hearts!`;
+}
 function handleEvents(events: GameEvent[]): void {
-  const found: Found[] = [];
   for (const [index, event] of events.entries()) {
     switch (event.type) {
       case 'blocked':
@@ -241,23 +244,24 @@ function handleEvents(events: GameEvent[]): void {
         status.textContent = `Hearts restored: +${event.amount}.`;
         break;
       case 'find':
-        if (event.find === 'coin') announce(event.at, findNames.coin, '#e8ce95');
-        else found.push({ find: event.find, detail: progress(event.find) });
         status.textContent = `Found: ${findNames[event.find]}.`;
-        break;
-      // Upgrades follow the find that earned them.
-      case 'powerUp': {
-        const last = found.at(-1);
-        if (last) last.detail = `Power ${event.power}!`;
+        if (event.find === 'coin') {
+          announce(event.at, findNames.coin, '#e8ce95');
+          break;
+        }
+        // Each find is shown on its own, and whatever follows waits until it is put away.
+        showFound(
+          event.find,
+          upgrade(events[index + 1]) ?? progress(event.find),
+          events.slice(index + 1),
+        );
+        return;
+      case 'powerUp':
         status.textContent = `Power ${event.power}. Level ${event.power} monsters are now free to fight.`;
         break;
-      }
-      case 'heartUp': {
-        const last = found.at(-1);
-        if (last) last.detail = `${event.maxHealth} hearts!`;
+      case 'heartUp':
         status.textContent = `${event.maxHealth} hearts.`;
         break;
-      }
       case 'win':
         announce(game.player, 'Chief defeated!');
         status.textContent = 'Goblin chief defeated.';
@@ -265,25 +269,23 @@ function handleEvents(events: GameEvent[]): void {
     }
   }
   if (events.length) stop();
-  const idle = !foundQueue.length;
-  foundQueue.push(...found);
-  if (idle) showFound();
 }
 const foundDialog = element<HTMLDialogElement>('#found');
-const foundQueue: Found[] = [];
-function showFound(): void {
-  const [next] = foundQueue;
-  if (!next) return;
-  element('#found-name').textContent = findNames[next.find];
-  element('#found-detail').textContent = next.detail ?? '';
-  element<HTMLImageElement>('#found-image').src = itemGetImage(next.find);
+let afterFound: GameEvent[] = [];
+function showFound(find: Find, detail: string | undefined, after: GameEvent[]): void {
+  afterFound = after;
+  element('#found-name').textContent = findNames[find];
+  element('#found-detail').textContent = detail ?? '';
+  element<HTMLImageElement>('#found-image').src = itemGetImage(find);
   openDialog('#found');
 }
-// A tap anywhere puts the find away and shows the next one.
+// A tap anywhere puts the find away.
 foundDialog.addEventListener('click', () => foundDialog.close());
 foundDialog.addEventListener('close', () => {
-  foundQueue.shift();
-  showFound();
+  const after = afterFound;
+  afterFound = [];
+  handleEvents(after);
+  updateHud();
 });
 const offerDialog = element<HTMLDialogElement>('#offer');
 let offered: Point | undefined;
@@ -331,9 +333,11 @@ talkDialog.addEventListener('click', () => {
   else talkDialog.close();
 });
 talkDialog.addEventListener('close', () => {
-  if (conversation) handleEvents(conversation.after);
-  if (conversation?.person.heals) handleEvents(heal(game));
+  // Clear the finished conversation first, since what follows may start another.
+  const finished = conversation;
   conversation = undefined;
+  if (finished) handleEvents(finished.after);
+  if (finished?.person.heals) handleEvents(heal(game));
   updateHud();
 });
 function move(target: Point): boolean {
@@ -620,7 +624,7 @@ function loadWorld(next: World): void {
   stop();
   cancelPress();
   conversation = undefined;
-  foundQueue.length = 0;
+  afterFound = [];
   offered = undefined;
   nextAnnouncement = 0;
   hovered = undefined;
