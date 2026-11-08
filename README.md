@@ -44,7 +44,9 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 - Step onto a door to go inside, and onto the doormat to come back out. The stairs north of the village lead to the cave, and the timber gate at the east edge leads to the wood. Every map keeps its state while you are away, and your hearts and power come with you.
 - Walk into a person, or tap them from across the room, to talk. Tap anywhere to show the next line.
 - Defeating a goblin chief does not end the run.
-- Running out of hearts is game over. Continue wakes you beside your bed at home with every heart, and the world stays as you left it. Start over begins a new game, and is also in the menu along with the rules and monster levels.
+- Running out of hearts is game over. Continue wakes you beside your bed at home with every heart, and the world stays as you left it. Start over begins a new game.
+- The bag in the corner opens the menu. Its pages show the items you carry, the quests people have given you and the ones you have finished, the rules and monster levels with Start over, and a debug page for playtesting.
+- Every find except a coin shows the hero holding it up, with how far it goes toward the next upgrade.
 - The game saves itself in the browser, so a reload or a locked computer picks up where you left off. Editing a map drops the save.
 - Tap a distant revealed tile to walk there. Tapping a distant hidden tile that borders reachable revealed floor walks beside it and steps in, fighting whatever is there. A hidden tile with no such neighbor routes only to the nearest reachable revealed floor.
 - Number keys 1–5 mark the hidden tile under the mouse right away. Anywhere else they pick that note tool. Choose a note tool with its button or a number key, then tap a hidden tile to mark it. The tool then returns to movement; hold Shift while clicking to keep marking. Marking a tile with the note it already has clears it, and a different note replaces it. Long press or right-click cycles 1–5, then clear. Notes do not prevent movement.
