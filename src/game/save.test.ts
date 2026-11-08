@@ -7,6 +7,7 @@ import { createWorld, travel } from './world';
 describe('saves', () => {
   it('restores the world as it was left, with every map sharing one hero', () => {
     const world = createWorld();
+    travel(world, 'village');
     const village = world.game;
     const hidden = village.tiles.find((tile) => !tile.revealed && !tile.monster);
     if (!hidden) throw new Error('Village has no hidden floor.');
@@ -32,6 +33,7 @@ describe('saves', () => {
   });
   it('remembers dead monsters and collected finds', () => {
     const world = createWorld();
+    travel(world, 'village');
     const slime = world.game.tiles.find((tile) => tile.monster);
     const find = world.game.tiles.find((tile) => tile.find);
     if (!slime?.monster || !find) throw new Error('Village has no monster or find.');
@@ -65,6 +67,7 @@ describe('saves', () => {
   });
   it('preserves a monster revealed by a failed attack and the blocked player position', () => {
     const world = createWorld();
+    travel(world, 'village');
     const bat = world.game.tiles.find((tile) => tile.monster?.kind === 'bat');
     if (!bat) throw new Error('Village has no bat.');
     const from = world.game.tiles.find(

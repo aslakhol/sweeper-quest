@@ -39,7 +39,7 @@ describe('the world', () => {
 
   // How much of each map's hidden ground the clues alone prove free at powers 1, 2 and 3.
   it.each([
-    ['village', undefined],
+    ['village', 'home'],
     ['wood', 'village'],
     ['cave', 'village'],
   ] as const)('%s opens in layers', (area, from) => {

@@ -18,6 +18,7 @@ describe('save slots', () => {
     const store = storage();
     const original = createWorld();
     original.game.hero.health = 1;
+    travel(original, 'village');
     travel(original, 'wood');
     const text = serialize(original);
     store.setItem('sweeper-quest-save', text);
@@ -27,7 +28,7 @@ describe('save slots', () => {
     slots.replace(1, createWorld());
     expect(new SaveSlots(store).read(1)).toMatchObject({
       status: 'ready',
-      world: { area: 'village' },
+      world: { area: 'home' },
     });
     expect(store.getItem('sweeper-quest-save')).toBe(text);
     expect(slots.read(2).status).toBe('empty');
@@ -41,6 +42,7 @@ describe('save slots', () => {
     const second = slots.open(2);
     if (!first || !second) throw new Error('Empty slots should start a game.');
     second.game.hero.power = 3;
+    travel(second, 'village');
     travel(second, 'cave');
     slots.save(second);
     const third = slots.open(3);

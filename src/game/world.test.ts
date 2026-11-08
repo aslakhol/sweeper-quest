@@ -11,8 +11,14 @@ describe('world', () => {
       }
     }
   });
+  it('starts a new game beside the bed at home', () => {
+    const world = createWorld();
+    expect(world.area).toBe('home');
+    expect(world.game.player).toEqual(areas.home.bedside);
+  });
   it('enters a house through its door and comes back out onto the same door', () => {
     const world = createWorld();
+    travel(world, 'village');
     const door = { x: 21, y: 6 };
     const village = world.game;
     village.player = { x: 21, y: 7 };
@@ -27,6 +33,7 @@ describe('world', () => {
   });
   it('keeps a map as you left it when you return', () => {
     const world = createWorld();
+    travel(world, 'village');
     travel(world, 'cave');
     const cave = world.game;
     cave.hero.power = 2;
@@ -38,6 +45,7 @@ describe('world', () => {
   });
   it('wakes beside the bed after a defeat, leaving the map you fell on as it was', () => {
     const world = createWorld();
+    travel(world, 'village');
     travel(world, 'cave');
     const cave = world.game;
     cave.hero.health = 0;

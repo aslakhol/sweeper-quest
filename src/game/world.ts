@@ -8,9 +8,11 @@ function isArea(id: string): id is AreaId {
   return Object.hasOwn(areas, id);
 }
 
+// A new game starts with waking up beside your bed at home.
 export function createWorld(): World {
-  const game = createGame(areas.village.map, { legend: areas.village });
-  return { area: 'village', game, visited: new Map([['village', game]]) };
+  const game = createGame(areas.home.map, { legend: areas.home, from: 'village' });
+  game.player = { ...areas.home.bedside };
+  return { area: 'home', game, visited: new Map([['home', game]]) };
 }
 
 // Maps keep their state between visits, and the hero comes along.

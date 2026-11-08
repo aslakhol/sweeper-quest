@@ -64,6 +64,10 @@ export const areas = {
         colors: { hair: '#8a5a3a', shirt: '#c08a9a' },
         heals: true,
         fullHealthLines: ['Not a scratch on you. Good.', 'Dinner will be ready when you need it.'],
+        introLines: [
+          'Morning, sleepyhead.',
+          'Doctor Madeleine sent word. She wants you at her dojo.',
+        ],
         wakeLines: [
           'You are awake! They carried you back half dead.',
           'Be more careful out there. Please.',

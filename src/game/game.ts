@@ -51,6 +51,8 @@ export type Person = {
   heals?: boolean;
   // What they say instead when you already have every heart.
   fullHealthLines?: readonly string[];
+  // What they say when you wake up at the start of a new game.
+  introLines?: readonly string[];
   // What they say when you wake up after a defeat.
   wakeLines?: readonly string[];
   // They hand over a reward, once, for the keepsake they lost.

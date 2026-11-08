@@ -179,9 +179,7 @@ export function checkMaps() {
     // Each supported entry is a separate conditional experiment, with fresh state initially and
     // persistent kills/reveals as power rises. None of these granted upgrades count as world progress.
     const entrances = [...new Set(Object.values(spec.exits).map((exit) => exit.to))];
-    const starts: (string | undefined)[] =
-      area === 'village' ? [undefined, ...entrances] : entrances;
-    for (const from of starts) {
+    for (const from of entrances) {
       const initial = createGame(spec.map, { legend: spec, from });
       if (
         initial.tiles.some(
@@ -197,7 +195,7 @@ export function checkMaps() {
         const measured = measureLayers(game, highestHiddenLevel, profile);
         layers.push({
           area,
-          from: from ?? 'start',
+          from,
           profile,
           initiallyHidden: hidden.length,
           powers: Array.from({ length: highestHiddenLevel }, (_, index) => {

@@ -89,6 +89,7 @@ const hearts = element<HTMLDivElement>('#hearts');
 const power = element<HTMLSpanElement>('#power-value');
 const noteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-note]')];
 const saves = new SaveSlots(localStorage);
+const freshStart = saves.read(saves.selected).status === 'empty';
 let world = saves.open(saves.selected) ?? createWorld();
 let game = world.game;
 let selectedNote: Note | 'erase' | null = null;
@@ -648,14 +649,18 @@ function newGame(slot: SaveSlot): void {
   const next = createWorld();
   saves.replace(slot, next);
   loadWorld(next);
+  wakeUp(areas.home.people.m.introLines);
+}
+// Mum is there whenever you wake up beside your bed.
+function wakeUp(lines: readonly string[]): void {
+  talk(areas.home.people.m, lines);
 }
 element('#continue').addEventListener('click', () => {
   element<HTMLDialogElement>('#death-dialog').close();
   wakeAtHome(world);
   changeMap();
   updateHud();
-  const mum = areas.home.people.m;
-  talk(mum, mum.wakeLines);
+  wakeUp(areas.home.people.m.wakeLines);
 });
 // Game over needs an answer.
 element('#death-dialog').addEventListener('cancel', (event) => event.preventDefault());
@@ -766,4 +771,5 @@ function frame(time: number): void {
 updateHud();
 if (saves.active === undefined) showSaves();
 else if (game.lost) openDialog('#death-dialog');
+else if (freshStart) wakeUp(areas.home.people.m.introLines);
 requestAnimationFrame(frame);

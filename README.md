@@ -82,11 +82,11 @@ The game module has no DOM, timers, or rendering dependencies. Actions mutate on
 
 ## Map format and decisions
 
-Rows must have equal widths. The village has exactly one `@`; maps you only reach through an exit start on the exit back to where you came from. Coordinates in code start at zero; the accessible board label and note feedback start at one.
+Rows must have equal widths. A new game wakes up beside the bed at home, where Mum speaks first. A map you reach through an exit starts on the exit back to where you came from; a map without exits starts on its single `@`. Coordinates in code start at zero; the accessible board label and note feedback start at one.
 
 | Symbol | Meaning |
 | --- | --- |
-| `@` | Start, revealed on spawn |
+| `@` | Start on a map without exits, revealed on spawn |
 | `.` | Hidden floor, drawn as tall grass |
 | `,` | Revealed lawn |
 | `=` | Revealed path |

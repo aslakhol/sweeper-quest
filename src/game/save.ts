@@ -69,9 +69,11 @@ export function deserialize(text: string): World | undefined {
     Object.assign(hero, save.hero);
     for (const saved of save.games) {
       const area = areas[saved.area];
+      // Any entrance will do, since the saved position replaces it.
+      const [entrance] = Object.values(area.exits);
       const game =
         world.visited.get(saved.area) ??
-        createGame(area.map, { legend: area, hero, from: 'village' });
+        createGame(area.map, { legend: area, hero, from: entrance.to });
       if (
         !Array.isArray(saved.tiles) ||
         saved.tiles.length !== game.tiles.length ||
