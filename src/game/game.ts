@@ -159,6 +159,7 @@ const monsters = {
   g: { kind: 'goblin', level: 3, goal: false },
   G: { kind: 'goblin', level: 3, goal: true, drop: 'heart' },
   C: { kind: 'goblin', level: 3, goal: true, drop: 'greatstone' },
+  K: { kind: 'goblin', level: 3, goal: true },
 } as const;
 const findSymbols = { '*': 'whetstone', '+': 'heartPiece', $: 'coin' } as const;
 

@@ -7,4 +7,5 @@ export const mapObjectives = [
   { name: 'Earn power 3 to challenge the chiefs', kind: 'power', power: 3 },
   { name: 'Defeat the meadow chief', kind: 'defeated', area: 'village', at: { x: 3, y: 4 } },
   { name: 'Defeat the cave chief', kind: 'defeated', area: 'cave', at: { x: 7, y: 1 } },
+  { name: 'Defeat the wood chief', kind: 'defeated', area: 'wood', at: { x: 18, y: 8 } },
 ] satisfies MapObjective[];

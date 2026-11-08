@@ -41,7 +41,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 - Numbers sum the levels of living monsters in the eight neighboring tiles. Zeros are blank and open their whole connected empty area plus its bordering numbers.
 - A monster at or below your power dies for free and you enter its tile. A stronger one is revealed but survives and blocks the way. Its clue stays hidden, and you lose its level times the levels it has over you in hearts. Return with enough power to defeat it. You start with 3 hearts. Finishing a conversation with Mum at home (the north-east house) restores them all.
 - Required progression must be possible through deduction without guesses or damage. Getting stuck in one region is a reason to explore elsewhere and return stronger.
-- Four whetstones raise your power by one, and four heart pieces add a filled heart. They lie hidden on tiles and are picked up by walking onto them. Chiefs are visible, and drop a whole heart or a greatstone worth four whetstones.
+- Four whetstones raise your power by one, and four heart pieces add a filled heart. They lie hidden on tiles and are picked up by walking onto them. Three goblin chiefs are visible: the meadow chief drops a whole heart, the cave chief a greatstone worth four whetstones, and the wood chief nothing yet.
 - Step onto a door to go inside, and onto the doormat to come back out. The stairs north of the village lead to the cave, and the timber gate at the east edge leads to the wood. Every map keeps its state while you are away, and your hearts and power come with you.
 - Walk into a person, or tap them from across the room, to talk. Tap anywhere to show the next line.
 - Defeating a goblin chief does not end the run.
@@ -108,6 +108,7 @@ Rows must have equal widths. A new game wakes up beside the bed at home, where M
 | `g` | Level-3 goblin |
 | `G` | Level-3 goblin chief, visible from the start; drops a heart |
 | `C` | Level-3 goblin chief, visible from the start; drops a greatstone |
+| `K` | Level-3 goblin chief, visible from the start; drops nothing |
 | `*` | Hidden whetstone |
 | `+` | Hidden heart piece |
 

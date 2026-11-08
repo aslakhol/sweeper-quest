@@ -109,7 +109,7 @@ Before the reveal, give the player a reason to investigate:
 
 `pnpm maps:check [output directory]` validates the agreed prototype objectives and writes `report.txt` and `report.json` under `output/map-checks` by default. It runs three deduction profiles in two move orders across the connected world, with actual walks and earned rewards. Every attempted fight must be damage-free, and both tested groups orders must reach all objectives. It also measures conditional layers from every entrance, distinguishing visible ground from reachable ground. These layer experiments grant power and do not count as earned world progression.
 
-`src/maps/puzzle-checks.ts` records agreed world objectives. It currently names the two chiefs and power 3 from the prototype. It imposes no upgrade quota or full-clear requirement on new regions. A designated reasoning requirement or protected earliest power must be recorded explicitly; expert shortcuts are otherwise allowed.
+`src/maps/puzzle-checks.ts` records agreed world objectives. It currently names the three chiefs and power 3 from the prototype. It imposes no upgrade quota or full-clear requirement on new regions. A designated reasoning requirement or protected earliest power must be recorded explicitly; expert shortcuts are otherwise allowed.
 
 `src/game/solver.ts` separates readable observations from deduction and records the supporting clues and bounds. The generator still uses the bounds profile so adding stronger reasoning does not silently change its scoring. `highestHiddenLevel` is a public roster limit, not a fact inferred from hidden map contents; update it with the player-facing legend when introducing stronger hidden monsters.
 
