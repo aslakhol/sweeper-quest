@@ -18,6 +18,8 @@ export type Find =
   | 'heart'
   | 'coin'
   | Keepsake;
+// Which building a roof, wall or room is drawn as. Like look, it never affects the rules.
+export type Building = 'cottage' | 'hall' | 'inn' | 'shop' | 'dojo';
 export type Tile = Point & {
   terrain: 'floor' | 'wall' | 'water';
   // How the tile is drawn. Only terrain affects the rules.
@@ -40,6 +42,7 @@ export type Tile = Point & {
     | 'cave'
     | 'stairs'
     | 'gate';
+  building?: Building;
   revealed: boolean;
   note?: Note;
   monster?: Monster;
@@ -89,7 +92,10 @@ export type Training = {
 export type Legend = {
   // How hidden floor, and the ground under monsters and people, is drawn.
   floor?: Tile['look'];
-  exits?: Record<string, { to: string; look: Tile['look'] }>;
+  // The building a whole map is the inside of.
+  building?: Building;
+  // A door's building also styles the roof and walls around it.
+  exits?: Record<string, { to: string; look: Tile['look']; building?: Building }>;
   people?: Record<string, Person>;
   // Finds that belong to this map, such as a villager's keepsake.
   finds?: Record<string, Find>;
@@ -216,7 +222,16 @@ export function createGame(
   const tiles = rows.flatMap((row, y) =>
     row.map((symbol, x): Tile => {
       const exit = legend.exits?.[symbol];
-      if (exit) return { x, y, terrain: 'floor', look: exit.look, revealed: true, exit: exit.to };
+      if (exit)
+        return {
+          x,
+          y,
+          terrain: 'floor',
+          look: exit.look,
+          building: exit.building,
+          revealed: true,
+          exit: exit.to,
+        };
       const ware = legend.wares?.[symbol];
       if (ware) return { x, y, terrain: 'wall', look: 'table', revealed: true, ...ware };
       const person = legend.people?.[symbol];
@@ -259,6 +274,22 @@ export function createGame(
     won: false,
     lost: false,
   };
+  if (legend.building) for (const tile of tiles) tile.building = legend.building;
+  // Spread each door's building through the roof and walls joined to it.
+  const styled = tiles.filter((tile) => tile.building);
+  for (const tile of styled)
+    for (const [dx, dy] of [
+      [1, 0],
+      [-1, 0],
+      [0, 1],
+      [0, -1],
+    ]) {
+      const next = tileAt(game, { x: tile.x + dx, y: tile.y + dy });
+      if (next && !next.building && (next.look === 'roof' || next.look === 'house')) {
+        next.building = tile.building;
+        styled.push(next);
+      }
+    }
   revealStep(game, start);
   return game;
 }

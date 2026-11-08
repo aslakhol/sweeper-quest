@@ -1,4 +1,4 @@
-import type { Legend, Point } from '../game/game';
+import type { Building, Legend, Point } from '../game/game';
 import cave from './cave.txt?raw';
 import dojo from './dojo.txt?raw';
 import elderHouse from './elder-house.txt?raw';
@@ -14,9 +14,12 @@ import wood from './wood.txt?raw';
 
 export type Area = Legend & { name: string; map: string; bedside?: Point; lesson?: boolean };
 
-const indoors = { floor: 'wood', exits: { '<': { to: 'village', look: 'mat' } } } as const;
+const indoors = (building: Building) =>
+  ({ floor: 'wood', building, exits: { '<': { to: 'village', look: 'mat' } } }) as const;
+const door = (to: string, building: Building) => ({ to, look: 'door', building }) as const;
 // A dojo lesson has no way out: you start on its @ and leave by winning it.
-const lesson = (map: string) => ({ name: 'Dojo', map, exits: {}, lesson: true });
+const lesson = (map: string) =>
+  ({ name: 'Dojo', map, building: 'dojo', exits: {}, lesson: true }) as const;
 
 export const areas = {
   village: {
@@ -24,19 +27,19 @@ export const areas = {
     map: village,
     finds: { '?': 'ring' },
     exits: {
-      1: { to: 'elder-house', look: 'door' },
-      2: { to: 'home', look: 'door' },
-      3: { to: 'inn', look: 'door' },
+      1: door('elder-house', 'hall'),
+      2: door('home', 'cottage'),
+      3: door('inn', 'inn'),
       4: { to: 'wood', look: 'gate' },
-      5: { to: 'shop', look: 'door' },
-      6: { to: 'dojo', look: 'door' },
+      5: door('shop', 'shop'),
+      6: door('dojo', 'dojo'),
       '>': { to: 'cave', look: 'stairs' },
     },
   },
   'elder-house': {
     name: "Elder's house",
     map: elderHouse,
-    ...indoors,
+    ...indoors('hall'),
     people: {
       e: {
         name: 'Elder Maren',
@@ -65,7 +68,7 @@ export const areas = {
     name: 'Home',
     map: home,
     bedside: { x: 6, y: 2 },
-    ...indoors,
+    ...indoors('cottage'),
     people: {
       m: {
         name: 'Mum',
@@ -90,7 +93,7 @@ export const areas = {
   inn: {
     name: 'Inn',
     map: inn,
-    ...indoors,
+    ...indoors('inn'),
     people: {
       i: {
         name: 'Hilde',
@@ -139,7 +142,7 @@ export const areas = {
   dojo: {
     name: 'Dojo',
     map: dojo,
-    ...indoors,
+    ...indoors('dojo'),
     people: {
       d: {
         name: 'Doctor Madeleine',
@@ -211,7 +214,7 @@ export const areas = {
   shop: {
     name: 'Shop',
     map: shop,
-    ...indoors,
+    ...indoors('shop'),
     wares: { w: { find: 'whetstone', price: 5 } },
     people: {
       k: {

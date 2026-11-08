@@ -312,6 +312,23 @@ describe('routes and notes', () => {
     expect(step(game, p(1, 0))).toEqual([{ type: 'travel', to: 'cave' }]);
     expect(game.player).toEqual(p(1, 0));
   });
+  it('styles the roof and walls joined to a door as its building, and a room as its own', () => {
+    const exits = { 1: { to: 'inn', look: 'door', building: 'inn' } } as const;
+    const village = createGame('^ ^ , ^\nH 1 , H\n@ , , ,', { legend: { exits } });
+    const buildings = village.tiles.map((tile) => tile.building);
+    expect(buildings.slice(0, 8)).toEqual([
+      'inn',
+      'inn',
+      undefined,
+      undefined,
+      'inn',
+      'inn',
+      undefined,
+      undefined,
+    ]);
+    const room = createGame('W W\n@ _', { legend: { building: 'dojo' } });
+    expect(room.tiles.every((tile) => tile.building === 'dojo')).toBe(true);
+  });
   it('talks to a person instead of stepping onto them, walking up to them first', () => {
     const person = { name: 'Ada', lines: ['Hi'], colors: { hair: '#000', shirt: '#fff' } };
     const game = createGame('@ , , a', { legend: { people: { a: person } } });
