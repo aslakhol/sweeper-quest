@@ -6,7 +6,7 @@
 
 A small connected world: a village with a tall-grass meadow to the west, a fixed cave to the north and a wood to the east, plus enterable houses with people to talk to. Monsters of levels 1–3 hide on layered maps with visible level-3 chiefs. Kills give nothing. Hidden whetstones and heart pieces raise power and hearts, and chiefs drop a whole upgrade. Monsters at or below power die for free. Stronger ones hurt the hero and become visible but survive, keep blocking the tile, and hide their clue. The hero starts on 3 hearts. A solver tours the connected world using visible evidence and damage-free moves; required progression must never depend on guessing or spending hearts.
 
-This world tests layered maps and returning stronger. Its size and density of finds are not the intended structure. This phase does not include a shop, inventory, or tools.
+This world tests layered maps and returning stronger. Its size and density of finds are not the intended structure. Its shop sells only one whetstone, and the phase does not include inventory or tools.
 
 ## Phase 2: grow the world
 
@@ -26,7 +26,7 @@ Resolve the questions below, then build the overworld and room/reset rules, shop
 
 1. **Progression.** Found whetstones and heart pieces are settled. Define how far power goes and how many finds the world holds.
 2. **Health and death.** The core test has finite health, free full healing from Mum in the village, and game over on death. Death costs the walk back from home; decide whether it should cost more.
-3. **Economy and rewards.** Decide how coins return with a shop, how healing is priced, and whether the shop sells a whetstone. Define bomb behavior.
+3. **Economy and rewards.** Coins returned to buy the shop's whetstone. Decide what else they buy, how healing is priced, and how coins are earned beyond hidden finds. Define bomb behavior.
 4. **Multi-tile clues.** Deduplicate the boss in neighboring sums. Define clues inside its footprint and where the player and remains go after victory.
 5. **Resets.** Monsters and finds stay gone. Decide when notes clear.
 6. **Mobile panning and routing.** The camera follows the player; looking ahead still needs panning without accidental movement or notes. Decide whether a distant hidden target with no reachable revealed neighbor should walk at all.

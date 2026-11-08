@@ -260,6 +260,24 @@ describe('routes and notes', () => {
     expect(step(game, p(0, 0))).toEqual([{ type: 'talk', person: pip, lines: ['Hi again'] }]);
     expect(game.hero.whetstones).toBe(1);
   });
+  it('sells for coins picked up along the way', () => {
+    const bram = {
+      name: 'Bram',
+      lines: ['Five coins'],
+      colors: { hair: '#000', shirt: '#fff' },
+      trade: { wants: { coins: 5 }, reward: 'whetstone', thanks: ['Sold'], after: ['Sold out'] },
+    } as const;
+    const game = createGame('k @ $', { legend: { people: { k: bram } } });
+    game.hero.coins = 4;
+    expect(step(game, p(0, 0))).toEqual([{ type: 'talk', person: bram, lines: ['Five coins'] }]);
+    step(game, p(2, 0));
+    game.player = p(1, 0);
+    expect(step(game, p(0, 0))).toEqual([
+      { type: 'talk', person: bram, lines: ['Sold'] },
+      { type: 'find', at: p(0, 0), find: 'whetstone' },
+    ]);
+    expect(game.hero).toMatchObject({ coins: 0, whetstones: 1 });
+  });
   it('restores every heart only once the conversation is over, then has nothing to heal', () => {
     const mum = {
       name: 'Mum',

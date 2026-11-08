@@ -8,7 +8,7 @@ Before authoring or regenerating maps, read [puzzle design](puzzle-design.md). I
 
 You walk a connected world of hidden tiles. Monsters hide on tiles and sum into clues. Kills give nothing. You grow only by finding hidden items: four whetstones raise your power, four heart pieces add a heart. Level-ups should be rare, so most play happens at one fixed power. Maps are not boards to clear; they are places you explore, get stuck in, leave, and return to stronger.
 
-Hidden finds, chief drops and quests are the current upgrade sources. A quest giver asks for a keepsake lost out in the world and hands over a reward when you bring it back. As the world grows, shops may also provide items and power. Key reward placement and acquisition remain collaborative with Aslak. A region may have few or no power-up items and depend on growth elsewhere to reveal another door, reward or quest objective on a later visit. The test world's reward density and layer ranges below are prototype measurements, not quotas for future regions.
+Hidden finds, chief drops, quests and the shop are the current upgrade sources. A quest giver asks for a keepsake lost out in the world and hands over a reward when you bring it back. Bram's shop sells one whetstone for five coins found around the world. Key reward placement and acquisition remain collaborative with Aslak. A region may have few or no power-up items and depend on growth elsewhere to reveal another door, reward or quest objective on a later visit. The test world's reward density and layer ranges below are prototype measurements, not quotas for future regions.
 
 ## Exact rules
 

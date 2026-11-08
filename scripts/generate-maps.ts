@@ -28,7 +28,7 @@ type Spec = {
 const specs: Spec[] = [
   {
     file: 'village',
-    legend: { finds: { '?': 'ring' }, exits: { 1: { to: '', look: 'door' }, 2: { to: '', look: 'door' }, 3: { to: '', look: 'door' }, 4: { to: '', look: 'gate' }, '>': { to: '', look: 'stairs' } } },
+    legend: { finds: { '?': 'ring' }, exits: { 1: { to: '', look: 'door' }, 2: { to: '', look: 'door' }, 3: { to: '', look: 'door' }, 4: { to: '', look: 'gate' }, 5: { to: '', look: 'door' }, '>': { to: '', look: 'stairs' } } },
     entries: [{ x: 15, y: 8 }, { x: 15, y: 23 }],
     clearing: 3,
     density: [0.14, 0.26],
@@ -70,7 +70,7 @@ const load = (file: string) =>
   readFileSync(new URL(`../src/maps/${file}.txt`, import.meta.url), 'utf8')
     .trim()
     .split('\n')
-    .map((row) => row.trim().split(/\s+/).map((symbol) => ('sbg*+?'.includes(symbol) ? '.' : symbol)));
+    .map((row) => row.trim().split(/\s+/).map((symbol) => ('sbg*+?$'.includes(symbol) ? '.' : symbol)));
 // Walking distance from the nearest entry over hidden floor.
 function distances(rows: string[][], entries: Point[]) {
   const distance = rows.map((row) => row.map(() => Infinity));

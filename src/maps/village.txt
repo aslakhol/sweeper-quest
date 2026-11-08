@@ -7,10 +7,10 @@ T T . . . g . . . . . b . . . . F , , ^ ^ ^ ^ ^ , , ^ ^ ^ ^ ^ , T T
 T T g b b . . . . b T . . . . . F , , H H 1 H H , , H H 2 H H , T T
 T T b g . . . . . . . . . . . . F , , , , = , , , , , , = , , , T T
 T T b . b . . . T T T T . . . s , = = = = = = = = = = = = = = = T T
-T T . . g b . g . . s . T . . . F , , , , , , = , , , , , , , , T T
-T T b . . s . . s s . . . . . . F , T , , , , = , , F F F F F , T T
-T T b . b b b . . . b g . . . . F , , , , , , = , , , , , , , , T T
-T T . . b ? b T T b . . . . s . F , ~ ~ ~ , , = , , , , , , , T T T
+T T . . g b . g . . s . T . . . F , , , , , , = , ^ ^ ^ ^ ^ , , T T
+T T b . . s . . s s . . . . . . F , T , , , , = , ^ ^ ^ ^ ^ , , T T
+T T b . b b b . . . b g . . . . F , , , , , , = , H H 5 H H , , T T
+T T . . b ? b T T b . . . . s . F , ~ ~ ~ , , = = = = = , , , T T T
 T T . . b b b T . . . b . . . * F , ~ ~ ~ ~ , = , , , , , , , , T T
 T T g . g . . . s g . . . . g g F , ~ ~ ~ , , = , ^ ^ ^ ^ ^ ^ , T T
 T T g T . . g . . . . . . . . b F , , , , , , = , ^ ^ ^ ^ ^ ^ , T T

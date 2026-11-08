@@ -35,6 +35,7 @@ app.innerHTML = `
       <div class="stat" id="power" aria-label="Power"><span class="stat-icon" aria-hidden="true">⚔</span><span id="power-value">1</span></div>
       <div class="stat" id="whetstones"><span class="stat-icon" aria-hidden="true">◆</span><span id="whetstones-value">0/4</span></div>
       <div class="stat" id="heart-pieces"><span class="stat-icon" aria-hidden="true">♥</span><span id="heart-pieces-value">0/4</span></div>
+      <div class="stat" id="coins"><span class="stat-icon" aria-hidden="true">●</span><span id="coins-value">0</span></div>
     </div>
   </section>
   <button class="menu-button hud" id="menu" aria-label="Menu">☰</button>
@@ -117,6 +118,8 @@ function updateHud(): void {
   const heartPieces = `${game.hero.heartPieces % piecesPerUpgrade}/${piecesPerUpgrade}`;
   element('#heart-pieces-value').textContent = heartPieces;
   element('#heart-pieces').setAttribute('aria-label', `${heartPieces} heart pieces`);
+  element('#coins-value').textContent = String(game.hero.coins);
+  element('#coins').setAttribute('aria-label', `${game.hero.coins} coins`);
 }
 function stop(): void {
   pendingChord = false;
@@ -151,6 +154,7 @@ const findNames: Record<Find, string> = {
   greatstone: 'Greatstone',
   heartPiece: 'Heart piece',
   heart: 'Heart',
+  coin: 'Coin',
   marble: 'Lucky marble',
   spectacles: 'Spectacles',
   ring: 'Ring',

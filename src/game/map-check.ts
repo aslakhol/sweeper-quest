@@ -227,7 +227,7 @@ export function checkMaps() {
       'Two deterministic move orders are evidence, not exhaustive route search or a proof of minimum difficulty.',
       'Groups implements subset subtraction. General overlap bounds and expert case analysis are not implemented.',
       'Conditional layers grant power; actual world surveys earn it. Partial regions are allowed.',
-      'Shops and traversal items are not implemented. Quest rewards are earned by delivering keepsakes.',
+      'Traversal items are not implemented. Trades are earned by delivering keepsakes and paying found coins.',
       'Repetition and flood sizes are review diagnostics, not calibrated measures of enjoyment.',
     ],
     objectives: mapObjectives,

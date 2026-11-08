@@ -9,7 +9,7 @@ export type Monster = {
 };
 // Things villagers have lost out in the world. Bringing one back earns their reward.
 export type Keepsake = 'marble' | 'spectacles' | 'ring';
-export type Find = 'whetstone' | 'greatstone' | 'heartPiece' | 'heart' | Keepsake;
+export type Find = 'whetstone' | 'greatstone' | 'heartPiece' | 'heart' | 'coin' | Keepsake;
 export type Tile = Point & {
   terrain: 'floor' | 'wall' | 'water';
   // How the tile is drawn. Only terrain affects the rules.
@@ -53,7 +53,7 @@ export type Person = {
   wakeLines?: readonly string[];
   // They hand over a reward, once, for what they want.
   trade?: {
-    wants: Keepsake;
+    wants: Keepsake | { coins: number };
     reward: Find;
     thanks: readonly string[];
     // What they say once the trade is done, instead of their usual lines.
@@ -76,6 +76,7 @@ export type Hero = {
   power: number;
   whetstones: number;
   heartPieces: number;
+  coins: number;
   carrying: Keepsake[];
   // Names of the people you have traded with.
   traded: string[];
@@ -126,7 +127,7 @@ const monsters = {
   G: { kind: 'goblin', level: 3, goal: true, drop: 'heart' },
   C: { kind: 'goblin', level: 3, goal: true, drop: 'greatstone' },
 } as const;
-const findSymbols = { '*': 'whetstone', '+': 'heartPiece' } as const;
+const findSymbols = { '*': 'whetstone', '+': 'heartPiece', $: 'coin' } as const;
 
 // Four pieces make one level of power or one heart. A greatstone or a heart counts as all four.
 export const piecesPerUpgrade = 4;
@@ -143,6 +144,7 @@ export function createHero(): Hero {
     power: 1,
     whetstones: 0,
     heartPieces: 0,
+    coins: 0,
     carrying: [],
     traded: [],
   };
@@ -331,13 +333,18 @@ function collect(game: Game, at: Point, find: Find): GameEvent[] {
       }
       break;
     }
+    case 'coin':
+      hero.coins++;
+      break;
     default:
       hero.carrying.push(find);
   }
   return events;
 }
 export function canTrade(hero: Hero, { name, trade }: Person): boolean {
-  return !!trade && !hero.traded.includes(name) && hero.carrying.includes(trade.wants);
+  if (!trade || hero.traded.includes(name)) return false;
+  const { wants } = trade;
+  return typeof wants === 'string' ? hero.carrying.includes(wants) : hero.coins >= wants.coins;
 }
 // Bringing a person what they want hands over their reward along with their thanks.
 function talk(game: Game, at: Point, person: Person): GameEvent[] {
@@ -348,7 +355,9 @@ function talk(game: Game, at: Point, person: Person): GameEvent[] {
   if (trade && hero.traded.includes(person.name))
     return [{ type: 'talk', person, lines: trade.after }];
   if (!trade || !canTrade(hero, person)) return [{ type: 'talk', person, lines: person.lines }];
-  hero.carrying = hero.carrying.filter((keepsake) => keepsake !== trade.wants);
+  const { wants } = trade;
+  if (typeof wants === 'string') hero.carrying = hero.carrying.filter((item) => item !== wants);
+  else hero.coins -= wants.coins;
   hero.traded.push(person.name);
   return [{ type: 'talk', person, lines: trade.thanks }, ...collect(game, at, trade.reward)];
 }

@@ -80,7 +80,7 @@ Terrain and landmarks are hand-drawn. Monsters and finds can be generated and tu
 
 ### Shop and items
 
-Keep a thumb-friendly bottom sheet for shopping. Coins were removed from the core demo because they had no use and added collection taps. A shop requires a deliberate economy design, including earnings, pickup behavior, and farm balance. Do not bring back mandatory corpse-looting taps by default.
+Bram's shop in the village sells one whetstone for five coins. Coins lie hidden in the world like other finds and are picked up by walking onto them, so they cost no extra taps. You buy by talking to Bram; a thumb-friendly bottom sheet can come when the shop sells more than one thing. A wider economy still needs deliberate design, including earnings and farm balance. Do not bring back mandatory corpse-looting taps by default.
 
 The original shop is a proposal to revisit, not settled balance:
 
@@ -90,7 +90,7 @@ The original shop is a proposal to revisit, not settled balance:
 | Bomb | 8 coins, reveals 3×3; kills enemies at or below power and exposes stronger ones | Interaction with the combat rules |
 | Heart piece | 15 coins, sold once | Pricing |
 
-Coins and other extras do not tie directly into progression, apart from perhaps a single whetstone in the shop. Currency rewards, if restored, should be predictable rather than random, following the original economy intent.
+Coins and other extras do not tie directly into progression, apart from the shop's single whetstone. Currency rewards, if restored, should be predictable rather than random, following the original economy intent.
 
 ### Dungeon and boss
 

@@ -3,6 +3,7 @@ import cave from './cave.txt?raw';
 import elderHouse from './elder-house.txt?raw';
 import home from './home.txt?raw';
 import inn from './inn.txt?raw';
+import shop from './shop.txt?raw';
 import village from './village.txt?raw';
 import wood from './wood.txt?raw';
 
@@ -20,6 +21,7 @@ export const areas = {
       2: { to: 'home', look: 'door' },
       3: { to: 'inn', look: 'door' },
       4: { to: 'wood', look: 'gate' },
+      5: { to: 'shop', look: 'door' },
       '>': { to: 'cave', look: 'stairs' },
     },
   },
@@ -118,6 +120,27 @@ export const areas = {
             'Here, swap you for this whetstone.',
           ],
           after: ['Did you see the crowned goblin? I am never going back.'],
+        },
+      },
+    },
+  },
+  shop: {
+    name: 'Shop',
+    map: shop,
+    ...indoors,
+    people: {
+      k: {
+        name: 'Bram',
+        colors: { hair: '#3a3a3a', shirt: '#8a6a3a' },
+        lines: [
+          'Welcome! I have one whetstone left. Five coins.',
+          'Folk drop coins all over out there. Bring me five.',
+        ],
+        trade: {
+          wants: { coins: 5 },
+          reward: 'whetstone',
+          thanks: ['Five coins, one whetstone. Pleasure doing business.'],
+          after: ['Sold out, I am afraid. The next cart is due in spring.'],
         },
       },
     },

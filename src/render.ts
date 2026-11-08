@@ -109,10 +109,12 @@ const whetstone = [
 const heartPiece = ['rrr     ', 'rlrr    ', 'rrrrr   ', ' rrrrr  ', '  rrr   ', '   r    '];
 const marble = ['  bbb  ', ' bllbb ', 'bllbbbd', 'bbbbbbd', ' bbbbd ', '  ddd  '];
 const spectacles = [' ff    ff ', 'fllf  fllf', 'flllfflllf', 'fllf  fllf', ' ff    ff '];
+const coin = [' yyy ', 'yllyd', 'ylyyd', 'yyyyd', ' ddd '];
 const ring = ['  ll  ', ' rllr ', 'r    r', 'r    r', 'r    r', ' rrrr '];
 const findSprites: Partial<Record<Find, { rows: string[]; palette: Record<string, string> }>> = {
   whetstone: { rows: whetstone, palette: { s: '#8c9aa0', l: '#d5dde0', d: '#566268' } },
   heartPiece: { rows: heartPiece, palette: { r: '#e0655f', l: '#f4b5a8' } },
+  coin: { rows: coin, palette: { y: '#e1bf76', l: '#f6e3a8', d: '#a8843e' } },
   marble: { rows: marble, palette: { b: '#7aa0d8', l: '#d8e6f4', d: '#4a6a9a' } },
   spectacles: { rows: spectacles, palette: { f: '#c9a35a', l: '#cfe3ea' } },
   ring: { rows: ring, palette: { r: '#e1bf76', l: '#9fd4e0' } },

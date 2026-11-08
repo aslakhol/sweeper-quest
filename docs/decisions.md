@@ -61,9 +61,9 @@ The demo previously supplied only seven whetstones before the level-3 cave chief
 - **The player's tile shows its clue like any other tile**, in the upper half with the hero below. Remove "Here: N".
 - **Remove the start tile marker.**
 
-## Removed for now
+## Coins
 
-- **Coins.** They have no use yet and cost taps. They will be redesigned alongside a shop.
+- **Coins are hidden finds.** They were removed because they had no use and cost taps. They came back to buy the shop's single whetstone, and are picked up by walking onto them like any other find.
 
 ## Deferred
 
