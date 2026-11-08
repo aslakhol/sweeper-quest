@@ -3,7 +3,7 @@ import { createGame, type Hero, type Tile } from './game';
 import { type AreaId, createWorld, type World } from './world';
 
 // Bump when the shape below changes. Saves from an older shape, or for an edited map, are dropped.
-const version = 2;
+const version = 3;
 type SavedTile = Pick<Tile, 'revealed' | 'note' | 'find'> & { alive?: boolean };
 type Save = {
   version: number;

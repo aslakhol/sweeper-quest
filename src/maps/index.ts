@@ -39,7 +39,7 @@ export const areas = {
           'Whetstones lie out in the wild. Four would put a real edge on that sword.',
           'And if you go through the east gate, keep an eye out for my spectacles.',
         ],
-        quest: {
+        trade: {
           wants: 'spectacles',
           reward: 'whetstone',
           thanks: [
@@ -88,7 +88,7 @@ export const areas = {
           'If the numbers climb around an empty spot, look there.',
           'Bring my ring back and I will make it worth your while.',
         ],
-        quest: {
+        trade: {
           wants: 'ring',
           reward: 'heartPiece',
           thanks: [
@@ -110,7 +110,7 @@ export const areas = {
           'The stairs are right where you arrive. Just step on them again.',
           'I dropped my lucky marble down there. Can you get it back?',
         ],
-        quest: {
+        trade: {
           wants: 'marble',
           reward: 'whetstone',
           thanks: [

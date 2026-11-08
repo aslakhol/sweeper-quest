@@ -51,11 +51,12 @@ export type Person = {
   fullHealthLines?: readonly string[];
   // What they say when you wake up after a defeat.
   wakeLines?: readonly string[];
-  quest?: {
+  // They hand over a reward, once, for what they want.
+  trade?: {
     wants: Keepsake;
     reward: Find;
     thanks: readonly string[];
-    // What they say once the quest is done, instead of their usual lines.
+    // What they say once the trade is done, instead of their usual lines.
     after: readonly string[];
   };
 };
@@ -76,7 +77,8 @@ export type Hero = {
   whetstones: number;
   heartPieces: number;
   carrying: Keepsake[];
-  returned: Keepsake[];
+  // Names of the people you have traded with.
+  traded: string[];
 };
 export type Game = {
   width: number;
@@ -142,7 +144,7 @@ export function createHero(): Hero {
     whetstones: 0,
     heartPieces: 0,
     carrying: [],
-    returned: [],
+    traded: [],
   };
 }
 
@@ -334,19 +336,21 @@ function collect(game: Game, at: Point, find: Find): GameEvent[] {
   }
   return events;
 }
-// Bringing a person what they lost hands over their reward along with their thanks.
+export function canTrade(hero: Hero, { name, trade }: Person): boolean {
+  return !!trade && !hero.traded.includes(name) && hero.carrying.includes(trade.wants);
+}
+// Bringing a person what they want hands over their reward along with their thanks.
 function talk(game: Game, at: Point, person: Person): GameEvent[] {
-  const { quest } = person;
+  const { trade } = person;
   const { hero } = game;
   if (person.fullHealthLines && hero.health === hero.maxHealth)
     return [{ type: 'talk', person, lines: person.fullHealthLines }];
-  if (quest && hero.returned.includes(quest.wants))
-    return [{ type: 'talk', person, lines: quest.after }];
-  if (!quest || !hero.carrying.includes(quest.wants))
-    return [{ type: 'talk', person, lines: person.lines }];
-  hero.carrying = hero.carrying.filter((keepsake) => keepsake !== quest.wants);
-  hero.returned.push(quest.wants);
-  return [{ type: 'talk', person, lines: quest.thanks }, ...collect(game, at, quest.reward)];
+  if (trade && hero.traded.includes(person.name))
+    return [{ type: 'talk', person, lines: trade.after }];
+  if (!trade || !canTrade(hero, person)) return [{ type: 'talk', person, lines: person.lines }];
+  hero.carrying = hero.carrying.filter((keepsake) => keepsake !== trade.wants);
+  hero.traded.push(person.name);
+  return [{ type: 'talk', person, lines: trade.thanks }, ...collect(game, at, trade.reward)];
 }
 // Stronger monsters hurt the hero and become visible, but keep blocking the tile.
 export function step(game: Game, target: Point): GameEvent[] {

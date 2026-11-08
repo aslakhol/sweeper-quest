@@ -1,5 +1,6 @@
 import {
   canStep,
+  canTrade,
   type Game,
   type GameEvent,
   heal,
@@ -34,7 +35,7 @@ export type Access = {
 export type SurveyAction = {
   area: AreaId;
   at: Point;
-  kind: 'deduction' | 'collect' | 'quest' | 'fight' | 'heal' | 'travel' | 'walk';
+  kind: 'deduction' | 'collect' | 'trade' | 'fight' | 'heal' | 'travel' | 'walk';
   power: number;
   health: number;
   revealed: number;
@@ -215,11 +216,9 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
         walk(healer, 'heal');
         continue;
       }
-      const questGiver = candidates.find(
-        (tile) => tile.person?.quest && game.hero.carrying.includes(tile.person.quest.wants),
-      );
-      if (questGiver) {
-        walk(questGiver, 'quest');
+      const trader = candidates.find((tile) => tile.person && canTrade(game.hero, tile.person));
+      if (trader) {
+        walk(trader, 'trade');
         continue;
       }
       const find = candidates.find(
