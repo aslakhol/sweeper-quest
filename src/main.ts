@@ -489,6 +489,8 @@ canvas.addEventListener('pointerup', (event) => {
   cancelPress();
   if (current && !current.consumed) activate(current.point, event.shiftKey);
 });
+// A tap acts on release. Its trailing click would land on a dialog the tap just opened and close it.
+canvas.addEventListener('touchend', (event) => event.preventDefault());
 canvas.addEventListener('pointerleave', () => {
   hovered = undefined;
 });

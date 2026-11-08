@@ -190,6 +190,11 @@ test('a door leads into a house where you can talk to people', async ({ page, is
   await talk.getByRole('button', { name: 'Continue' }).click();
   await expect(talk).not.toBeVisible();
   await position(page, 4, 3);
+  // A tap from next door opens the dialog on release; the tap's own click must not skip a line.
+  await tap(page, 5, 2, isMobile);
+  await expect(talk).toContainText('Welcome to the inn.');
+  for (let line = 0; line < 5; line++) await talk.click();
+  await expect(talk).not.toBeVisible();
   await tap(page, 5, 7, isMobile);
   await expect(page.locator('canvas')).toHaveAttribute(
     'aria-label',
