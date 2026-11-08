@@ -212,9 +212,9 @@ function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number) {
   );
 }
 
-function drawFind(ctx: CanvasRenderingContext2D, find: Find, x: number, y: number) {
+function drawFind(ctx: CanvasRenderingContext2D, find: Find, x: number, y: number, top = 22) {
   const found = findSprites[find];
-  if (found) sprite(ctx, found.rows, found.palette, x + 24 - found.rows[0].length * 1.5, y + 22);
+  if (found) sprite(ctx, found.rows, found.palette, x + 24 - found.rows[0].length * 1.5, y + top);
 }
 
 function rects(
@@ -486,9 +486,9 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
     const x = tile.x * TILE_SIZE;
     const y = tile.y * TILE_SIZE;
     drawGround(ctx, game, tile, x, y);
-    // Wares stand on display.
     if (tile.terrain !== 'floor') {
-      if (tile.find && tile.price !== undefined) drawFind(ctx, tile.find, x, y);
+      // Wares sit on the tabletop, above its front edge.
+      if (tile.find && tile.price !== undefined) drawFind(ctx, tile.find, x, y, 12);
       continue;
     }
     if (tile.person) {
