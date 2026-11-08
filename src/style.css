@@ -36,16 +36,22 @@ button:focus-visible {
   outline: 2px solid #e4c782;
   outline-offset: 4px;
 }
+/* The board takes the space between the HUD rows, so the HUD never covers a tile. */
 #app {
   position: fixed;
   inset: 0;
+  display: grid;
+  grid-template:
+    "stats menu" auto
+    "board board" minmax(0, 1fr)
+    "notes notes" auto
+    / 1fr auto;
   overflow: hidden;
   user-select: none;
   -webkit-user-select: none;
 }
 canvas {
-  position: absolute;
-  inset: 0;
+  grid-area: board;
   width: 100%;
   height: 100%;
   display: block;
@@ -53,15 +59,15 @@ canvas {
   outline: none;
 }
 .hud {
-  position: absolute;
   background: #101a17cc;
   border: 1px solid #40503d;
   border-radius: 10px;
   backdrop-filter: blur(4px);
 }
 .stats {
-  top: max(10px, env(safe-area-inset-top));
-  left: max(10px, env(safe-area-inset-left));
+  grid-area: stats;
+  justify-self: start;
+  margin: max(10px, env(safe-area-inset-top)) 0 8px max(10px, env(safe-area-inset-left));
   padding: 8px 11px;
   display: grid;
   gap: 4px;
@@ -95,8 +101,9 @@ canvas {
   color: #d7bd7e;
 }
 .menu-button {
-  top: max(10px, env(safe-area-inset-top));
-  right: max(10px, env(safe-area-inset-right));
+  grid-area: menu;
+  align-self: start;
+  margin: max(10px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) 8px 0;
   width: 44px;
   display: grid;
   place-items: center;
@@ -107,9 +114,9 @@ canvas {
   image-rendering: pixelated;
 }
 .notes {
-  bottom: max(10px, env(safe-area-inset-bottom));
-  left: 50%;
-  transform: translateX(-50%);
+  grid-area: notes;
+  justify-self: center;
+  margin: 8px 0 max(10px, env(safe-area-inset-bottom));
   width: min(calc(100% - 20px), 400px);
   padding: 6px;
   display: grid;
