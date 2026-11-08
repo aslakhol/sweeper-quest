@@ -1,6 +1,6 @@
 # Sweeper Quest
 
-A touch-first Minesweeper RPG prototype. The map fills the screen and a camera follows you around a small connected world: a 34×30 village, a tall-grass meadow behind its west fence, a cave to the north and a wood to the east. Slimes (level 1), bats (level 2) and goblins (level 3) hide on tiles and sum into the clues. Kills give nothing. You grow by finding hidden whetstones and heart pieces, which open more of the world. The three houses can be entered and have people to talk to.
+A touch-first Minesweeper RPG prototype. The map fills the screen and a camera follows you around a small connected world: a 34×30 village, a tall-grass meadow behind its west fence, a cave to the north and a wood to the east. Slimes (level 1), bats (level 2) and goblins (level 3) hide on tiles and sum into the clues. Kills give nothing. You grow by finding hidden whetstones and heart pieces, which open more of the world. The houses, the shop and the dojo can be entered and have people to talk to.
 
 For the intended adventure and current design direction, start with [idea.md](idea.md). The village is a scratch map for trying out a full-screen world, not a designed area.
 
@@ -36,6 +36,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 
 ## Play
 
+- A new game starts at home without a sword, at power 0, where even a slime hurts. Mum sends you to the dojo in the south-east of the village. Doctor Madeleine asks whether you will help, hands over a sword when you say yes, and teaches the rules in four short lessons. Each lesson is won by defeating every monster you are strong enough for, and puts you back beside her for the next.
 - Tap a neighboring tile to move or fight. Arrow keys and WASD work too. Combine directions for diagonals, or use Q/E/Z/C.
 - Numbers sum the levels of living monsters in the eight neighboring tiles. Zeros are blank and open their whole connected empty area plus its bordering numbers.
 - A monster at or below your power dies for free and you enter its tile. A stronger one is revealed but survives and blocks the way. Its clue stays hidden, and you lose its level times the levels it has over you in hearts. Return with enough power to defeat it. You start with 3 hearts. Finishing a conversation with Mum at home (the north-east house) restores them all.
@@ -45,7 +46,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 - Walk into a person, or tap them from across the room, to talk. Tap anywhere to show the next line.
 - Defeating a goblin chief does not end the run.
 - Running out of hearts is game over. Continue wakes you beside your bed at home with every heart, and the world stays as you left it. Start over begins a new game.
-- The bag in the corner opens the menu. Its pages show the items you carry, the quests people have given you and the ones you have finished, the rules and monster levels with Start over, and a debug page for playtesting.
+- The bag in the corner opens the menu. Its pages show the items you carry, the quests people have given you and the ones you have finished, the rules and monster levels with Start over, and a debug page for playtesting. Skip training on the debug page hands over the sword and puts you outside the dojo.
 - Every find except a coin shows the hero holding it up, with how far it goes toward the next upgrade.
 - The game autosaves to one of three browser-local slots. Open **Menu → Saves** to switch; the game you leave is saved first. A reload resumes the last selected slot. The original single save moves into Save 1, with its original data retained as a backup.
 - Saves made incompatible by a map or format change stay stored. Choose another slot, or confirm replacing the old save with a new game. Each slot has Download and Import buttons for keeping a JSON backup or restoring a repaired save. Importing an incompatible file leaves the slot unchanged.
@@ -57,16 +58,16 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 
 | File | Responsibility |
 | --- | --- |
-| `src/maps/*.txt` | The village, three house interiors, the cave and the wood, edited as whitespace-separated symbols |
+| `src/maps/*.txt` | The village, its interiors, the dojo lessons, the cave and the wood, edited as whitespace-separated symbols |
 | `src/maps/index.ts` | Areas: each one's map or maps, exits, people and their lines |
-| `src/game/world.ts` | Which area you are in, travel between areas, and the visited maps that keep their state |
+| `src/game/world.ts` | Which area you are in, travel between areas, dojo lessons, and the visited maps that keep their state |
 | `src/game/game.ts` | Validated map loading, state, clues, combat, finds, reveal rules, notes, and route planning |
 | `src/game/save.ts` | Saves and restores the world as JSON in `localStorage` |
 | `src/game/save-slots.ts` | Three independent save slots, selection and migration of the original save |
 | `src/game/game.test.ts` | Rule and progression tests with small maps |
 | `src/game/world.test.ts` | Exits link up both ways, and travel keeps or refreshes maps |
 | `src/game/solver.ts` | Direct, bounds and shared-group deductions with clue proofs; conditional visibility and reachability layers |
-| `src/game/survey.ts` | Walks the connected world, earns upgrades and revisits persistent areas |
+| `src/game/survey.ts` | Walks the connected world, trains at the dojo, earns upgrades and revisits persistent areas |
 | `src/game/puzzle-fixtures.ts` | Small authored examples of weighted deduction and unresolved frontiers |
 | `src/maps/puzzle-checks.ts` | Agreed world objectives; optional reasoning requirements and protected access powers |
 | `src/game/map-check.ts` | Validates objectives and reports routes, proofs, partial layers and return visits |

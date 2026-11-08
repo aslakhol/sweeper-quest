@@ -71,6 +71,15 @@ The demo previously supplied only seven whetstones before the level-3 cave chief
 - **Screen layout, HUD, status line and copy.** These will be redesigned from scratch later.
 - **Note tools.** Revisit once the board plays like a real deduction puzzle.
 
+## Tutorial start
+
+A new game wakes up at home. Mum sends you to Doctor Madeleine's dojo, where she asks for help against the goblin chiefs and hands over a sword when you agree. Four short lessons teach the clue rules before the open world.
+
+- **No sword means power 0.** The sword gives the first point of power, and whetstones add to it. Leaving the village before training is allowed but dangerous, because even a slime hurts. No extra lock is needed.
+- **Lessons are separate maps without exits.** A lesson starts afresh each time on its `@`, and is won by defeating every monster at or below your power. That lets a lesson include a stronger monster to leave alone. Winning puts you back beside her for the next one.
+- **The world survey trains for real.** It says yes, plays each lesson with the same deductions and must take no damage, so map checks also cover the tutorial.
+- **Skip training is a debug shortcut** for playtesting new saves and for browser tests.
+
 ## Save slots
 
 Three local save slots keep separate playthroughs during development. The menu and game-over screen offer a save picker, and switching saves the outgoing game first. Replacing an occupied slot requires confirmation.

@@ -45,14 +45,14 @@ Hidden finds, chief drops, quests and the shop are the current upgrade sources. 
 
 ### Numbers today
 
-| Monster | Level | Cost at power 1 | Power 2 | Power 3 |
-| --- | --- | --- | --- | --- |
-| Slime | 1 | 0 | 0 | 0 |
-| Bat | 2 | 2 | 0 | 0 |
-| Goblin | 3 | 6 | 3 | 0 |
-| Chief (visible) | 3 | Blocked | Blocked | 0 |
+| Monster | Level | Cost without a sword | Power 1 | Power 2 | Power 3 |
+| --- | --- | --- | --- | --- | --- |
+| Slime | 1 | 1 | 0 | 0 | 0 |
+| Bat | 2 | 4 | 2 | 0 | 0 |
+| Goblin | 3 | 9 | 6 | 3 | 0 |
+| Chief (visible) | 3 | Blocked | Blocked | Blocked | 0 |
 
-These are damage costs for encountering a hidden monster, not prices for killing it. The hero starts on 3 hearts, so at power 1 encountering one hidden bat is survivable, a second hidden bat is not, and a hidden goblin is lethal. Whoever draws maps must treat a wrong guess as possibly fatal, especially early. Later levels cost more: a monster one level above you costs `power + 1`, so about `2 × power + 1` hearts survive one mistake. The planned ladder stops around power 5 or 6, and note tools already go up to 5.
+These are damage costs for encountering a hidden monster, not prices for killing it. A new game has no sword and power 0 until Doctor Madeleine's training, so the world must not require anything before the dojo. The hero starts on 3 hearts, so at power 1 encountering one hidden bat is survivable, a second hidden bat is not, and a hidden goblin is lethal. Whoever draws maps must treat a wrong guess as possibly fatal, especially early. Later levels cost more: a monster one level above you costs `power + 1`, so about `2 × power + 1` hearts survive one mistake. The planned ladder stops around power 5 or 6, and note tools already go up to 5.
 
 ## How this differs from classic Minesweeper
 
@@ -82,8 +82,10 @@ At each power, part of a map can be proven free using only visible clues. That s
 
 The world test also checks that:
 
-- the village alone cannot give you power 2, so being stuck sends you elsewhere
+- the village and its dojo alone cannot give you power 2, so being stuck sends you elsewhere
 - every find and chief can be reached without a guess or any damage, by touring all maps repeatedly
+
+The tour starts beside the bed at home, at power 0. It agrees to Doctor Madeleine's training and wins all four lessons with the same deduction rules, so each lesson is checked to be winnable without guesses or damage.
 
 This test world holds 8 whetstones and 6 heart pieces, counting two whetstones and a heart piece that villagers give as quest rewards and the whetstone Bram sells. Seven coins are hidden in the village, wood and cave, two more than the whetstone costs. It compresses a long stretch of play into a short test. Real maps should hold far fewer.
 

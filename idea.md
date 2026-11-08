@@ -41,9 +41,11 @@ Notes are guesses on hidden floor, not movement barriers. Provide levels 1–5, 
 
 At or below your power, an enemy dies without hurting you and you move onto its tile. Stepping into a hidden stronger enemy costs hearts and reveals the monster, but it survives and you stay where you are. Its own clue stays hidden, its contribution to neighbouring clues stays unchanged, and no flood or reward is triggered. A visible stronger monster cannot be attacked; trying briefly shakes the hero without changing game state. Return with sufficient power.
 
-Current damage tuning is `monster level × max(0, monster level − player power)` hearts. At power 1 a bat costs 2 hearts and a goblin costs 6; at power 2 a goblin costs 3. Reaching zero health is lethal: the monster survives and you do not move.
+A new game starts at home with no sword, at power 0. Mum sends you to Doctor Madeleine's dojo in the village. She asks whether you will help against three goblin chiefs and hands over a sword, which gives power 1, when you agree. Four lessons follow, each a small walled map: one slime, two slimes adding up, blank tiles and kills changing numbers, and a bat to leave alone. Winning one puts you back beside her for the next.
 
-Power stays with the character and never resets. Four whetstones raise it by one, and a chief can drop a greatstone worth all four. Four heart pieces add a heart, and a chief can drop a whole heart. A new heart also refills your health. Kills give nothing.
+Current damage tuning is `monster level × max(0, monster level − player power)` hearts. Without a sword a slime costs 1 heart and a bat 4. At power 1 a bat costs 2 hearts and a goblin costs 6; at power 2 a goblin costs 3. Reaching zero health is lethal: the monster survives and you do not move.
+
+Power stays with the character and never resets. The sword gives the first point. Four whetstones raise it by one, and a chief can drop a greatstone worth all four. Four heart pieces add a heart, and a chief can drop a whole heart. A new heart also refills your health. Kills give nothing.
 
 Level-ups are rare, with a lot of game between them. Keep the ladder short, around power 5 or 6, so each one is an event and clues stay small. Heart pieces, tools and secrets set the everyday rhythm of rewards. Each power needs a large part of the world designed for it.
 
@@ -73,7 +75,7 @@ Grow the test world into a connected adventure from the village to a dungeon bos
 
 Terrain and landmarks are hand-drawn. Monsters and finds can be generated and tuned; see [docs/map-design.md](docs/map-design.md).
 
-- **Village in the south:** revealed and safe, with the start, a shop, and a house with an indoor room. The house tests interiors and room boundaries, not a different zero-reveal mode.
+- **Village in the south:** revealed and safe, with home, a shop, the dojo, and a house with an indoor room. The house tests interiors and room boundaries, not a different zero-reveal mode.
 - **Meadow in the middle:** slimes, bats, and stronger threats arranged in layers. Hide whetstones, heart pieces and tools as exploration rewards.
 - **Tall grass in the west:** the first region you can only partly clear. Monsters do not respawn, and there is no grinding to do.
 - **Cave entrance in the north:** leads to the dungeon. Clues and monster levels gate routes. Tools can separately unlock exploration gates.
