@@ -228,7 +228,7 @@ export function checkMaps() {
       'Some ground finds are collected on the step that reveals them. Review the listed placements; prefer a reveal before pickup.',
     );
   // Preserve the existing prototype dependency without assuming that every future area holds power.
-  const villageOnly = surveyWorld({ profile: 'bounds', destinations: [] });
+  const villageOnly = surveyWorld({ profile: 'bounds', destinations: ['village', 'dojo'] });
   if (villageOnly.world.game.hero.power > 1)
     errors.push(
       'The village alone now supplies power 2. Review the existing requirement to explore elsewhere.',

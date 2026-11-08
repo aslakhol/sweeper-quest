@@ -1,4 +1,5 @@
 import {
+  answer,
   buy,
   canFinishQuest,
   canStep,
@@ -38,7 +39,7 @@ export type Access = {
 export type SurveyAction = {
   area: AreaId;
   at: Point;
-  kind: 'deduction' | 'collect' | 'quest' | 'buy' | 'fight' | 'heal' | 'travel' | 'walk';
+  kind: 'deduction' | 'collect' | 'quest' | 'train' | 'buy' | 'fight' | 'heal' | 'travel' | 'walk';
   power: number;
   health: number;
   revealed: number;
@@ -160,6 +161,8 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
     if (events.some((event) => event.type === 'talk' && event.person.heals))
       events.push(...heal(game));
     if (events.some((event) => event.type === 'offer')) events.push(...buy(game, at));
+    for (const event of [...events])
+      if (event.type === 'ask') events.push(...answer(game, at, event.person, true));
     const revealed = revealedCount(game) - before;
     if (!events.length && !revealed) return;
     if (game.lost) throw new Error(`Survey died at ${accessKey(area, at)}.`);
@@ -232,6 +235,11 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
       );
       if (questGiver) {
         walk(questGiver, 'quest');
+        continue;
+      }
+      const trainer = candidates.find((tile) => tile.person?.training && !game.hero.sword);
+      if (trainer) {
+        walk(trainer, 'train');
         continue;
       }
       const ware = game.tiles.find(

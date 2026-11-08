@@ -1,5 +1,6 @@
 import type { Legend, Point } from '../game/game';
 import cave from './cave.txt?raw';
+import dojo from './dojo.txt?raw';
 import elderHouse from './elder-house.txt?raw';
 import home from './home.txt?raw';
 import inn from './inn.txt?raw';
@@ -22,6 +23,7 @@ export const areas = {
       3: { to: 'inn', look: 'door' },
       4: { to: 'wood', look: 'gate' },
       5: { to: 'shop', look: 'door' },
+      6: { to: 'dojo', look: 'door' },
       '>': { to: 'cave', look: 'stairs' },
     },
   },
@@ -124,6 +126,27 @@ export const areas = {
             'Here, swap you for this whetstone.',
           ],
           after: ['Did you see the crowned goblin? I am never going back.'],
+        },
+      },
+    },
+  },
+  dojo: {
+    name: 'Dojo',
+    map: dojo,
+    ...indoors,
+    people: {
+      d: {
+        name: 'Doctor Madeleine',
+        colors: { hair: '#3a2a26', shirt: '#e2dccb' },
+        lines: [
+          'There you are. I am Doctor Madeleine, doctor of fighting.',
+          'Three goblin chiefs are attacking the village.',
+        ],
+        training: {
+          question: 'Will you help me save it?',
+          accepted: ['Good. Then you will need a sword.'],
+          declined: ['Then go home. Come back if you change your mind.'],
+          after: ['You can collect whetstones to grow in power.'],
         },
       },
     },

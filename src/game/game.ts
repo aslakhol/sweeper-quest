@@ -9,7 +9,14 @@ export type Monster = {
 };
 // Things villagers have lost out in the world. Bringing one back earns their reward.
 export type Keepsake = 'marble' | 'spectacles' | 'ring';
-export type Find = 'whetstone' | 'greatstone' | 'heartPiece' | 'heart' | 'coin' | Keepsake;
+export type Find =
+  | 'sword'
+  | 'whetstone'
+  | 'greatstone'
+  | 'heartPiece'
+  | 'heart'
+  | 'coin'
+  | Keepsake;
 export type Tile = Point & {
   terrain: 'floor' | 'wall' | 'water';
   // How the tile is drawn. Only terrain affects the rules.
@@ -63,6 +70,15 @@ export type Person = {
     // What they say once the quest is done, instead of their usual lines.
     after: readonly string[];
   };
+  // They ask you to help, and hand over a sword when you agree.
+  training?: Training;
+};
+export type Training = {
+  question: string;
+  accepted: readonly string[];
+  declined: readonly string[];
+  // What they say once you have the sword, instead of their usual lines.
+  after: readonly string[];
 };
 // Symbols a particular map adds on top of the shared ones.
 export type Legend = {
@@ -77,6 +93,8 @@ export type Legend = {
 };
 // The hero's stats travel with the player from map to map.
 export type Hero = {
+  // Without a sword you have power 0, and even a slime hurts.
+  sword: boolean;
   health: number;
   maxHealth: number;
   power: number;
@@ -108,6 +126,7 @@ export type GameEvent =
   | { type: 'heal'; at: Point; amount: number }
   | { type: 'find'; at: Point; find: Find }
   | { type: 'offer'; at: Point; find: Find; price: number }
+  | { type: 'ask'; at: Point; person: Person; question: string }
   | { type: 'powerUp'; at: Point; power: number }
   | { type: 'heartUp'; at: Point; maxHealth: number };
 
@@ -148,9 +167,10 @@ function isKey<T extends object>(object: T, key: string): key is Extract<keyof T
 
 export function createHero(): Hero {
   return {
+    sword: false,
     health: startingHearts,
     maxHealth: startingHearts,
-    power: 1,
+    power: 0,
     whetstones: 0,
     heartPieces: 0,
     coins: 0,
@@ -324,10 +344,12 @@ export function collect(game: Game, at: Point, find: Find): GameEvent[] {
   const { hero } = game;
   const events: GameEvent[] = [{ type: 'find', at, find }];
   switch (find) {
+    case 'sword':
     case 'whetstone':
     case 'greatstone': {
-      hero.whetstones += find === 'whetstone' ? 1 : piecesPerUpgrade;
-      const power = 1 + Math.floor(hero.whetstones / piecesPerUpgrade);
+      if (find === 'sword') hero.sword = true;
+      else hero.whetstones += find === 'whetstone' ? 1 : piecesPerUpgrade;
+      const power = Number(hero.sword) + Math.floor(hero.whetstones / piecesPerUpgrade);
       if (power > hero.power) {
         hero.power = power;
         events.push({ type: 'powerUp', at, power });
@@ -358,8 +380,15 @@ export function canFinishQuest(hero: Hero, { quest }: Person): boolean {
 }
 // Bringing a person what they want hands over their reward along with their thanks.
 function talk(game: Game, at: Point, person: Person): GameEvent[] {
-  const { quest } = person;
+  const { quest, training } = person;
   const { hero } = game;
+  if (training)
+    return hero.sword
+      ? [{ type: 'talk', person, lines: training.after }]
+      : [
+          { type: 'talk', person, lines: person.lines },
+          { type: 'ask', at, person, question: training.question },
+        ];
   if (quest && !hero.asked.includes(quest.wants)) hero.asked.push(quest.wants);
   if (person.fullHealthLines && hero.health === hero.maxHealth)
     return [{ type: 'talk', person, lines: person.fullHealthLines }];
@@ -370,6 +399,13 @@ function talk(game: Game, at: Point, person: Person): GameEvent[] {
   hero.carrying = hero.carrying.filter((keepsake) => keepsake !== quest.wants);
   hero.returned.push(quest.wants);
   return [{ type: 'talk', person, lines: quest.thanks }, ...collect(game, at, quest.reward)];
+}
+// Agreeing to train hands over a sword.
+export function answer(game: Game, at: Point, person: Person, yes: boolean): GameEvent[] {
+  const { training } = person;
+  if (!training || game.hero.sword) return [];
+  if (!yes) return [{ type: 'talk', person, lines: training.declined }];
+  return [{ type: 'talk', person, lines: training.accepted }, ...collect(game, at, 'sword')];
 }
 function forSale(tile: Tile | undefined): tile is Tile & { find: Find; price: number } {
   return !!tile?.find && tile.price !== undefined;

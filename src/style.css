@@ -272,8 +272,8 @@ dialog .secondary {
   background: none;
   color: #d7bd7e;
 }
-#offer:not(.declined) .talk-next,
-#offer.declined .dialog-actions {
+#ask:not(.declined) .talk-next,
+#ask.declined .dialog-actions {
   display: none;
 }
 .found {

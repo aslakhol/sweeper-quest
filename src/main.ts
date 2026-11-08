@@ -1,5 +1,6 @@
 import './style.css';
 import {
+  answer,
   buy,
   canNote,
   collect,
@@ -74,7 +75,7 @@ app.innerHTML = `
   <button data-close autofocus>Resume</button></dialog>
   <dialog id="saves-dialog" aria-labelledby="saves-title"><h2 id="saves-title">Saves</h2><div id="save-slots"></div><p id="save-error" role="alert"></p><button id="saves-close" data-close>Back</button></dialog>
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
-  <dialog id="offer" class="talk"><p id="offer-line"></p><div class="dialog-actions"><button class="secondary" data-close>No</button><button id="buy">Yes</button></div><button class="talk-next" aria-label="Continue">▸</button></dialog>
+  <dialog id="ask" class="talk"><div class="talk-name" id="ask-name"></div><p id="ask-line"></p><div class="dialog-actions"><button class="secondary" id="no">No</button><button id="yes">Yes</button></div><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="found" class="found"><img id="found-image" alt="" /><p>You found</p><h2 id="found-name"></h2><p id="found-detail"></p></dialog>
   <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button id="continue">Continue</button></div><button class="secondary" data-saves>Saves</button></dialog>
 `;
@@ -171,6 +172,7 @@ function announce(at: Point, text: string, color = '#f3d794'): void {
   effects.push({ kind: 'text', at, text, color, started });
 }
 const findNames: Record<Find, string> = {
+  sword: 'Sword',
   whetstone: 'Whetstone',
   greatstone: 'Greatstone',
   heartPiece: 'Heart piece',
@@ -233,9 +235,31 @@ function handleEvents(events: GameEvent[]): void {
         travel(world, event.to);
         changeMap();
         break;
-      case 'offer':
-        offer(event.at, event.find, event.price);
+      case 'offer': {
+        const { at, find, price } = event;
+        ask(`Buy ${findNames[find].toLowerCase()} for ${price} coins?`, {
+          yes: () => {
+            const events = buy(game, at);
+            // Keep the dialog open to explain; the next tap closes it.
+            if (!events.length)
+              return decline('Not enough coins. Folk drop them all over out there.');
+            askDialog.close();
+            handleEvents(events);
+            updateHud();
+          },
+        });
         break;
+      }
+      case 'ask': {
+        const { at, person } = event;
+        const respond = (yes: boolean) => {
+          askDialog.close();
+          handleEvents(answer(game, at, person, yes));
+          updateHud();
+        };
+        ask(event.question, { yes: () => respond(true), no: () => respond(false) }, person.name);
+        break;
+      }
       case 'talk':
         // A reward is handed over once they have finished speaking.
         talk(event.person, event.lines, events.slice(index + 1));
@@ -288,29 +312,30 @@ foundDialog.addEventListener('close', () => {
   handleEvents(after);
   updateHud();
 });
-const offerDialog = element<HTMLDialogElement>('#offer');
-let offered: Point | undefined;
-function offer(at: Point, find: Find, price: number): void {
-  offered = at;
-  offerDialog.classList.remove('declined');
-  element('#offer-line').textContent = `Buy ${findNames[find].toLowerCase()} for ${price} coins?`;
-  openDialog('#offer');
+const askDialog = element<HTMLDialogElement>('#ask');
+let answers: { yes: () => void; no?: () => void } | undefined;
+function ask(question: string, next: NonNullable<typeof answers>, name = ''): void {
+  answers = next;
+  askDialog.classList.remove('declined');
+  element('#ask-name').textContent = name;
+  element('#ask-line').textContent = question;
+  openDialog('#ask');
 }
-element('#buy').addEventListener('click', (event) => {
-  // Keep the dialog open to explain; the next tap closes it.
+function decline(line: string): void {
+  askDialog.classList.add('declined');
+  element('#ask-line').textContent = line;
+}
+element('#yes').addEventListener('click', (event) => {
   event.stopPropagation();
-  const events = offered ? buy(game, offered) : [];
-  if (!events.length) {
-    offerDialog.classList.add('declined');
-    element('#offer-line').textContent = 'Not enough coins. Folk drop them all over out there.';
-    return;
-  }
-  offerDialog.close();
-  handleEvents(events);
-  updateHud();
+  answers?.yes();
 });
-offerDialog.addEventListener('click', () => {
-  if (offerDialog.classList.contains('declined')) offerDialog.close();
+element('#no').addEventListener('click', (event) => {
+  event.stopPropagation();
+  if (answers?.no) answers.no();
+  else askDialog.close();
+});
+askDialog.addEventListener('click', () => {
+  if (askDialog.classList.contains('declined')) askDialog.close();
 });
 const talkDialog = element<HTMLDialogElement>('#talk');
 let conversation:
@@ -565,6 +590,7 @@ function showItems(): void {
   const whetstones = hero.whetstones % piecesPerUpgrade;
   const heartPieces = hero.heartPieces % piecesPerUpgrade;
   const slots = [
+    hero.sword ? slot('sword', findNames.sword) : '',
     whetstones ? slot('whetstone', `${whetstones}/${piecesPerUpgrade}`) : '',
     heartPieces ? slot('heartPiece', `${heartPieces}/${piecesPerUpgrade}`) : '',
     hero.coins ? slot('coin', String(hero.coins)) : '',
@@ -626,7 +652,7 @@ function loadWorld(next: World): void {
   cancelPress();
   conversation = undefined;
   afterFound = [];
-  offered = undefined;
+  answers = undefined;
   nextAnnouncement = 0;
   hovered = undefined;
   world = next;

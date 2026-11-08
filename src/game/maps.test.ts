@@ -13,7 +13,8 @@ const chiefsAlive = (game: Game) =>
 describe('the world', () => {
   it('cannot be finished from a single area, so being stuck sends you elsewhere', () => {
     const world = createWorld();
-    surveyWorld({ profile: 'bounds', destinations: [] }, world);
+    // The dojo stands in the village, and its sword is needed to fight at all.
+    surveyWorld({ profile: 'bounds', destinations: ['village', 'dojo'] }, world);
     expect(stats(world)).toEqual([1, 3]);
     expect(world.game.hero.whetstones).toBeLessThan(4);
   }, 60_000);

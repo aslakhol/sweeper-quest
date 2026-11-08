@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createGame, step, tileAt } from './game';
+import { createGame, createHero, step, tileAt } from './game';
 import { puzzleFixtures } from './puzzle-fixtures';
 import {
   deduce,
@@ -12,6 +12,7 @@ import {
 } from './solver';
 
 const person = { name: 'Guide', lines: [], colors: { hair: '', shirt: '' } };
+const armed = () => ({ ...createHero(), sword: true, power: 1 });
 
 describe('deduction profiles', () => {
   it.each(puzzleFixtures)('$name', (fixture) => {
@@ -26,7 +27,7 @@ describe('deduction profiles', () => {
   });
 
   it('explains the shared group and recomputes clues after the free kill', () => {
-    const game = createGame(puzzleFixtures[2].map);
+    const game = createGame(puzzleFixtures[2].map, { hero: armed() });
     const result = deduce(observe(game), 'groups');
     expect(explain(result, 8)).toContainEqual(
       expect.objectContaining({ rule: 'subset', target: 8, low: 1, high: 1, clues: [11, 12] }),
@@ -60,7 +61,7 @@ describe('deduction profiles', () => {
   });
 
   it('uses an exposed monster level but never its covered clue', () => {
-    const game = createGame('@ b s');
+    const game = createGame('@ b s', { hero: armed() });
     step(game, { x: 1, y: 0 });
     const observation = observe(game);
     expect(observation.clues.map((clue) => clue.at)).toEqual([0]);

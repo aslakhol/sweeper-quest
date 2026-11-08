@@ -3,7 +3,7 @@ import { createGame, type Hero, type Tile } from './game';
 import { type AreaId, createWorld, type World } from './world';
 
 // Bump when the shape below changes. Incompatible saves stay stored but cannot be loaded.
-const version = 5;
+const version = 6;
 type SavedTile = Pick<Tile, 'revealed' | 'note' | 'find'> & { alive?: boolean };
 type Save = {
   version: number;
@@ -58,14 +58,15 @@ export function deserialize(text: string): World | undefined {
       const value = save.hero[key];
       if (typeof hero[key] === 'number') {
         if (typeof value !== 'number' || !Number.isInteger(value) || value < 0) return undefined;
+      } else if (typeof hero[key] === 'boolean') {
+        if (typeof value !== 'boolean') return undefined;
       } else if (
         !Array.isArray(value) ||
         value.some((item) => !['marble', 'spectacles', 'ring'].includes(item))
       )
         return undefined;
     }
-    if (save.hero.power < 1 || save.hero.maxHealth < 1 || save.hero.health > save.hero.maxHealth)
-      return undefined;
+    if (save.hero.maxHealth < 1 || save.hero.health > save.hero.maxHealth) return undefined;
     Object.assign(hero, save.hero);
     for (const saved of save.games) {
       const area = areas[saved.area];

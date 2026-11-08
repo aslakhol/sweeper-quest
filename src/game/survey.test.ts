@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { areas } from '../maps';
-import { createGame } from './game';
+import { createGame, createHero } from './game';
 import { surveyWorld } from './survey';
 import type { World } from './world';
 
@@ -46,9 +46,10 @@ beforeEach(() => {
   areas.cave.map = 'w , * * * *';
 });
 
-// These surveys start in the village rather than beside the bed at home.
+// These surveys start in the village with a sword, rather than beside the bed at home.
 function inVillage(): World {
-  const game = createGame(areas.village.map, { legend: areas.village });
+  const hero = { ...createHero(), sword: true, power: 1 };
+  const game = createGame(areas.village.map, { legend: areas.village, hero });
   return { area: 'village', game, visited: new Map([['village', game]]) };
 }
 

@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { areas } from '../maps';
 import {
+  answer,
   buy,
   canStep,
+  collect,
   createGame,
   createHero,
   cycleNote,
@@ -17,7 +19,8 @@ import {
 } from './game';
 
 const p = (x: number, y: number) => ({ x, y });
-const sturdy = () => ({ ...createHero(), health: 10, maxHealth: 10 });
+const armed = () => ({ ...createHero(), sword: true, power: 1 });
+const sturdy = () => ({ ...armed(), health: 10, maxHealth: 10 });
 
 describe('map and clues', () => {
   it('loads a map and keeps its monsters hidden', () => {
@@ -36,7 +39,7 @@ describe('map and clues', () => {
     expect(() => createGame('@ ?')).toThrow('Unknown map symbol');
   });
   it('sums monster levels, including diagonals, and removes dead monsters from clues', () => {
-    const game = createGame('s . b\n. @ .\n. . G');
+    const game = createGame('s . b\n. @ .\n. . G', { hero: armed() });
     expect(numberAt(game, p(1, 1))).toBe(6);
     step(game, p(0, 0));
     expect(numberAt(game, p(1, 1))).toBe(5);
@@ -56,13 +59,16 @@ describe('map and clues', () => {
     expect(tileAt(game, p(3, 2))?.revealed).toBe(false);
   });
   it('expands a revealed clue that becomes zero after a kill, even if the fought tile is nonzero', () => {
-    const game = createGame(`
+    const game = createGame(
+      `
       # # # # # #
       # . . s . #
       # @ s . . #
       # . . . . #
       # # # # # #
-    `);
+    `,
+      { hero: armed() },
+    );
     expect(numberAt(game, game.start)).toBe(1);
     expect(tileAt(game, p(1, 1))?.revealed).toBe(false);
     setNote(game, p(1, 1), 'danger');
@@ -76,7 +82,7 @@ describe('map and clues', () => {
     expect(tileAt(game, p(3, 1))).toMatchObject({ revealed: false, monster: { alive: true } });
   });
   it('does not expand from a visible living monster after a neighboring kill', () => {
-    const game = createGame('@ s G . .');
+    const game = createGame('@ s G . .', { hero: armed() });
     step(game, p(1, 0));
     expect(numberAt(game, p(2, 0))).toBe(0);
     expect(tileAt(game, p(3, 0))?.revealed).toBe(false);
@@ -106,7 +112,7 @@ describe('map and clues', () => {
 
 describe('combat and progression', () => {
   it('kills an equal or weaker monster for free and steps onto its tile', () => {
-    const game = createGame('@ s .');
+    const game = createGame('@ s .', { hero: armed() });
     const [fight] = step(game, p(1, 0));
     expect(fight).toMatchObject({ type: 'fight', from: p(0, 0), at: p(1, 0), damage: 0 });
     expect(game.player).toEqual(p(1, 0));
@@ -160,12 +166,27 @@ describe('combat and progression', () => {
     expect(game.won).toBe(true);
   });
   it('gives nothing for a kill', () => {
-    const game = createGame('@ s .');
+    const game = createGame('@ s .', { hero: armed() });
     step(game, p(1, 0));
-    expect(game.hero).toEqual(createHero());
+    expect(game.hero).toEqual(armed());
+  });
+  it('starts at power 0 without a sword, so even a slime hurts', () => {
+    const game = createGame('@ s');
+    expect(game.hero.power).toBe(0);
+    expect(step(game, p(1, 0))).toMatchObject([{ type: 'fight', damage: 1 }]);
+  });
+  it('adds the sword to the power from whetstones', () => {
+    const hero = { ...createHero(), whetstones: 5, power: 1 };
+    const game = createGame('@', { hero });
+    expect(collect(game, p(0, 0), 'sword')).toContainEqual({
+      type: 'powerUp',
+      at: p(0, 0),
+      power: 2,
+    });
+    expect(hero.sword).toBe(true);
   });
   it('raises power on the fourth whetstone, wherever you are', () => {
-    const game = createGame('@ * * * * s');
+    const game = createGame('@ * * * * s', { hero: armed() });
     for (let x = 1; x <= 3; x++) step(game, p(x, 0));
     expect([game.hero.whetstones, game.hero.power]).toEqual([3, 1]);
     expect(step(game, p(4, 0))).toEqual([
@@ -209,9 +230,37 @@ describe('combat and progression', () => {
   });
 });
 
+describe('training', () => {
+  const legend = {
+    people: {
+      d: {
+        name: 'Teacher',
+        colors: { hair: '', shirt: '' },
+        lines: ['Will you help?'],
+        training: { question: 'Yes?', accepted: ['Good.'], declined: ['Pity.'], after: ['Go.'] },
+      },
+    },
+  };
+  it('asks for help, and hands over a sword only on a yes', () => {
+    const game = createGame('@ d', { legend });
+    const [, ask] = step(game, p(1, 0));
+    expect(ask).toMatchObject({ type: 'ask', at: p(1, 0), question: 'Yes?' });
+    if (ask.type !== 'ask') throw new Error('Expected a question.');
+    expect(answer(game, ask.at, ask.person, false)).toMatchObject([{ lines: ['Pity.'] }]);
+    expect(game.hero.sword).toBe(false);
+    expect(answer(game, ask.at, ask.person, true)).toMatchObject([
+      { type: 'talk', lines: ['Good.'] },
+      { type: 'find', find: 'sword' },
+      { type: 'powerUp', power: 1 },
+    ]);
+    expect(answer(game, ask.at, ask.person, true)).toEqual([]);
+    expect(step(game, p(1, 0))).toMatchObject([{ type: 'talk', lines: ['Go.'] }]);
+  });
+});
+
 describe('routes and notes', () => {
   it('walks to a hidden target that borders known ground and steps into it', () => {
-    const game = createGame('@ . s .');
+    const game = createGame('@ . s .', { hero: armed() });
     expect(tileAt(game, p(2, 0))?.revealed).toBe(false);
     const route = planWalk(game, p(2, 0));
     expect(route).toEqual([p(1, 0), p(2, 0)]);

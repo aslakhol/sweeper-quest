@@ -100,14 +100,8 @@ const heroHolding = [
   '   b   b   ',
   '   d   d   ',
 ];
-const heroColors = {
-  g: '#adc984',
-  f: '#e3c399',
-  d: '#29362a',
-  b: '#678879',
-  s: '#e4e7c8',
-  t: '#b99a65',
-};
+const heroColors = { g: '#adc984', f: '#e3c399', d: '#29362a', b: '#678879' };
+const swordColors = { s: '#e4e7c8', t: '#b99a65' };
 const person = [
   '   hhh   ',
   '  hhhhh  ',
@@ -122,6 +116,7 @@ const person = [
   '  pp pp  ',
   '  dd dd  ',
 ];
+const sword = ['  s  ', '  s  ', '  s  ', '  s  ', 'ttttt', '  h  ', '  h  '];
 const whetstone = [
   '    ss  ',
   '   slls ',
@@ -138,6 +133,7 @@ const spectacles = [' ff    ff ', 'fllf  fllf', 'flllfflllf', 'fllf  fllf', ' ff
 const coin = [' yyy ', 'yllyd', 'ylyyd', 'yyyyd', ' ddd '];
 const ring = ['  ll  ', ' rllr ', 'r    r', 'r    r', 'r    r', ' rrrr '];
 const findSprites: Record<Find, { rows: string[]; palette: Record<string, string> }> = {
+  sword: { rows: sword, palette: { ...swordColors, h: '#7a6038' } },
   whetstone: { rows: whetstone, palette: { s: '#8c9aa0', l: '#d5dde0', d: '#566268' } },
   greatstone: { rows: whetstone, palette: { s: '#9a86c8', l: '#e2d8f6', d: '#5c4c86' } },
   heartPiece: { rows: heartPiece, palette: { r: '#e0655f', l: '#f4b5a8' } },
@@ -244,8 +240,9 @@ function drawMonster(
   ctx.restore();
 }
 
-function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  sprite(ctx, hero, heroColors, x + 15, y + 23, 2);
+// The hero only carries a sword once Doctor Madeleine has handed one over.
+function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number, armed: boolean) {
+  sprite(ctx, hero, armed ? { ...heroColors, ...swordColors } : heroColors, x + 15, y + 23, 2);
 }
 
 function drawFind(ctx: CanvasRenderingContext2D, find: Find, x: number, y: number, top = 22) {
@@ -618,14 +615,14 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
     const reach = t < hitEnd ? 0.4 * Math.sin((Math.PI * t) / hitEnd) : 0;
     const enter = Math.min(1, Math.max(0, (t - stepStart) / (effectDuration.fight - stepStart)));
     const along = Math.max(reach, enter);
-    drawHero(ctx, fx + (ax - fx) * along, fy + (ay - fy) * along);
+    drawHero(ctx, fx + (ax - fx) * along, fy + (ay - fy) * along, game.hero.sword);
   } else {
     const shake = view.effects.find(
       (effect) => effect.kind === 'shake' && same(effect.at, game.player),
     );
     const progress = shake ? (view.time - shake.started) / effectDuration.shake : 0;
     const offset = Math.sin(progress * Math.PI * 6) * 4 * (1 - progress);
-    drawHero(ctx, px + offset, py);
+    drawHero(ctx, px + offset, py, game.hero.sword);
   }
   if (view.flash) {
     ctx.fillStyle = '#e4867577';

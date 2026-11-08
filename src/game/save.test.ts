@@ -68,6 +68,7 @@ describe('saves', () => {
   it('preserves a monster revealed by a failed attack and the blocked player position', () => {
     const world = createWorld();
     travel(world, 'village');
+    Object.assign(world.game.hero, { sword: true, power: 1 });
     const bat = world.game.tiles.find((tile) => tile.monster?.kind === 'bat');
     if (!bat) throw new Error('Village has no bat.');
     const from = world.game.tiles.find(
