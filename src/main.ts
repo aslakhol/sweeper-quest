@@ -56,7 +56,7 @@ app.innerHTML = `
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin and chief</span></div>
   <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
-  <dialog id="offer"><p id="offer-question"></p><div class="dialog-actions"><button class="secondary" data-close>No</button><button id="buy">Yes</button></div></dialog>
+  <dialog id="offer" class="talk"><p id="offer-line"></p><div class="dialog-actions"><button class="secondary" data-close>No</button><button id="buy">Yes</button></div><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button id="continue">Continue</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
@@ -234,15 +234,25 @@ const offerDialog = element<HTMLDialogElement>('#offer');
 let offered: Point | undefined;
 function offer(at: Point, find: Find, price: number): void {
   offered = at;
-  element('#offer-question').textContent =
-    `Buy ${findNames[find].toLowerCase()} for ${price} coins?`;
-  element<HTMLButtonElement>('#buy').disabled = game.hero.coins < price;
+  offerDialog.classList.remove('declined');
+  element('#offer-line').textContent = `Buy ${findNames[find].toLowerCase()} for ${price} coins?`;
   openDialog('#offer');
 }
-element('#buy').addEventListener('click', () => {
+element('#buy').addEventListener('click', (event) => {
+  // Keep the dialog open to explain; the next tap closes it.
+  event.stopPropagation();
+  const events = offered ? buy(game, offered) : [];
+  if (!events.length) {
+    offerDialog.classList.add('declined');
+    element('#offer-line').textContent = 'Not enough coins. Folk drop them all over out there.';
+    return;
+  }
   offerDialog.close();
-  if (offered) handleEvents(buy(game, offered));
+  handleEvents(events);
   updateHud();
+});
+offerDialog.addEventListener('click', () => {
+  if (offerDialog.classList.contains('declined')) offerDialog.close();
 });
 const talkDialog = element<HTMLDialogElement>('#talk');
 let conversation:

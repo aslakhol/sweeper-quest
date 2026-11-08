@@ -211,10 +211,6 @@ dialog button {
   border: 0;
   font-weight: 700;
 }
-dialog button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
 .dialog-actions {
   display: flex;
   gap: 10px;
@@ -270,4 +266,8 @@ dialog button:disabled {
   padding: 0 12px;
   background: none;
   color: #d7bd7e;
+}
+#offer:not(.declined) .talk-next,
+#offer.declined .dialog-actions {
+  display: none;
 }
