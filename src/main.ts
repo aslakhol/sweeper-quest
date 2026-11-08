@@ -23,7 +23,15 @@ import {
 import { deserialize, serialize } from './game/save';
 import { createWorld, travel, wakeAtHome } from './game/world';
 import { areas } from './maps';
-import { cameraTarget, draw, type Effect, effectDuration, itemGetImage, layout } from './render';
+import {
+  cameraTarget,
+  draw,
+  type Effect,
+  effectDuration,
+  icon,
+  itemGetImage,
+  layout,
+} from './render';
 
 const app = element<HTMLElement>('#app');
 const levelNotes = [1, 2, 3, 4, 5] as const;
@@ -39,12 +47,16 @@ app.innerHTML = `
       <div class="stat" id="coins"><span class="stat-icon" aria-hidden="true">●</span><span id="coins-value">0</span></div>
     </div>
   </section>
-  <button class="menu-button hud" id="menu" aria-label="Menu">☰</button>
+  <button class="menu-button hud" id="menu" aria-label="Menu"><img src="${icon('bag')}" alt="" /></button>
   <section class="notes hud" aria-label="Tile notes">
     ${noteTools.map((note) => `<button class="note-button" data-note="${note}" aria-label="${note === 'erase' ? 'Erase notes' : note === 'danger' ? 'Mark danger' : `Mark level ${note}`}" aria-pressed="false">${note === 'danger' ? '!' : note === 'erase' ? '⌫' : note}</button>`).join('')}
   </section>
   <p id="status" class="visually-hidden" role="status" aria-live="polite"></p>
-  <dialog id="menu-dialog"><h2>Menu</h2><ul>
+  <dialog id="menu-dialog" class="menu">
+  <header class="menu-header"><button class="page-turn" data-turn="-1" aria-label="Previous page">‹</button><h2 id="menu-title"></h2><button class="page-turn" data-turn="1" aria-label="Next page">›</button></header>
+  <section data-page="Items"><div class="slots" id="items"></div></section>
+  <section data-page="Quests"><div id="quests"></div></section>
+  <section data-page="Guide"><ul>
     <li>Tap a neighboring tile to move or fight. Numbers sum the levels of living monsters in the eight neighboring tiles.</li>
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. A hidden tile next to known ground is entered at the end of the walk.</li>
@@ -54,7 +66,8 @@ app.innerHTML = `
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
   </ul>
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin and chief</span></div>
-  <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
+  <button class="secondary" data-restart>Start over</button></section>
+  <button data-close autofocus>Resume</button></dialog>
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="offer" class="talk"><p id="offer-line"></p><div class="dialog-actions"><button class="secondary" data-close>No</button><button id="buy">Yes</button></div><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="found" class="found"><img id="found-image" alt="" /><p>You found</p><h2 id="found-name"></h2><p id="found-detail"></p></dialog>
@@ -517,7 +530,64 @@ document.addEventListener('visibilitychange', () => {
 const save = () => localStorage.setItem(saveKey, serialize(world));
 setInterval(save, 1000);
 window.addEventListener('pagehide', save);
-element('#menu').addEventListener('click', () => openDialog('#menu-dialog'));
+const menuDialog = element<HTMLDialogElement>('#menu-dialog');
+const pages = [...menuDialog.querySelectorAll<HTMLElement>('[data-page]')];
+let page = 0;
+function turnPage(by: number): void {
+  showItems();
+  showQuests();
+  page = (page + by + pages.length) % pages.length;
+  pages.forEach((section, index) => {
+    section.hidden = index !== page;
+  });
+  element('#menu-title').textContent = pages[page].dataset.page ?? '';
+}
+function slot(find: Find, label: string): string {
+  return `<div class="slot"><img src="${icon(find)}" alt="" /><span>${label}</span></div>`;
+}
+// Pieces show how far they go toward the next upgrade; spent ones are gone.
+function showItems(): void {
+  const { hero } = game;
+  const whetstones = hero.whetstones % piecesPerUpgrade;
+  const heartPieces = hero.heartPieces % piecesPerUpgrade;
+  const slots = [
+    whetstones ? slot('whetstone', `${whetstones}/${piecesPerUpgrade}`) : '',
+    heartPieces ? slot('heartPiece', `${heartPieces}/${piecesPerUpgrade}`) : '',
+    hero.coins ? slot('coin', String(hero.coins)) : '',
+    ...hero.carrying.map((keepsake) => slot(keepsake, findNames[keepsake])),
+  ].filter(Boolean);
+  element('#items').innerHTML = Array.from(
+    { length: Math.max(8, slots.length) },
+    (_, index) => slots[index] ?? '<div class="slot"></div>',
+  ).join('');
+}
+const quests = Object.values(areas)
+  .flatMap((area): Person[] => ('people' in area ? Object.values(area.people) : []))
+  .flatMap(({ name, quest }) => (quest ? [{ name, wants: quest.wants }] : []));
+function showQuests(): void {
+  const { hero } = game;
+  const row = ({ name, wants }: (typeof quests)[number], state: string) =>
+    `<li><img src="${icon(wants)}" alt="" /><div><strong>${findNames[wants]}</strong><span>${name}</span></div><em>${state}</em></li>`;
+  const active = quests
+    .filter(({ wants }) => hero.asked.includes(wants) && !hero.returned.includes(wants))
+    .map((quest) => row(quest, hero.carrying.includes(quest.wants) ? 'Found' : ''));
+  const done = quests
+    .filter(({ wants }) => hero.returned.includes(wants))
+    .map((quest) => row(quest, '✓'));
+  element('#quests').innerHTML = `
+    <h3>Active</h3><ul class="quests">${active.join('') || '<li class="none">None</li>'}</ul>
+    <h3>Completed</h3><ul class="quests done">${done.join('') || '<li class="none">None</li>'}</ul>`;
+}
+element('#menu').addEventListener('click', () => {
+  turnPage(-page);
+  openDialog('#menu-dialog');
+});
+for (const button of menuDialog.querySelectorAll<HTMLButtonElement>('[data-turn]'))
+  button.addEventListener('click', () => turnPage(Number(button.dataset.turn)));
+menuDialog.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowLeft') turnPage(-1);
+  if (event.key === 'ArrowRight') turnPage(1);
+});
 for (const button of document.querySelectorAll('[data-close]'))
   button.addEventListener('click', () => button.closest('dialog')?.close());
 function restart(): void {

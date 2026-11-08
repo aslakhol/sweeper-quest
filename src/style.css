@@ -98,8 +98,13 @@ canvas {
   top: max(10px, env(safe-area-inset-top));
   right: max(10px, env(safe-area-inset-right));
   width: 44px;
-  font-size: 18px;
-  color: #c4cdb5;
+  display: grid;
+  place-items: center;
+}
+.menu-button img {
+  width: 30px;
+  height: 30px;
+  image-rendering: pixelated;
 }
 .notes {
   bottom: max(10px, env(safe-area-inset-bottom));
@@ -215,7 +220,7 @@ dialog button {
   display: flex;
   gap: 10px;
 }
-.dialog-actions .secondary {
+dialog .secondary {
   background: #394c37;
   color: #d4dec9;
 }
@@ -307,4 +312,91 @@ dialog button {
     opacity: 0;
     transform: translateY(12px);
   }
+}
+.menu-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.menu-header h2 {
+  flex: 1;
+  margin: 0;
+  text-align: center;
+}
+.menu .page-turn {
+  width: 44px;
+  margin: 0;
+  padding: 0;
+  background: none;
+  color: #d7bd7e;
+  font:
+    500 36px Fraunces,
+    Georgia,
+    serif;
+  line-height: 1;
+}
+.menu section {
+  min-height: 220px;
+}
+.slots {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+.slot {
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  border: 1px solid #4c5c49;
+  border-radius: 8px;
+  background: #1a2a22;
+  font-size: 11px;
+  font-weight: 600;
+  color: #d4dec9;
+  text-align: center;
+  line-height: 1.2;
+}
+.slot img,
+.quests img {
+  width: 40px;
+  height: 40px;
+  image-rendering: pixelated;
+}
+.menu h3 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #d7bd7e;
+}
+.menu ul.quests {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+.quests li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 0;
+}
+.quests div {
+  flex: 1;
+  display: grid;
+}
+.quests strong {
+  color: #e6e9d9;
+}
+.quests span {
+  font-size: 12px;
+}
+.quests em {
+  font-style: normal;
+  font-weight: 700;
+  color: #e4c782;
+}
+.quests.done li {
+  opacity: 0.6;
 }

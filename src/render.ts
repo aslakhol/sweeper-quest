@@ -146,6 +146,21 @@ const findSprites: Record<Find, { rows: string[]; palette: Record<string, string
   spectacles: { rows: spectacles, palette: { f: '#c9a35a', l: '#cfe3ea' } },
   ring: { rows: ring, palette: { r: '#e1bf76', l: '#9fd4e0' } },
 };
+const bag = {
+  rows: [
+    '   dddd   ',
+    '    tt    ',
+    '  bbbbbb  ',
+    ' bbbbbbbb ',
+    'bblbbbbbbd',
+    'blbbbbbbbd',
+    'bbbbbbbbbd',
+    'bbbbbbbbbd',
+    ' bbbbbbdd ',
+    '  dddddd  ',
+  ],
+  palette: { b: '#b99a65', l: '#e4d1a0', d: '#7a6038', t: '#d7bd7e' },
+};
 const slime = [
   '   ggg   ',
   ' ggggggg ',
@@ -235,6 +250,24 @@ function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number) {
 function drawFind(ctx: CanvasRenderingContext2D, find: Find, x: number, y: number, top = 22) {
   const found = findSprites[find];
   sprite(ctx, found.rows, found.palette, x + 24 - found.rows[0].length * 1.5, y + top);
+}
+
+// A sprite centered on a square image, at one image pixel per sprite pixel.
+export function icon(name: Find | 'bag'): string {
+  const { rows, palette } = name === 'bag' ? bag : findSprites[name];
+  const canvas = document.createElement('canvas');
+  canvas.width = canvas.height = 10;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+  sprite(
+    ctx,
+    rows,
+    palette,
+    Math.floor((10 - rows[0].length) / 2),
+    Math.floor((10 - rows.length) / 2),
+    1,
+  );
+  return canvas.toDataURL();
 }
 
 // The hero holds a find up over their head, at one image pixel per sprite pixel.
