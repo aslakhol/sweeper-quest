@@ -2,6 +2,7 @@ import './style.css';
 import {
   buy,
   canNote,
+  collect,
   cycleNote,
   distance,
   type Find,
@@ -67,6 +68,7 @@ app.innerHTML = `
   </ul>
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin and chief</span></div>
   <button class="secondary" data-restart>Start over</button></section>
+  <section data-page="Debug"><div class="debug" id="debug"></div><button class="secondary" data-restart>Start over</button></section>
   <button data-close autofocus>Resume</button></dialog>
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="offer" class="talk"><p id="offer-line"></p><div class="dialog-actions"><button class="secondary" data-close>No</button><button id="buy">Yes</button></div><button class="talk-next" aria-label="Continue">▸</button></dialog>
@@ -584,6 +586,23 @@ element('#menu').addEventListener('click', () => {
 });
 for (const button of menuDialog.querySelectorAll<HTMLButtonElement>('[data-turn]'))
   button.addEventListener('click', () => turnPage(Number(button.dataset.turn)));
+// Playtesting shortcuts, to be removed before release. Solvers and map checks must not use them.
+const cheats = {
+  'Add coin': () => collect(game, game.player, 'coin'),
+  'Add whetstone': () => collect(game, game.player, 'whetstone'),
+  'Add heart': () => collect(game, game.player, 'heart'),
+  Heal: () => heal(game),
+};
+for (const [label, cheat] of Object.entries(cheats)) {
+  const button = document.createElement('button');
+  button.className = 'secondary';
+  button.textContent = label;
+  button.addEventListener('click', () => {
+    handleEvents(cheat());
+    updateHud();
+  });
+  element('#debug').append(button);
+}
 menuDialog.addEventListener('keydown', (event) => {
   if (event.key === 'ArrowLeft') turnPage(-1);
   if (event.key === 'ArrowRight') turnPage(1);

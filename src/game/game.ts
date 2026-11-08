@@ -317,7 +317,7 @@ export function heal(game: Game): GameEvent[] {
   game.hero.health = game.hero.maxHealth;
   return [{ type: 'heal', at: game.player, amount }];
 }
-function collect(game: Game, at: Point, find: Find): GameEvent[] {
+export function collect(game: Game, at: Point, find: Find): GameEvent[] {
   const { hero } = game;
   const events: GameEvent[] = [{ type: 'find', at, find }];
   switch (find) {
