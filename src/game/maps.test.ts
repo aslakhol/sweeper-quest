@@ -30,6 +30,7 @@ describe('the world', () => {
         .every((fight) => fight.damage === 0),
     ).toBe(true);
     expect(hero.lessons).toBe(areas.dojo.people.d.training.lessons.length);
+    expect(hero.diploma).toBe(true);
     expect(hero.power).toBe(4);
     expect(hero.maxHealth).toBeGreaterThanOrEqual(5);
     for (const game of world.visited.values()) {

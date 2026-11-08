@@ -78,6 +78,7 @@ A new game wakes up at home. Mum sends you to Doctor Madeleine's dojo, where she
 - **No sword means power 0.** The sword gives the first point of power, and whetstones add to it. Leaving the village before training is allowed but dangerous, because even a slime hurts. No extra lock is needed.
 - **Lessons are separate maps without exits.** A lesson starts afresh each time on its `@`, and is won by defeating every monster at or below your power. That lets a lesson include a stronger monster to leave alone. Winning puts you back beside her for the next one.
 - **The world survey trains for real.** It says yes, plays each lesson with the same deductions and must take no damage, so map checks also cover the tutorial.
+- **The main quest ends the game.** The hero counts defeated chiefs. Returning to Doctor Madeleine with all three earns a Bachelor of Fighting and a completion screen. Continue keeps the world, and the survey collects the award as part of the world check.
 - **Skip training is a debug shortcut** for playtesting new saves and for browser tests.
 
 ## Save slots

@@ -44,7 +44,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 - Four whetstones raise your power by one, and four heart pieces add a filled heart. They lie hidden on tiles and are picked up by walking onto them. Three goblin chiefs are visible: the meadow chief drops a whole heart, the cave chief a greatstone worth four whetstones, and the wood chief nothing yet.
 - Step onto a door to go inside, and onto the doormat to come back out. The stairs north of the village lead to the cave, and the timber gate at the east edge leads to the wood. Every map keeps its state while you are away, and your hearts and power come with you.
 - Walk into a person, or tap them from across the room, to talk. Tap anywhere to show the next line.
-- Defeating a goblin chief does not end the run.
+- Agreeing to train starts the main quest, shown in the quest menu with how many chiefs you have defeated. Defeating all three and returning to Doctor Madeleine earns a Bachelor of Fighting, which stays in your items. A screen then says the game is completed and offers Start over or Continue.
 - Running out of hearts is game over. Continue wakes you beside your bed at home with every heart, and the world stays as you left it. Start over begins a new game.
 - The bag in the corner opens the menu. Its pages show the items you carry, the quests people have given you and the ones you have finished, the rules and monster levels with Start over, and a debug page for playtesting. Skip training on the debug page hands over the sword and puts you outside the dojo.
 - Every find except a coin shows the hero holding it up, with how far it goes toward the next upgrade.

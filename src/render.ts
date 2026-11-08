@@ -117,6 +117,16 @@ const person = [
   '  dd dd  ',
 ];
 const sword = ['  s  ', '  s  ', '  s  ', '  s  ', 'ttttt', '  h  ', '  h  '];
+// A rolled certificate tied with a ribbon.
+const diploma = [
+  ' pppppp ',
+  'pllllllp',
+  ' ldddll ',
+  ' llllll ',
+  ' lddlrl ',
+  'pllllrrp',
+  ' pppprp ',
+];
 const whetstone = [
   '    ss  ',
   '   slls ',
@@ -134,6 +144,10 @@ const coin = [' yyy ', 'yllyd', 'ylyyd', 'yyyyd', ' ddd '];
 const ring = ['  ll  ', ' rllr ', 'r    r', 'r    r', 'r    r', ' rrrr '];
 const findSprites: Record<Find, { rows: string[]; palette: Record<string, string> }> = {
   sword: { rows: sword, palette: { ...swordColors, h: '#7a6038' } },
+  diploma: {
+    rows: diploma,
+    palette: { p: '#c9a86a', l: '#f2e6c4', d: '#9a8a6a', r: '#c0504a' },
+  },
   whetstone: { rows: whetstone, palette: { s: '#8c9aa0', l: '#d5dde0', d: '#566268' } },
   greatstone: { rows: whetstone, palette: { s: '#9a86c8', l: '#e2d8f6', d: '#5c4c86' } },
   heartPiece: { rows: heartPiece, palette: { r: '#e0655f', l: '#f4b5a8' } },

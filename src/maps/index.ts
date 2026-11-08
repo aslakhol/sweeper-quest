@@ -187,7 +187,19 @@ export const areas = {
               ],
             },
           ],
-          after: ['You can collect whetstones to grow in power.'],
+          after: [
+            'You can collect whetstones to grow in power.',
+            'Defeat the three goblin chiefs, then come back to me.',
+          ],
+          graduation: {
+            quest: 'Defeat the three goblin chiefs',
+            chiefs: 3,
+            lines: [
+              'All three goblin chiefs, defeated. The village is safe.',
+              'I hereby award you a Bachelor of Fighting.',
+            ],
+            after: ['The village owes you everything, Bachelor.'],
+          },
         },
       },
     },

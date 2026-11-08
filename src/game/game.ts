@@ -11,6 +11,7 @@ export type Monster = {
 export type Keepsake = 'marble' | 'spectacles' | 'ring';
 export type Find =
   | 'sword'
+  | 'diploma'
   | 'whetstone'
   | 'greatstone'
   | 'heartPiece'
@@ -81,6 +82,8 @@ export type Training = {
   lessons: readonly { area: string; lines: readonly string[] }[];
   // What they say once every lesson is won, instead of their usual lines.
   after: readonly string[];
+  // Coming back with every chief defeated earns a Bachelor of Fighting and completes the game.
+  graduation: { quest: string; chiefs: number; lines: readonly string[]; after: readonly string[] };
 };
 // Symbols a particular map adds on top of the shared ones.
 export type Legend = {
@@ -99,6 +102,9 @@ export type Hero = {
   sword: boolean;
   // How many of the dojo lessons you have won.
   lessons: number;
+  // Goblin chiefs defeated, and the Bachelor of Fighting awarded for them.
+  chiefs: number;
+  diploma: boolean;
   health: number;
   maxHealth: number;
   power: number;
@@ -125,6 +131,7 @@ export type GameEvent =
   | { type: 'blocked'; at: Point }
   | { type: 'death' }
   | { type: 'win' }
+  | { type: 'complete' }
   | { type: 'travel'; to: string }
   | { type: 'talk'; person: Person; lines: readonly string[] }
   | { type: 'heal'; at: Point; amount: number }
@@ -175,6 +182,8 @@ export function createHero(): Hero {
   return {
     sword: false,
     lessons: 0,
+    chiefs: 0,
+    diploma: false,
     health: startingHearts,
     maxHealth: startingHearts,
     power: 0,
@@ -377,6 +386,9 @@ export function collect(game: Game, at: Point, find: Find): GameEvent[] {
     case 'coin':
       hero.coins++;
       break;
+    case 'diploma':
+      hero.diploma = true;
+      break;
     default:
       hero.carrying.push(find);
   }
@@ -396,7 +408,16 @@ function talk(game: Game, at: Point, person: Person): GameEvent[] {
         { type: 'ask', at, person, question: training.question },
       ];
     const lesson = training.lessons[hero.lessons];
-    if (!lesson) return [{ type: 'talk', person, lines: training.after }];
+    if (!lesson) {
+      const { graduation } = training;
+      if (hero.diploma) return [{ type: 'talk', person, lines: graduation.after }];
+      if (hero.chiefs < graduation.chiefs) return [{ type: 'talk', person, lines: training.after }];
+      return [
+        { type: 'talk', person, lines: graduation.lines },
+        ...collect(game, at, 'diploma'),
+        { type: 'complete' },
+      ];
+    }
     return [
       { type: 'talk', person, lines: lesson.lines },
       { type: 'lesson', area: lesson.area },
@@ -470,9 +491,10 @@ export function step(game: Game, target: Point): GameEvent[] {
       )
         revealStep(game, neighbor);
     }
-    if (tile.monster.goal && !game.won) {
+    if (tile.monster.goal) {
+      game.hero.chiefs++;
+      if (!game.won) events.push({ type: 'win' });
       game.won = true;
-      events.push({ type: 'win' });
     }
     if (tile.monster.drop) events.push(...collect(game, target, tile.monster.drop));
   }

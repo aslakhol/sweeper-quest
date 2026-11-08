@@ -85,6 +85,7 @@ app.innerHTML = `
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="ask" class="talk"><div class="talk-name" id="ask-name"></div><p id="ask-line"></p><div class="dialog-actions"><button class="secondary" id="no">No</button><button id="yes">Yes</button></div><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="found" class="found"><img id="found-image" alt="" /><p>You found</p><h2 id="found-name"></h2><p id="found-detail"></p></dialog>
+  <dialog id="complete-dialog"><h2>The game is now completed</h2><div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Continue</button></div></dialog>
   <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button id="continue">Continue</button></div><button class="secondary" data-saves>Saves</button></dialog>
 `;
 function element<T extends Element>(selector: string): T {
@@ -181,6 +182,7 @@ function announce(at: Point, text: string, color = '#f3d794'): void {
 }
 const findNames: Record<Find, string> = {
   sword: 'Sword',
+  diploma: 'Bachelor of Fighting',
   whetstone: 'Whetstone',
   greatstone: 'Greatstone',
   heartPiece: 'Heart piece',
@@ -298,6 +300,9 @@ function handleEvents(events: GameEvent[]): void {
         break;
       case 'heartUp':
         status.textContent = `${event.maxHealth} hearts.`;
+        break;
+      case 'complete':
+        openDialog('#complete-dialog');
         break;
       case 'win':
         announce(game.player, 'Chief defeated!');
@@ -612,6 +617,7 @@ function showItems(): void {
   const heartPieces = hero.heartPieces % piecesPerUpgrade;
   const slots = [
     hero.sword ? slot('sword', findNames.sword) : '',
+    hero.diploma ? slot('diploma', findNames.diploma) : '',
     whetstones ? slot('whetstone', `${whetstones}/${piecesPerUpgrade}`) : '',
     heartPieces ? slot('heartPiece', `${heartPieces}/${piecesPerUpgrade}`) : '',
     hero.coins ? slot('coin', String(hero.coins)) : '',
@@ -625,16 +631,30 @@ function showItems(): void {
 const quests = Object.values(areas)
   .flatMap((area): Person[] => ('people' in area ? Object.values(area.people) : []))
   .flatMap(({ name, quest }) => (quest ? [{ name, wants: quest.wants }] : []));
+// The main quest comes from agreeing to train, and ends with the Bachelor of Fighting.
+const teacher = areas.dojo.people.d;
 function showQuests(): void {
   const { hero } = game;
-  const row = ({ name, wants }: (typeof quests)[number], state: string) =>
-    `<li><img src="${icon(wants)}" alt="" /><div><strong>${findNames[wants]}</strong><span>${name}</span></div><em>${state}</em></li>`;
-  const active = quests
-    .filter(({ wants }) => hero.asked.includes(wants) && !hero.returned.includes(wants))
-    .map((quest) => row(quest, hero.carrying.includes(quest.wants) ? 'Found' : ''));
-  const done = quests
-    .filter(({ wants }) => hero.returned.includes(wants))
-    .map((quest) => row(quest, '✓'));
+  const row = (find: Find, title: string, giver: string, state: string) =>
+    `<li><img src="${icon(find)}" alt="" /><div><strong>${title}</strong><span>${giver}</span></div><em>${state}</em></li>`;
+  const { quest, chiefs } = teacher.training.graduation;
+  const main = (state: string) => row('sword', quest, teacher.name, state);
+  const active = [
+    hero.sword && !hero.diploma
+      ? main(hero.chiefs < chiefs ? `${hero.chiefs}/${chiefs}` : 'Return')
+      : '',
+    ...quests
+      .filter(({ wants }) => hero.asked.includes(wants) && !hero.returned.includes(wants))
+      .map(({ name, wants }) =>
+        row(wants, findNames[wants], name, hero.carrying.includes(wants) ? 'Found' : ''),
+      ),
+  ].filter(Boolean);
+  const done = [
+    hero.diploma ? main('✓') : '',
+    ...quests
+      .filter(({ wants }) => hero.returned.includes(wants))
+      .map(({ name, wants }) => row(wants, findNames[wants], name, '✓')),
+  ].filter(Boolean);
   element('#quests').innerHTML = `
     <h3>Active</h3><ul class="quests">${active.join('') || '<li class="none">None</li>'}</ul>
     <h3>Completed</h3><ul class="quests done">${done.join('') || '<li class="none">None</li>'}</ul>`;

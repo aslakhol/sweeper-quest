@@ -244,7 +244,9 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
       const trainer = candidates.find(
         (tile) =>
           tile.person?.training &&
-          (!game.hero.sword || game.hero.lessons < tile.person.training.lessons.length),
+          (!game.hero.sword ||
+            game.hero.lessons < tile.person.training.lessons.length ||
+            (!game.hero.diploma && game.hero.chiefs >= tile.person.training.graduation.chiefs)),
       );
       if (trainer) {
         walk(trainer, 'train');
