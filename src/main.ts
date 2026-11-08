@@ -24,7 +24,15 @@ import {
 } from './game/game';
 import { deserialize } from './game/save';
 import { type SaveSlot, SaveSlots, saveSlots } from './game/save-slots';
-import { createWorld, travel, type World, wakeAtHome } from './game/world';
+import {
+  createWorld,
+  finishLesson,
+  lessonWon,
+  startLesson,
+  travel,
+  type World,
+  wakeAtHome,
+} from './game/world';
 import { areas } from './maps';
 import {
   cameraTarget,
@@ -235,6 +243,10 @@ function handleEvents(events: GameEvent[]): void {
         travel(world, event.to);
         changeMap();
         break;
+      case 'lesson':
+        startLesson(world, event.area);
+        changeMap();
+        break;
       case 'offer': {
         const { at, find, price } = event;
         ask(`Buy ${findNames[find].toLowerCase()} for ${price} coins?`, {
@@ -376,7 +388,16 @@ function move(target: Point): boolean {
   if (same(before, game.player) && !events.length) feedback(target);
   handleEvents(events);
   updateHud();
+  // Let the last kill play out before going back to Doctor Madeleine.
+  if (lessonWon(world)) setTimeout(returnFromLesson, effectDuration.fight + 300);
   return events.length === 0 && !same(before, game.player);
+}
+function returnFromLesson(): void {
+  const events = finishLesson(world);
+  if (!events.length) return;
+  changeMap();
+  updateHud();
+  handleEvents(events);
 }
 // Shift keeps the note tool out for marking several tiles in a row.
 function activate(target: Point, keepTool = false): void {

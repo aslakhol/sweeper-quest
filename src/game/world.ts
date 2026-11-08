@@ -1,5 +1,5 @@
 import { areas } from '../maps';
-import { arrive, createGame, type Game } from './game';
+import { arrive, createGame, type Game, type GameEvent, step } from './game';
 
 export type AreaId = keyof typeof areas;
 export type World = { area: AreaId; game: Game; visited: Map<AreaId, Game> };
@@ -35,4 +35,38 @@ export function wakeAtHome(world: World): void {
   world.game.hero.health = world.game.hero.maxHealth;
   travel(world, 'home', 'village');
   world.game.player = { ...areas.home.bedside };
+}
+
+const isLesson = (id: string): id is AreaId => isArea(id) && 'lesson' in areas[id];
+
+// Each lesson starts afresh on its own map, which has no way out.
+export function startLesson(world: World, to: string): void {
+  if (!isLesson(to)) throw new Error(`Unknown lesson "${to}".`);
+  const area = areas[to];
+  const game = createGame(area.map, { legend: area, hero: world.game.hero });
+  world.visited.set(to, game);
+  world.area = to;
+  world.game = game;
+}
+
+// A lesson is won once every monster you are strong enough to defeat is gone.
+export function lessonWon({ area, game }: World): boolean {
+  return (
+    isLesson(area) &&
+    !game.tiles.some((tile) => tile.monster?.alive && tile.monster.level <= game.hero.power)
+  );
+}
+
+// Winning puts you back beside Doctor Madeleine, who goes on to the next lesson.
+export function finishLesson(world: World): GameEvent[] {
+  if (!lessonWon(world)) return [];
+  const teacher = areas.dojo.people.d;
+  const { hero } = world.game;
+  if (teacher.training.lessons[hero.lessons]?.area === world.area) hero.lessons++;
+  world.visited.delete(world.area);
+  travel(world, 'dojo', 'village');
+  const at = world.game.tiles.find((tile) => tile.person === teacher);
+  if (!at) throw new Error('Doctor Madeleine is missing from the dojo.');
+  world.game.player = { x: at.x, y: at.y + 1 };
+  return step(world.game, at);
 }

@@ -4,13 +4,19 @@ import dojo from './dojo.txt?raw';
 import elderHouse from './elder-house.txt?raw';
 import home from './home.txt?raw';
 import inn from './inn.txt?raw';
+import lesson1 from './lesson-1.txt?raw';
+import lesson2 from './lesson-2.txt?raw';
+import lesson3 from './lesson-3.txt?raw';
+import lesson4 from './lesson-4.txt?raw';
 import shop from './shop.txt?raw';
 import village from './village.txt?raw';
 import wood from './wood.txt?raw';
 
-export type Area = Legend & { name: string; map: string; bedside?: Point };
+export type Area = Legend & { name: string; map: string; bedside?: Point; lesson?: boolean };
 
 const indoors = { floor: 'wood', exits: { '<': { to: 'village', look: 'mat' } } } as const;
+// A dojo lesson has no way out: you start on its @ and leave by winning it.
+const lesson = (map: string) => ({ name: 'Dojo', map, exits: {}, lesson: true });
 
 export const areas = {
   village: {
@@ -146,11 +152,50 @@ export const areas = {
           question: 'Will you help me save it?',
           accepted: ['Good. Then you will need a sword.'],
           declined: ['Then go home. Come back if you change your mind.'],
+          lessons: [
+            {
+              area: 'lesson-1',
+              lines: [
+                'One monster hides in this grass.',
+                'The number tells you the total power of monsters next to a tile.',
+                'With your sword you are level 1. You can defeat anything of level 1 or below.',
+                'Go kill it to proceed.',
+              ],
+            },
+            {
+              area: 'lesson-2',
+              lines: [
+                'In this next scenario, there are two monsters.',
+                'Where both are next to a tile, its number adds them up.',
+              ],
+            },
+            {
+              area: 'lesson-3',
+              lines: [
+                'Now there are three.',
+                'A blank tile has no monsters next to it, and opens up the ground around it.',
+                'Defeating a monster lowers the numbers around it.',
+              ],
+            },
+            {
+              area: 'lesson-4',
+              lines: [
+                'This time a bat hides among the slimes.',
+                'A bat is level 2. Step on it and it will hurt you.',
+                'Next to a 1, nothing can be stronger than you.',
+                'Defeat the slimes and leave the bat alone.',
+              ],
+            },
+          ],
           after: ['You can collect whetstones to grow in power.'],
         },
       },
     },
   },
+  'lesson-1': lesson(lesson1),
+  'lesson-2': lesson(lesson2),
+  'lesson-3': lesson(lesson3),
+  'lesson-4': lesson(lesson4),
   shop: {
     name: 'Shop',
     map: shop,

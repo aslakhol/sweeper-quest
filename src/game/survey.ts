@@ -25,7 +25,7 @@ import {
   reachableTiles,
   type SolverProfile,
 } from './solver';
-import { type AreaId, createWorld, travel, type World } from './world';
+import { type AreaId, createWorld, finishLesson, startLesson, travel, type World } from './world';
 
 export type MoveOrder = 'forward' | 'reverse';
 export type Access = {
@@ -163,6 +163,8 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
     if (events.some((event) => event.type === 'offer')) events.push(...buy(game, at));
     for (const event of [...events])
       if (event.type === 'ask') events.push(...answer(game, at, event.person, true));
+    // Winning a lesson goes back to the teacher, who starts the next one.
+    events.push(...finishLesson(world));
     const revealed = revealedCount(game) - before;
     if (!events.length && !revealed) return;
     if (game.lost) throw new Error(`Survey died at ${accessKey(area, at)}.`);
@@ -195,6 +197,8 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
     // Entering an exit immediately leaves the map. Its far side is not reachable until we actually
     // return through that exit; the destination might not even offer a safe way back.
     recordAccess(power, !events.some((event) => event.type === 'travel'));
+    const lesson = events.findLast((event) => event.type === 'lesson');
+    if (lesson?.type === 'lesson') startLesson(world, lesson.area);
   }
   function walk(at: Point, kind: SurveyAction['kind'], proof?: SurveyAction['proof']) {
     const { game } = world;
@@ -237,7 +241,11 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
         walk(questGiver, 'quest');
         continue;
       }
-      const trainer = candidates.find((tile) => tile.person?.training && !game.hero.sword);
+      const trainer = candidates.find(
+        (tile) =>
+          tile.person?.training &&
+          (!game.hero.sword || game.hero.lessons < tile.person.training.lessons.length),
+      );
       if (trainer) {
         walk(trainer, 'train');
         continue;

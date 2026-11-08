@@ -70,14 +70,16 @@ export type Person = {
     // What they say once the quest is done, instead of their usual lines.
     after: readonly string[];
   };
-  // They ask you to help, and hand over a sword when you agree.
+  // They ask you to help, hand over a sword when you agree, and teach you in lessons.
   training?: Training;
 };
 export type Training = {
   question: string;
   accepted: readonly string[];
   declined: readonly string[];
-  // What they say once you have the sword, instead of their usual lines.
+  // Each lesson is a map you are sent into once they have explained it.
+  lessons: readonly { area: string; lines: readonly string[] }[];
+  // What they say once every lesson is won, instead of their usual lines.
   after: readonly string[];
 };
 // Symbols a particular map adds on top of the shared ones.
@@ -95,6 +97,8 @@ export type Legend = {
 export type Hero = {
   // Without a sword you have power 0, and even a slime hurts.
   sword: boolean;
+  // How many of the dojo lessons you have won.
+  lessons: number;
   health: number;
   maxHealth: number;
   power: number;
@@ -127,6 +131,7 @@ export type GameEvent =
   | { type: 'find'; at: Point; find: Find }
   | { type: 'offer'; at: Point; find: Find; price: number }
   | { type: 'ask'; at: Point; person: Person; question: string }
+  | { type: 'lesson'; area: string }
   | { type: 'powerUp'; at: Point; power: number }
   | { type: 'heartUp'; at: Point; maxHealth: number };
 
@@ -168,6 +173,7 @@ function isKey<T extends object>(object: T, key: string): key is Extract<keyof T
 export function createHero(): Hero {
   return {
     sword: false,
+    lessons: 0,
     health: startingHearts,
     maxHealth: startingHearts,
     power: 0,
@@ -382,13 +388,19 @@ export function canFinishQuest(hero: Hero, { quest }: Person): boolean {
 function talk(game: Game, at: Point, person: Person): GameEvent[] {
   const { quest, training } = person;
   const { hero } = game;
-  if (training)
-    return hero.sword
-      ? [{ type: 'talk', person, lines: training.after }]
-      : [
-          { type: 'talk', person, lines: person.lines },
-          { type: 'ask', at, person, question: training.question },
-        ];
+  if (training) {
+    if (!hero.sword)
+      return [
+        { type: 'talk', person, lines: person.lines },
+        { type: 'ask', at, person, question: training.question },
+      ];
+    const lesson = training.lessons[hero.lessons];
+    if (!lesson) return [{ type: 'talk', person, lines: training.after }];
+    return [
+      { type: 'talk', person, lines: lesson.lines },
+      { type: 'lesson', area: lesson.area },
+    ];
+  }
   if (quest && !hero.asked.includes(quest.wants)) hero.asked.push(quest.wants);
   if (person.fullHealthLines && hero.health === hero.maxHealth)
     return [{ type: 'talk', person, lines: person.fullHealthLines }];
@@ -400,12 +412,16 @@ function talk(game: Game, at: Point, person: Person): GameEvent[] {
   hero.returned.push(quest.wants);
   return [{ type: 'talk', person, lines: quest.thanks }, ...collect(game, at, quest.reward)];
 }
-// Agreeing to train hands over a sword.
+// Agreeing to train hands over a sword, and the first lesson follows.
 export function answer(game: Game, at: Point, person: Person, yes: boolean): GameEvent[] {
   const { training } = person;
   if (!training || game.hero.sword) return [];
   if (!yes) return [{ type: 'talk', person, lines: training.declined }];
-  return [{ type: 'talk', person, lines: training.accepted }, ...collect(game, at, 'sword')];
+  return [
+    { type: 'talk', person, lines: training.accepted },
+    ...collect(game, at, 'sword'),
+    ...talk(game, at, person),
+  ];
 }
 function forSale(tile: Tile | undefined): tile is Tile & { find: Find; price: number } {
   return !!tile?.find && tile.price !== undefined;

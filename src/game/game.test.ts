@@ -237,11 +237,17 @@ describe('training', () => {
         name: 'Teacher',
         colors: { hair: '', shirt: '' },
         lines: ['Will you help?'],
-        training: { question: 'Yes?', accepted: ['Good.'], declined: ['Pity.'], after: ['Go.'] },
+        training: {
+          question: 'Yes?',
+          accepted: ['Good.'],
+          declined: ['Pity.'],
+          lessons: [{ area: 'yard', lines: ['In you go.'] }],
+          after: ['Go.'],
+        },
       },
     },
   };
-  it('asks for help, and hands over a sword only on a yes', () => {
+  it('asks for help, hands over a sword on a yes, and teaches each lesson in turn', () => {
     const game = createGame('@ d', { legend });
     const [, ask] = step(game, p(1, 0));
     expect(ask).toMatchObject({ type: 'ask', at: p(1, 0), question: 'Yes?' });
@@ -252,8 +258,11 @@ describe('training', () => {
       { type: 'talk', lines: ['Good.'] },
       { type: 'find', find: 'sword' },
       { type: 'powerUp', power: 1 },
+      { type: 'talk', lines: ['In you go.'] },
+      { type: 'lesson', area: 'yard' },
     ]);
     expect(answer(game, ask.at, ask.person, true)).toEqual([]);
+    game.hero.lessons = 1;
     expect(step(game, p(1, 0))).toMatchObject([{ type: 'talk', lines: ['Go.'] }]);
   });
 });

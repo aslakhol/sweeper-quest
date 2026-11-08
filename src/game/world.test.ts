@@ -1,7 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { areas } from '../maps';
 import { step, tileAt } from './game';
-import { type AreaId, createWorld, travel, wakeAtHome } from './world';
+import {
+  type AreaId,
+  createWorld,
+  finishLesson,
+  lessonWon,
+  startLesson,
+  travel,
+  wakeAtHome,
+} from './world';
 
 describe('world', () => {
   it('every exit leads to a map with exactly one exit back', () => {
@@ -57,5 +65,25 @@ describe('world', () => {
     expect(cave.lost).toBe(false);
     travel(world, 'village');
     expect(tileAt(world.game, world.game.player)?.exit).toBe('home');
+  });
+  it('sends you back beside Doctor Madeleine once a lesson is won, for the next one', () => {
+    const world = createWorld();
+    travel(world, 'village');
+    travel(world, 'dojo');
+    Object.assign(world.game.hero, { sword: true, power: 1 });
+    startLesson(world, 'lesson-1');
+    expect(world.area).toBe('lesson-1');
+    expect(finishLesson(world)).toEqual([]);
+    step(world.game, { x: 2, y: 3 });
+    step(world.game, { x: 2, y: 2 });
+    expect(lessonWon(world)).toBe(true);
+    expect(finishLesson(world)).toMatchObject([
+      { type: 'talk', lines: areas.dojo.people.d.training.lessons[1].lines },
+      { type: 'lesson', area: 'lesson-2' },
+    ]);
+    expect(world.area).toBe('dojo');
+    expect(world.game.player).toEqual({ x: 4, y: 2 });
+    expect(world.game.hero.lessons).toBe(1);
+    expect(world.visited.has('lesson-1')).toBe(false);
   });
 });
