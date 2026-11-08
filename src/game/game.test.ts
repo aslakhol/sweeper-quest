@@ -246,7 +246,7 @@ describe('routes and notes', () => {
       name: 'Pip',
       lines: ['Find my marble?'],
       colors: { hair: '#000', shirt: '#fff' },
-      trade: { wants: 'marble', reward: 'whetstone', thanks: ['Thanks!'], after: ['Hi again'] },
+      quest: { wants: 'marble', reward: 'whetstone', thanks: ['Thanks!'], after: ['Hi again'] },
     } as const;
     const game = createGame('p @ ?', { legend: { people: { p: pip }, finds: { '?': 'marble' } } });
     expect(step(game, p(0, 0))).toEqual([{ type: 'talk', person: pip, lines: pip.lines }]);
@@ -257,7 +257,7 @@ describe('routes and notes', () => {
       { type: 'talk', person: pip, lines: ['Thanks!'] },
       { type: 'find', at: p(0, 0), find: 'whetstone' },
     ]);
-    expect(game.hero).toMatchObject({ whetstones: 1, carrying: [], traded: ['Pip'] });
+    expect(game.hero).toMatchObject({ whetstones: 1, carrying: [], returned: ['marble'] });
     expect(step(game, p(0, 0))).toEqual([{ type: 'talk', person: pip, lines: ['Hi again'] }]);
     expect(game.hero.whetstones).toBe(1);
   });

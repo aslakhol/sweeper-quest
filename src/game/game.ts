@@ -53,12 +53,12 @@ export type Person = {
   fullHealthLines?: readonly string[];
   // What they say when you wake up after a defeat.
   wakeLines?: readonly string[];
-  // They hand over a reward, once, for what they want.
-  trade?: {
+  // They hand over a reward, once, for the keepsake they lost.
+  quest?: {
     wants: Keepsake;
     reward: Find;
     thanks: readonly string[];
-    // What they say once the trade is done, instead of their usual lines.
+    // What they say once the quest is done, instead of their usual lines.
     after: readonly string[];
   };
 };
@@ -82,8 +82,7 @@ export type Hero = {
   heartPieces: number;
   coins: number;
   carrying: Keepsake[];
-  // Names of the people you have traded with.
-  traded: string[];
+  returned: Keepsake[];
 };
 export type Game = {
   width: number;
@@ -151,7 +150,7 @@ export function createHero(): Hero {
     heartPieces: 0,
     coins: 0,
     carrying: [],
-    traded: [],
+    returned: [],
   };
 }
 
@@ -348,21 +347,22 @@ function collect(game: Game, at: Point, find: Find): GameEvent[] {
   }
   return events;
 }
-export function canTrade(hero: Hero, { name, trade }: Person): boolean {
-  return !!trade && !hero.traded.includes(name) && hero.carrying.includes(trade.wants);
+export function canFinishQuest(hero: Hero, { quest }: Person): boolean {
+  return !!quest && hero.carrying.includes(quest.wants);
 }
 // Bringing a person what they want hands over their reward along with their thanks.
 function talk(game: Game, at: Point, person: Person): GameEvent[] {
-  const { trade } = person;
+  const { quest } = person;
   const { hero } = game;
   if (person.fullHealthLines && hero.health === hero.maxHealth)
     return [{ type: 'talk', person, lines: person.fullHealthLines }];
-  if (trade && hero.traded.includes(person.name))
-    return [{ type: 'talk', person, lines: trade.after }];
-  if (!trade || !canTrade(hero, person)) return [{ type: 'talk', person, lines: person.lines }];
-  hero.carrying = hero.carrying.filter((keepsake) => keepsake !== trade.wants);
-  hero.traded.push(person.name);
-  return [{ type: 'talk', person, lines: trade.thanks }, ...collect(game, at, trade.reward)];
+  if (quest && hero.returned.includes(quest.wants))
+    return [{ type: 'talk', person, lines: quest.after }];
+  if (!quest || !canFinishQuest(hero, person))
+    return [{ type: 'talk', person, lines: person.lines }];
+  hero.carrying = hero.carrying.filter((keepsake) => keepsake !== quest.wants);
+  hero.returned.push(quest.wants);
+  return [{ type: 'talk', person, lines: quest.thanks }, ...collect(game, at, quest.reward)];
 }
 function forSale(tile: Tile | undefined): tile is Tile & { find: Find; price: number } {
   return !!tile?.find && tile.price !== undefined;

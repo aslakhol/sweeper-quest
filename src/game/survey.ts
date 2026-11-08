@@ -1,7 +1,7 @@
 import {
   buy,
+  canFinishQuest,
   canStep,
-  canTrade,
   distance,
   type Game,
   type GameEvent,
@@ -37,7 +37,7 @@ export type Access = {
 export type SurveyAction = {
   area: AreaId;
   at: Point;
-  kind: 'deduction' | 'collect' | 'trade' | 'buy' | 'fight' | 'heal' | 'travel' | 'walk';
+  kind: 'deduction' | 'collect' | 'quest' | 'buy' | 'fight' | 'heal' | 'travel' | 'walk';
   power: number;
   health: number;
   revealed: number;
@@ -219,9 +219,11 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
         walk(healer, 'heal');
         continue;
       }
-      const trader = candidates.find((tile) => tile.person && canTrade(game.hero, tile.person));
-      if (trader) {
-        walk(trader, 'trade');
+      const questGiver = candidates.find(
+        (tile) => tile.person && canFinishQuest(game.hero, tile.person),
+      );
+      if (questGiver) {
+        walk(questGiver, 'quest');
         continue;
       }
       const ware = game.tiles.find(
