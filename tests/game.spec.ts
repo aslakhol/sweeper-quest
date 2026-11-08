@@ -41,13 +41,28 @@ async function position(page: Page, x: number, y: number) {
     new RegExp(`column ${x + 1}, row ${y + 1}\\.`),
   );
 }
+// Past Mum and Doctor Madeleine's lessons, outside the dojo door with a sword.
 test.beforeEach(async ({ page }) => {
   await page.goto('/');
+  // The board label and Mum's greeting are both set while the page starts.
+  await expect(page.locator('canvas')).toHaveAttribute('aria-label', /^Home\./);
+  const talk = page.locator('#talk');
+  while (await talk.isVisible()) await talk.click();
+  await page.getByRole('button', { name: 'Menu', exact: true }).click();
+  await page.getByRole('button', { name: 'Previous page' }).click();
+  await page.getByRole('button', { name: 'Skip training' }).click();
+  await expect(page.locator('#found')).toContainText('Sword');
+  await page.locator('#found').click();
+  // Putting the sword away announces the new power, after which keys move the hero.
+  await expect(page.getByRole('status')).toHaveText(/^Power 1\./);
+  await position(page, 28, 21);
 });
-// Walk from the village to the south meadow gate, then step into the tall grass beside it.
+// Walk from the dojo to the south meadow gate, then step into the tall grass beside it.
 async function enterMeadow(page: Page, touch: boolean) {
   await page.keyboard.press('z');
-  for (let i = 0; i < 9; i++) await page.keyboard.press('ArrowLeft');
+  await position(page, 27, 22);
+  await page.keyboard.press('z');
+  for (let i = 0; i < 10; i++) await page.keyboard.press('ArrowLeft');
   await position(page, 16, 23);
   await tap(page, 15, 23, touch);
   await position(page, 15, 23);
@@ -111,7 +126,11 @@ test('hidden stronger monsters can still end the run', async ({ page, isMobile }
   page.once('dialog', (dialog) => dialog.accept());
   await page.locator('#death-dialog').getByRole('button', { name: 'Start over' }).click();
   await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '3 of 3 hearts');
-  await position(page, 26, 22);
+  await expect(page.locator('#talk')).toContainText('Morning, sleepyhead.');
+  await expect(page.locator('canvas')).toHaveAttribute(
+    'aria-label',
+    /^Home\. Player column 7, row 3\./,
+  );
 });
 
 test('a reload picks up where you left off until you start over', async ({ page, isMobile }) => {
@@ -123,9 +142,9 @@ test('a reload picks up where you left off until you start over', async ({ page,
   await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
   page.once('dialog', (dialog) => dialog.accept());
   await page.locator('#death-dialog').getByRole('button', { name: 'Start over' }).click();
-  await position(page, 26, 22);
+  await position(page, 6, 2);
   await page.reload();
-  await position(page, 26, 22);
+  await position(page, 6, 2);
 });
 
 test('continuing after a defeat wakes you at home with Mum', async ({ page, isMobile }) => {
@@ -179,15 +198,15 @@ test('a door leads into a house where you can talk to people', async ({ page, is
 });
 
 test('quick keys and two-key diagonals each move once', async ({ page }) => {
-  await page.keyboard.press('ArrowUp');
-  await position(page, 26, 21);
-  await page.keyboard.down('w');
+  await page.keyboard.press('ArrowDown');
+  await position(page, 28, 22);
+  await page.keyboard.down('s');
   await page.keyboard.down('a');
   await page.keyboard.up('a');
-  await page.keyboard.up('w');
-  await position(page, 25, 20);
+  await page.keyboard.up('s');
+  await position(page, 27, 23);
   await page.keyboard.press('e');
-  await position(page, 26, 19);
+  await position(page, 28, 22);
 });
 
 test('a note tool marks one tile and a long press marks without moving', async ({

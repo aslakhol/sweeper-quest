@@ -13,6 +13,12 @@ async function position(page: Page, x: number, y: number) {
     new RegExp(`column ${x + 1}, row ${y + 1}\\.`),
   );
 }
+// A new game wakes up at home, and Mum speaks first.
+async function wakeUp(page: Page) {
+  const talk = page.locator('#talk');
+  await expect(talk).toContainText('Mum');
+  while (await talk.isVisible()) await talk.click();
+}
 async function stored(page: Page, key = 'sweeper-quest-save-1') {
   const text = await page.evaluate((key) => localStorage.getItem(key), key);
   if (text === null) throw new Error(`Missing save: ${key}`);
@@ -30,36 +36,40 @@ async function seedOnReload(page: Page, entries: Record<string, string>) {
 
 test('three slots keep separate progress and resume the last selected save', async ({ page }) => {
   await page.goto('/');
-  await page.keyboard.press('ArrowUp');
-  await position(page, 26, 21);
+  await wakeUp(page);
+  await page.keyboard.press('ArrowDown');
+  await position(page, 6, 3);
   await openSaves(page);
   await expect(slot(page, 1)).toContainText('Playing');
   await slot(page, 2).getByRole('button', { name: 'New game' }).click();
-  await position(page, 26, 22);
+  await wakeUp(page);
+  await position(page, 6, 2);
   await page.keyboard.press('ArrowLeft');
-  await position(page, 25, 22);
+  await position(page, 5, 2);
   await openSaves(page);
   await slot(page, 3).getByRole('button', { name: 'New game' }).click();
-  await page.keyboard.press('ArrowDown');
-  await position(page, 26, 23);
+  await wakeUp(page);
+  await page.keyboard.press('ArrowRight');
+  await position(page, 7, 2);
   await page.reload();
-  await position(page, 26, 23);
+  await position(page, 7, 2);
   await openSaves(page);
   await expect(slot(page, 3)).toContainText('Playing');
   await slot(page, 1).getByRole('button', { name: 'Continue' }).click();
-  await position(page, 26, 21);
+  await position(page, 6, 3);
   await openSaves(page);
   await slot(page, 2).getByRole('button', { name: 'Continue' }).click();
-  await position(page, 25, 22);
+  await position(page, 5, 2);
 });
 
 test('the original single save migrates to Save 1 without losing progress', async ({ page }) => {
   await page.goto('/');
-  await page.keyboard.press('ArrowUp');
+  await wakeUp(page);
+  await page.keyboard.press('ArrowDown');
   await openSaves(page);
   const original = await stored(page);
   await seedOnReload(page, { 'sweeper-quest-save': original });
-  await position(page, 26, 21);
+  await position(page, 6, 3);
   expect(await stored(page)).toBe(original);
   expect(await stored(page, 'sweeper-quest-save')).toBe(original);
   await openSaves(page);
@@ -94,7 +104,8 @@ test('an incompatible save survives autosave, cancellation, downloads and playin
   expect(await stored(page)).toBe(incompatible);
   page.once('dialog', (dialog) => dialog.accept());
   await slot(page, 1).getByRole('button', { name: 'New game' }).click();
-  await position(page, 26, 22);
+  await wakeUp(page);
+  await position(page, 6, 2);
   expect(await stored(page)).toBe(original);
 });
 
@@ -102,9 +113,10 @@ test('imports a repaired save only after confirmation and rejects damaged files'
   page,
 }) => {
   await page.goto('/');
+  await wakeUp(page);
   const original = await stored(page);
   const repaired = JSON.parse(original);
-  repaired.games[0].player.y--;
+  repaired.games[0].player.x--;
   await openSaves(page);
   const input = slot(page, 1).locator('input[type=file]');
   await input.setInputFiles({
@@ -126,7 +138,7 @@ test('imports a repaired save only after confirmation and rejects damaged files'
   page.once('dialog', (dialog) => dialog.accept());
   await input.setInputFiles(file);
   await expect(page.locator('#saves-dialog')).not.toBeVisible();
-  await position(page, 26, 21);
+  await position(page, 5, 2);
   await page.reload();
-  await position(page, 26, 21);
+  await position(page, 5, 2);
 });

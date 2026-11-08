@@ -651,6 +651,15 @@ const cheats = {
   'Add whetstone': () => collect(game, game.player, 'whetstone'),
   'Add heart': () => collect(game, game.player, 'heart'),
   Heal: () => heal(game),
+  // Finish Doctor Madeleine's training and step out of the dojo.
+  'Skip training': () => {
+    menuDialog.close();
+    const events = game.hero.sword ? [] : collect(game, game.player, 'sword');
+    game.hero.lessons = areas.dojo.people.d.training.lessons.length;
+    travel(world, 'village', 'dojo');
+    changeMap();
+    return events;
+  },
 };
 for (const [label, cheat] of Object.entries(cheats)) {
   const button = document.createElement('button');
