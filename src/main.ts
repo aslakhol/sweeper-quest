@@ -23,7 +23,7 @@ import {
 import { deserialize, serialize } from './game/save';
 import { createWorld, travel, wakeAtHome } from './game/world';
 import { areas } from './maps';
-import { cameraTarget, draw, type Effect, effectDuration, layout } from './render';
+import { cameraTarget, draw, type Effect, effectDuration, itemGetImage, layout } from './render';
 
 const app = element<HTMLElement>('#app');
 const levelNotes = [1, 2, 3, 4, 5] as const;
@@ -57,6 +57,7 @@ app.innerHTML = `
   <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="offer" class="talk"><p id="offer-line"></p><div class="dialog-actions"><button class="secondary" data-close>No</button><button id="buy">Yes</button></div><button class="talk-next" aria-label="Continue">▸</button></dialog>
+  <dialog id="found" class="found"><img id="found-image" alt="" /><p>You found</p><h2 id="found-name"></h2><p id="found-detail"></p></dialog>
   <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button id="continue">Continue</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
@@ -167,7 +168,14 @@ function changeMap(): void {
   effects = [];
   status.textContent = areas[world.area].name;
 }
+type Found = { find: Find; detail?: string };
+function progress(find: Find): string | undefined {
+  const { hero } = game;
+  if (find === 'whetstone') return `${hero.whetstones % piecesPerUpgrade}/${piecesPerUpgrade}`;
+  if (find === 'heartPiece') return `${hero.heartPieces % piecesPerUpgrade}/${piecesPerUpgrade}`;
+}
 function handleEvents(events: GameEvent[]): void {
+  const found: Found[] = [];
   for (const [index, event] of events.entries()) {
     switch (event.type) {
       case 'fight':
@@ -211,17 +219,23 @@ function handleEvents(events: GameEvent[]): void {
         status.textContent = `Hearts restored: +${event.amount}.`;
         break;
       case 'find':
-        announce(event.at, findNames[event.find], '#e8ce95');
+        if (event.find === 'coin') announce(event.at, findNames.coin, '#e8ce95');
+        else found.push({ find: event.find, detail: progress(event.find) });
         status.textContent = `Found: ${findNames[event.find]}.`;
         break;
-      case 'powerUp':
-        announce(event.at, 'Power up!');
+      // Upgrades follow the find that earned them.
+      case 'powerUp': {
+        const last = found.at(-1);
+        if (last) last.detail = `Power ${event.power}!`;
         status.textContent = `Power ${event.power}. Level ${event.power} monsters are now free to fight.`;
         break;
-      case 'heartUp':
-        announce(event.at, 'New heart!', '#a5c97c');
+      }
+      case 'heartUp': {
+        const last = found.at(-1);
+        if (last) last.detail = `${event.maxHealth} hearts!`;
         status.textContent = `${event.maxHealth} hearts.`;
         break;
+      }
       case 'win':
         announce(game.player, 'Chief defeated!');
         status.textContent = 'Goblin chief defeated.';
@@ -229,7 +243,26 @@ function handleEvents(events: GameEvent[]): void {
     }
   }
   if (events.length) stop();
+  const idle = !foundQueue.length;
+  foundQueue.push(...found);
+  if (idle) showFound();
 }
+const foundDialog = element<HTMLDialogElement>('#found');
+const foundQueue: Found[] = [];
+function showFound(): void {
+  const [next] = foundQueue;
+  if (!next) return;
+  element('#found-name').textContent = findNames[next.find];
+  element('#found-detail').textContent = next.detail ?? '';
+  element<HTMLImageElement>('#found-image').src = itemGetImage(next.find);
+  openDialog('#found');
+}
+// A tap anywhere puts the find away and shows the next one.
+foundDialog.addEventListener('click', () => foundDialog.close());
+foundDialog.addEventListener('close', () => {
+  foundQueue.shift();
+  showFound();
+});
 const offerDialog = element<HTMLDialogElement>('#offer');
 let offered: Point | undefined;
 function offer(at: Point, find: Find, price: number): void {

@@ -83,6 +83,30 @@ const hero = [
   '  b b  t ',
   '  d d    ',
 ];
+// Arms up, showing off a find.
+const heroHolding = [
+  ' f       f ',
+  ' b  ggg  b ',
+  ' b ggggg b ',
+  ' bgggggggb ',
+  ' b fdfdf b ',
+  ' b fffff b ',
+  ' bb fff bb ',
+  '  bbbgbbb  ',
+  '   bgggb   ',
+  '   ggggg   ',
+  '   bb bb   ',
+  '   b   b   ',
+  '   d   d   ',
+];
+const heroColors = {
+  g: '#adc984',
+  f: '#e3c399',
+  d: '#29362a',
+  b: '#678879',
+  s: '#e4e7c8',
+  t: '#b99a65',
+};
 const person = [
   '   hhh   ',
   '  hhhhh  ',
@@ -107,13 +131,16 @@ const whetstone = [
   ' dds    ',
 ];
 const heartPiece = ['rrr     ', 'rlrr    ', 'rrrrr   ', ' rrrrr  ', '  rrr   ', '   r    '];
+const heart = [' rr rr ', 'rlrrrrr', 'rrrrrrr', ' rrrrr ', '  rrr  ', '   r   '];
 const marble = ['  bbb  ', ' bllbb ', 'bllbbbd', 'bbbbbbd', ' bbbbd ', '  ddd  '];
 const spectacles = [' ff    ff ', 'fllf  fllf', 'flllfflllf', 'fllf  fllf', ' ff    ff '];
 const coin = [' yyy ', 'yllyd', 'ylyyd', 'yyyyd', ' ddd '];
 const ring = ['  ll  ', ' rllr ', 'r    r', 'r    r', 'r    r', ' rrrr '];
-const findSprites: Partial<Record<Find, { rows: string[]; palette: Record<string, string> }>> = {
+const findSprites: Record<Find, { rows: string[]; palette: Record<string, string> }> = {
   whetstone: { rows: whetstone, palette: { s: '#8c9aa0', l: '#d5dde0', d: '#566268' } },
+  greatstone: { rows: whetstone, palette: { s: '#9a86c8', l: '#e2d8f6', d: '#5c4c86' } },
   heartPiece: { rows: heartPiece, palette: { r: '#e0655f', l: '#f4b5a8' } },
+  heart: { rows: heart, palette: { r: '#e0655f', l: '#f4b5a8' } },
   coin: { rows: coin, palette: { y: '#e1bf76', l: '#f6e3a8', d: '#a8843e' } },
   marble: { rows: marble, palette: { b: '#7aa0d8', l: '#d8e6f4', d: '#4a6a9a' } },
   spectacles: { rows: spectacles, palette: { f: '#c9a35a', l: '#cfe3ea' } },
@@ -202,19 +229,25 @@ function drawMonster(
 }
 
 function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number) {
-  sprite(
-    ctx,
-    hero,
-    { g: '#adc984', f: '#e3c399', d: '#29362a', b: '#678879', s: '#e4e7c8', t: '#b99a65' },
-    x + 15,
-    y + 23,
-    2,
-  );
+  sprite(ctx, hero, heroColors, x + 15, y + 23, 2);
 }
 
 function drawFind(ctx: CanvasRenderingContext2D, find: Find, x: number, y: number, top = 22) {
   const found = findSprites[find];
-  if (found) sprite(ctx, found.rows, found.palette, x + 24 - found.rows[0].length * 1.5, y + top);
+  sprite(ctx, found.rows, found.palette, x + 24 - found.rows[0].length * 1.5, y + top);
+}
+
+// The hero holds a find up over their head, at one image pixel per sprite pixel.
+export function itemGetImage(find: Find): string {
+  const { rows, palette } = findSprites[find];
+  const canvas = document.createElement('canvas');
+  canvas.width = heroHolding[0].length;
+  canvas.height = 8 + heroHolding.length;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+  sprite(ctx, rows, palette, Math.floor((canvas.width - rows[0].length) / 2), 7 - rows.length, 1);
+  sprite(ctx, heroHolding, heroColors, 0, 8, 1);
+  return canvas.toDataURL();
 }
 
 function rects(

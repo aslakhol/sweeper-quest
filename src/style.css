@@ -271,3 +271,40 @@ dialog button {
 #offer.declined .dialog-actions {
   display: none;
 }
+.found {
+  width: min(80vw, 280px);
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  animation: appear 0.3s ease-out 0.35s backwards;
+}
+.found::backdrop {
+  animation: appear 0.3s ease-out 0.35s backwards;
+}
+#found-image {
+  display: block;
+  width: 77px;
+  height: 147px;
+  margin: 0 auto 10px;
+  padding: 24px 40px 0;
+  box-sizing: content-box;
+  image-rendering: pixelated;
+  background: radial-gradient(circle at 50% 28%, #f6e3a899, #f6e3a800 45%);
+}
+.found p {
+  margin: 0;
+}
+.found h2 {
+  margin: 2px 0 4px;
+}
+#found-detail {
+  min-height: 1.55em;
+  font-weight: 700;
+  color: #e4c782;
+}
+@keyframes appear {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
