@@ -82,6 +82,8 @@ export type Hero = {
   heartPieces: number;
   coins: number;
   carrying: Keepsake[];
+  // Keepsakes someone has asked you to look for.
+  asked: Keepsake[];
   returned: Keepsake[];
 };
 export type Game = {
@@ -150,6 +152,7 @@ export function createHero(): Hero {
     heartPieces: 0,
     coins: 0,
     carrying: [],
+    asked: [],
     returned: [],
   };
 }
@@ -354,6 +357,7 @@ export function canFinishQuest(hero: Hero, { quest }: Person): boolean {
 function talk(game: Game, at: Point, person: Person): GameEvent[] {
   const { quest } = person;
   const { hero } = game;
+  if (quest && !hero.asked.includes(quest.wants)) hero.asked.push(quest.wants);
   if (person.fullHealthLines && hero.health === hero.maxHealth)
     return [{ type: 'talk', person, lines: person.fullHealthLines }];
   if (quest && hero.returned.includes(quest.wants))

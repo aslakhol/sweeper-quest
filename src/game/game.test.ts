@@ -250,6 +250,7 @@ describe('routes and notes', () => {
     } as const;
     const game = createGame('p @ ?', { legend: { people: { p: pip }, finds: { '?': 'marble' } } });
     expect(step(game, p(0, 0))).toEqual([{ type: 'talk', person: pip, lines: pip.lines }]);
+    expect(game.hero.asked).toEqual(['marble']);
     expect(step(game, p(2, 0))).toEqual([{ type: 'find', at: p(2, 0), find: 'marble' }]);
     expect(game.hero.carrying).toEqual(['marble']);
     game.player = p(1, 0);
