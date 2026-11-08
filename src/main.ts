@@ -62,7 +62,7 @@ app.innerHTML = `
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. A hidden tile next to known ground is entered at the end of the walk.</li>
     <li>Choose a note, then tap a hidden tile to mark it. Number keys 1–5 mark the tile under the mouse, or pick that note. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
-    <li>Monsters at or below your power fall without hurting you. A stronger monster is revealed and survives: you lose its level times the levels it has over you in hearts, and stay where you are. Its clue stays hidden. Running out of hearts ends the run.</li>
+    <li>Monsters at or below your power fall without hurting you. A hidden stronger monster is revealed and survives: you lose its level times the levels it has over you in hearts, and stay where you are. Once visible, it blocks you without further damage until your power is high enough. Its clue stays hidden. Running out of hearts ends the run.</li>
     <li>Four whetstones raise your power. Four heart pieces add a heart. Chiefs drop a whole one.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
   </ul>
@@ -195,6 +195,11 @@ function handleEvents(events: GameEvent[]): void {
     switch (event.type) {
       case 'fight':
         animate(event.damage ? 'hurt' : 'hit');
+      case 'blocked':
+        effects = effects.filter((effect) => effect.kind !== 'shake');
+        effects.push({ kind: 'shake', at: game.player, started: performance.now() });
+        status.textContent = 'Too strong.';
+        break;
         if (!event.monster.alive)
           effects.push({
             kind: 'fight',

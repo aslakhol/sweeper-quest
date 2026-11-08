@@ -98,6 +98,7 @@ export type Game = {
 };
 export type GameEvent =
   | { type: 'fight'; from: Point; at: Point; monster: Monster; damage: number }
+  | { type: 'blocked'; at: Point }
   | { type: 'death' }
   | { type: 'win' }
   | { type: 'travel'; to: string }
@@ -379,7 +380,7 @@ export function buy(game: Game, at: Point): GameEvent[] {
   delete tile.find;
   return events;
 }
-// Stronger monsters hurt the hero and become visible, but keep blocking the tile.
+// Hidden stronger monsters hurt and reveal themselves; known ones block without a fight.
 export function step(game: Game, target: Point): GameEvent[] {
   if (game.lost) return [];
   const tile = tileAt(game, target);
@@ -390,6 +391,8 @@ export function step(game: Game, target: Point): GameEvent[] {
   if (tile.person) return talk(game, target, tile.person);
   const events: GameEvent[] = [];
   if (tile.monster?.alive) {
+    if (tile.revealed && tile.monster.level > game.hero.power)
+      return [{ type: 'blocked', at: target }];
     tile.revealed = true;
     delete tile.note;
     const damage = fightDamage(game, tile.monster);

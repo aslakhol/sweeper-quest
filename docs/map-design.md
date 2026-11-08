@@ -37,8 +37,8 @@ Hidden finds, chief drops, quests and the shop are the current upgrade sources. 
 - You move in eight directions. A diagonal step is blocked only when both tiles beside it block movement.
 - Attacking a hidden monster reveals it and clears its note.
 - A monster at or below your power dies for free and you enter its tile.
-- A stronger one costs `level × (level − power)` hearts but survives. You stay put. Its clue stays hidden, neighbouring clues do not change, and no flood, drop or victory occurs. If that takes your last heart you lose.
-- Repeated attacks and healing cannot clear a stronger monster. No required progression may depend on guesses or damage, including attacks used merely to reveal a monster.
+- A hidden stronger one costs `level × (level − power)` hearts but survives. You stay put. Its clue stays hidden, neighbouring clues do not change, and no flood, drop or victory occurs. If that takes your last heart you lose.
+- A visible stronger monster blocks attacks without damage or any game-state change. The hero briefly shakes. No required progression may depend on guesses or damage, including attacks used merely to reveal a monster.
 - Auto-walk only crosses known ground, and tapping a hidden tile beside known ground walks there and steps in.
 - Notes are the player's own marks on hidden tiles, levels 1–5 and "danger". They never block movement or affect the rules.
 - Game over offers Continue, which wakes you at home with all hearts and the world unchanged. Maps must never rely on it: dying counts as failure.
@@ -50,9 +50,9 @@ Hidden finds, chief drops, quests and the shop are the current upgrade sources. 
 | Slime | 1 | 0 | 0 | 0 |
 | Bat | 2 | 2 | 0 | 0 |
 | Goblin | 3 | 6 | 3 | 0 |
-| Chief (visible) | 3 | 6 | 3 | 0 |
+| Chief (visible) | 3 | Blocked | Blocked | 0 |
 
-These are damage costs per unsuccessful attack, not prices for killing a monster. The hero starts on 3 hearts, so at power 1 one attack on a bat is survivable, a second is not, and a goblin is lethal. Whoever draws maps must treat a wrong guess as possibly fatal, especially early. Later levels cost more: a monster one level above you costs `power + 1`, so about `2 × power + 1` hearts survive one mistake. The planned ladder stops around power 5 or 6, and note tools already go up to 5.
+These are damage costs for encountering a hidden monster, not prices for killing it. The hero starts on 3 hearts, so at power 1 encountering one hidden bat is survivable, a second hidden bat is not, and a hidden goblin is lethal. Whoever draws maps must treat a wrong guess as possibly fatal, especially early. Later levels cost more: a monster one level above you costs `power + 1`, so about `2 × power + 1` hearts survive one mistake. The planned ladder stops around power 5 or 6, and note tools already go up to 5.
 
 ## How this differs from classic Minesweeper
 

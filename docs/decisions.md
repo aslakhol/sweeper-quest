@@ -42,7 +42,8 @@ The first demo could be won without reading a clue. The subsequent playtest also
 ## Combat
 
 - **Power determines whether a monster can die.** At or below your power, it dies for free and you enter its tile.
-- **A stronger monster survives.** Attacking reveals it and costs `level × (level − power)` hearts. The hero stays put, its clue stays hidden, nearby sums stay unchanged, and no reward or flood occurs. Losing the last heart is lethal.
+- **A hidden stronger monster survives.** Attacking reveals it and costs `level × (level − power)` hearts. The hero stays put, its clue stays hidden, nearby sums stay unchanged, and no reward or flood occurs. Losing the last heart is lethal.
+- **Visible stronger monsters block attacks.** Once the danger is known, another tap is a misclick. The hero briefly shakes, with no damage or game-state change. This also applies to chiefs visible from the start. Return with enough power to fight.
 - **Hearts cover mistakes, not passage.** Healing and repeated attacks cannot break a power gate.
 - **Required progression is safe.** The connected world must have a route to its objectives without guessing or taking any damage. A region can remain partially blocked while another reachable region supplies clues, quests or upgrades. A required upgrade cannot be locked behind a monster that needs that upgrade.
 

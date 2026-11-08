@@ -39,7 +39,7 @@ Notes are guesses on hidden floor, not movement barriers. Provide levels 1–5, 
 
 ## Combat, health, and progression
 
-At or below your power, an enemy dies without hurting you and you move onto its tile. Attacking a stronger enemy costs hearts and reveals the monster, but it survives and you stay where you are. Its own clue stays hidden, its contribution to neighbouring clues stays unchanged, and no flood or reward is triggered. Repeated attacks and healing cannot force a way through; return with sufficient power.
+At or below your power, an enemy dies without hurting you and you move onto its tile. Stepping into a hidden stronger enemy costs hearts and reveals the monster, but it survives and you stay where you are. Its own clue stays hidden, its contribution to neighbouring clues stays unchanged, and no flood or reward is triggered. A visible stronger monster cannot be attacked; trying briefly shakes the hero without changing game state. Return with sufficient power.
 
 Current damage tuning is `monster level × max(0, monster level − player power)` hearts. At power 1 a bat costs 2 hearts and a goblin costs 6; at power 2 a goblin costs 3. Reaching zero health is lethal: the monster survives and you do not move.
 
@@ -98,7 +98,7 @@ Dungeons with finds are fixed maps, because a layout rebuilt on every visit woul
 
 A 2×2 level-5 boss occupies four tiles but counts as one monster in neighboring clue sums. Deduplicate its contribution when several occupied tiles touch the same clue. Rules for clues within its footprint, movement after victory, and remains still need definition.
 
-The boss follows the same combat model: power 5 is required to defeat it. Lower-power attacks reveal it and hurt the player without killing it. The power needed to win must be available before the boss, independently of its reward. Its planned reward remains a heart container and a Lantern. For this adventure, the Lantern opens the next-zone gate.
+The boss follows the same combat model: power 5 is required to defeat it. Encountering it while hidden hurts a lower-power player without killing it. Once visible, it blocks attacks until the player has enough power. The power needed to win must be available before the boss, independently of its reward. Its planned reward remains a heart container and a Lantern. For this adventure, the Lantern opens the next-zone gate.
 
 ### Persistence and completion
 

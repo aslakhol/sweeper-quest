@@ -125,6 +125,12 @@ describe('combat and progression', () => {
     expect(tileAt(game, p(2, 0))?.revealed).toBe(false);
     expect(tileAt(game, p(3, 0))?.find).toBe('heartPiece');
 
+    const revealed = structuredClone(game);
+    for (let attempt = 0; attempt < 3; attempt++) {
+      expect(step(game, p(1, 0))).toEqual([{ type: 'blocked', at: p(1, 0) }]);
+      expect(game).toEqual(revealed);
+    }
+
     game.hero.power = 3;
     expect(step(game, p(1, 0))).toMatchObject([{ type: 'fight', damage: 0 }]);
     expect(game.player).toEqual(p(1, 0));
@@ -132,12 +138,12 @@ describe('combat and progression', () => {
     expect(tileAt(game, p(3, 0))?.revealed).toBe(true);
   });
   it('ends the run when a fight takes the last heart', () => {
-    const game = createGame('@ g g', { hero: sturdy() });
+    const game = createGame('@ g\ng .', { hero: sturdy() });
     step(game, p(1, 0));
-    expect(step(game, p(1, 0))).toMatchObject([{ type: 'fight', damage: 6 }, { type: 'death' }]);
+    expect(step(game, p(0, 1))).toMatchObject([{ type: 'fight', damage: 6 }, { type: 'death' }]);
     expect([game.hero.health, game.lost]).toEqual([0, true]);
     expect(game.player).toEqual(p(0, 0));
-    expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(true);
+    expect(tileAt(game, p(0, 1))?.monster?.alive).toBe(true);
     expect(step(game, p(0, 0))).toEqual([]);
   });
   it('shows the chief from the start and wins when it falls', () => {
@@ -183,16 +189,16 @@ describe('combat and progression', () => {
     expect(step(game, p(1, 0))).toContainEqual({ type: 'powerUp', at: p(1, 0), power: 4 });
     expect([hero.power, hero.whetstones % 4]).toEqual([4, 3]);
   });
-  it('cannot buy a chief reward with hearts, even over repeated healed attempts', () => {
+  it('blocks a visible chief without damage or rewards until the hero is strong enough', () => {
     const game = createGame('@ C', { hero: { ...sturdy(), power: 2, whetstones: 7 } });
+    const before = structuredClone(game);
     for (let attempt = 0; attempt < 3; attempt++) {
-      expect(step(game, p(1, 0))).toMatchObject([{ type: 'fight', damage: 3 }]);
-      expect(game.won).toBe(false);
-      expect(game.hero.whetstones).toBe(7);
-      expect(game.player).toEqual(p(0, 0));
-      expect(tileAt(game, p(1, 0))?.monster?.alive).toBe(true);
-      heal(game);
+      expect(step(game, p(1, 0))).toEqual([{ type: 'blocked', at: p(1, 0) }]);
+      expect(game).toEqual(before);
     }
+    game.hero.power = 3;
+    expect(step(game, p(1, 0))).toContainEqual({ type: 'win' });
+    expect(game.hero.whetstones).toBe(11);
   });
   it('hides a find until it is revealed and leaves clues alone', () => {
     const game = createGame('@ . *');

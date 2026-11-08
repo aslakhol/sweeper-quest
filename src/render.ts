@@ -14,8 +14,9 @@ export const TILE_SIZE = 48;
 export type Effect =
   | { kind: 'text'; at: Point; text: string; color: string; started: number }
   | { kind: 'fight'; from: Point; at: Point; monster: Monster; started: number }
+  | { kind: 'shake'; at: Point; started: number }
   | { kind: 'pulse'; at: Point; started: number };
-export const effectDuration = { text: 1100, fight: 420, pulse: 700 } as const;
+export const effectDuration = { text: 1100, fight: 420, shake: 280, pulse: 700 } as const;
 // Fight timeline: the hero lunges and the monster flashes, then it pops and the hero steps in.
 const hitEnd = 200;
 const popEnd = 340;
@@ -619,7 +620,12 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
     const along = Math.max(reach, enter);
     drawHero(ctx, fx + (ax - fx) * along, fy + (ay - fy) * along);
   } else {
-    drawHero(ctx, px, py);
+    const shake = view.effects.find(
+      (effect) => effect.kind === 'shake' && same(effect.at, game.player),
+    );
+    const progress = shake ? (view.time - shake.started) / effectDuration.shake : 0;
+    const offset = Math.sin(progress * Math.PI * 6) * 4 * (1 - progress);
+    drawHero(ctx, px + offset, py);
   }
   if (view.flash) {
     ctx.fillStyle = '#e4867577';

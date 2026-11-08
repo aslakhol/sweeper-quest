@@ -53,12 +53,18 @@ async function enterMeadow(page: Page, touch: boolean) {
   await position(page, 15, 23);
 }
 
-// Repeatedly attacking a bat above our power reveals it, then takes the last heart.
+// Two different hidden monsters hurt us; the revealed bat can no longer be attacked.
 async function fallInBattle(page: Page, touch: boolean) {
   await enterMeadow(page, touch);
   await fallInBattleFromGate(page, touch);
 }
 async function fallInBattleFromGate(page: Page, touch: boolean) {
+  await revealBatFromGate(page, touch);
+  await tap(page, 14, 18, touch);
+  await position(page, 14, 18);
+  await tap(page, 13, 17, touch);
+}
+async function revealBatFromGate(page: Page, touch: boolean) {
   await tap(page, 15, 19, touch);
   await position(page, 15, 19);
   await tap(page, 15, 18, touch);
@@ -66,7 +72,6 @@ async function fallInBattleFromGate(page: Page, touch: boolean) {
   await tap(page, 14, 17, touch);
   await position(page, 15, 18);
   await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '1 of 3 hearts');
-  await tap(page, 14, 17, touch);
 }
 
 test('a fight moves you onto the tile and gives nothing', async ({ page, isMobile }) => {
@@ -80,7 +85,25 @@ test('a fight moves you onto the tile and gives nothing', async ({ page, isMobil
   expect(errors).toEqual([]);
 });
 
-test('stronger monsters cost hearts until the run ends', async ({ page, isMobile }) => {
+test('a revealed stronger monster blocks taps and keyboard moves without more damage', async ({
+  page,
+  isMobile,
+}) => {
+  await enterMeadow(page, isMobile);
+  await revealBatFromGate(page, isMobile);
+  await tap(page, 14, 17, isMobile);
+  await expect(page.getByRole('status')).toHaveText('Too strong.');
+  await page.keyboard.press('q');
+  await position(page, 15, 18);
+  await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '1 of 3 hearts');
+  await page.reload();
+  await tap(page, 14, 17, isMobile);
+  await expect(page.getByRole('status')).toHaveText('Too strong.');
+  await position(page, 15, 18);
+  await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '1 of 3 hearts');
+});
+
+test('hidden stronger monsters can still end the run', async ({ page, isMobile }) => {
   await fallInBattle(page, isMobile);
   await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
   await page.keyboard.press('Escape');
