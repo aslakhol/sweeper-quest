@@ -21,6 +21,7 @@ pnpm exec playwright install chromium
 pnpm test:e2e                    # Mouse, keyboard, and emulated phone input
 pnpm test:watch
 pnpm maps                        # Regenerate the outdoor maps
+pnpm maps:check                  # Check world objectives, deduction profiles and return visits
 pnpm format
 pnpm preview                     # Serve the most recent dist/ build
 ```
@@ -59,9 +60,14 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 | `src/game/save.ts` | Saves and restores the world as JSON in `localStorage` |
 | `src/game/game.test.ts` | Rule and progression tests with small maps |
 | `src/game/world.test.ts` | Exits link up both ways, and travel keeps or refreshes maps |
-| `src/game/solver.ts` | Narrows hidden levels from visible clues and measures how a map opens at each power |
-| `src/game/maps.test.ts` | Tours the whole world with the solver and holds each map to its layers |
+| `src/game/solver.ts` | Direct, bounds and shared-group deductions with clue proofs; conditional visibility and reachability layers |
+| `src/game/survey.ts` | Walks the connected world, earns upgrades and revisits persistent areas |
+| `src/game/puzzle-fixtures.ts` | Small authored examples of weighted deduction and unresolved frontiers |
+| `src/maps/puzzle-checks.ts` | Agreed world objectives; optional reasoning requirements and protected access powers |
+| `src/game/map-check.ts` | Validates objectives and reports routes, proofs, partial layers and return visits |
+| `src/game/maps.test.ts` | Preserves the current prototype's full exploration and layer expectations |
 | `scripts/generate-maps.ts` | Places monsters and finds on hand-drawn terrain |
+| `scripts/check-maps.ts` | Runs authoring checks and writes reports under `output/map-checks` |
 | `src/main.ts` | HUD, touch and keyboard input, camera easing, 75 ms auto-walk, event feedback |
 | `src/render.ts` | Camera layout, canvas tiles, pixel sprites, fight animation, remains, route dots, and popups |
 | `src/style.css` | Full-screen canvas, HUD and dialogs |

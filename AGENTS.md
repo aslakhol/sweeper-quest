@@ -1,3 +1,5 @@
 This project uses pnpm.
 
 Read `idea.md` for the game and `docs/decisions.md` for why it works this way. Before changing maps or puzzle rules, read `docs/map-design.md`.
+
+For map work, follow the authoring workflow in `docs/puzzle-design.md`. Run `pnpm maps:check` as well as `pnpm check`, and inspect the routes, return visits and deduction proofs. Partial regions and regions without power rewards are expected. Key reward placement and acquisition remain collaborative with Aslak; do not insert upgrades or weaken agreed objectives just to make validation pass.

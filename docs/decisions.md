@@ -26,6 +26,14 @@ XP clicked on small maps, where going from weak to strong fits inside one board.
 
 The original shards failed because they were too easy to reach: the first bundle took 7 taps and made 16 of 19 monsters harmless. Keeping finds rare and hidden is what fixes that, not the name.
 
+## World authoring and progression
+
+Key rewards, where they are placed and how they are obtained remain a collaboration with Aslak as the world develops. Agents should design the local deductions without requiring him to supervise puzzle construction. A complete progression budget is not a prerequisite for extending the world; record agreed dependencies as they emerge.
+
+Regions may contain few or no power-up items. The test world's reward density compresses progression and should not carry into the larger adventure. Quests and shops may provide items and power outside explicit puzzles; their acquisition rules and costs will be designed alongside the world.
+
+Partial access at a given power is intentional. The player explores elsewhere, grows stronger and returns to discover another door, reward or quest objective. Judge solvability and progression across the connected world and persistent visits. Do not require each region to supply an upgrade or be cleared on arrival, and do not insert rewards merely to make it self-contained. See [puzzle design](puzzle-design.md) for the authoring and validation policy.
+
 
 ## First playtest
 

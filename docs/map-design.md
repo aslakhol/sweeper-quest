@@ -2,9 +2,13 @@
 
 How the puzzle works, how maps are built, and what we know so far about making them good. Rules are taken from `src/game/game.ts`, which wins if this document disagrees. The reasons behind the design are in [decisions.md](decisions.md).
 
+Before authoring or regenerating maps, read [puzzle design](puzzle-design.md). It defines the reasoning we want to teach, worked examples for weighted clues, and the authoring workflow. Direct, bounds and shared-group solver profiles are implemented; expert case analysis remains future work.
+
 ## The game in brief
 
 You walk a connected world of hidden tiles. Monsters hide on tiles and sum into clues. Kills give nothing. You grow only by finding hidden items: four whetstones raise your power, four heart pieces add a heart. Level-ups should be rare, so most play happens at one fixed power. Maps are not boards to clear; they are places you explore, get stuck in, leave, and return to stronger.
+
+Hidden finds and chief drops are the current upgrade sources. As the world grows, quests and shops may also provide items and power. Key reward placement and acquisition remain collaborative with Aslak. A region may have few or no power-up items and depend on growth elsewhere to reveal another door, reward or quest objective on a later visit. The test world's reward density and layer ranges below are prototype measurements, not quotas for future regions.
 
 ## Exact rules
 
@@ -94,24 +98,30 @@ Most finds are hidden and should stay that way. A player needs a reason to look,
 
 `pnpm maps [candidates] [output directory]` regenerates the village, wood and cave. Walls, water, exits and chiefs come from the existing map files. Each candidate scatters monsters with density and strength growing with walking distance from the entrances, stamps in rings and gate slimes, and is scored against its layer targets. Finds then go on ground that first opens at the power named in the script, spread apart and preferring tiles beside clues. Settings for each map are at the top of `scripts/generate-maps.ts`. Without an output directory it overwrites the maps, and any changed map drops existing saves.
 
-`src/game/solver.ts` has the deduction. It narrows each hidden tile to a range of levels, one clue at a time, using only what the player can see. `highestHiddenLevel` there must be raised when maps hide stronger monsters.
+`pnpm maps:check [output directory]` validates the agreed prototype objectives and writes `report.txt` and `report.json` under `output/map-checks` by default. It runs three deduction profiles in two move orders across the connected world, with actual walks, rewards, health and healing. It also measures conditional layers from every entrance, distinguishing visible ground from reachable ground. These layer experiments grant power and do not count as earned world progression.
+
+`src/maps/puzzle-checks.ts` records agreed world objectives. It currently names the two chiefs and power 3 from the prototype. It imposes no upgrade quota or full-clear requirement on new regions. A designated reasoning requirement or protected earliest power must be recorded explicitly; expert shortcuts are otherwise allowed.
+
+`src/game/solver.ts` separates readable observations from deduction and records the supporting clues and bounds. The generator still uses the bounds profile so adding stronger reasoning does not silently change its scoring. `highestHiddenLevel` is a public roster limit, not a fact inferred from hidden map contents; update it with the player-facing legend when introducing stronger hidden monsters.
+
+`src/game/puzzle-fixtures.ts` contains small authored examples, including shared groups, changing clues after kills and deliberately unresolved frontiers. `src/game/survey.ts` follows connected routes and revisits persistent maps as evidence and power change. The report includes each hidden move's proof and each find's reveal, reach and collection power, using zero-based map coordinates and row-major tile IDs in proofs.
 
 ## Known weaknesses
 
-- **Layers measure how much opens, not whether finding it is fun.** A map can hit its targets and still be dull. Nothing measures how interesting a deduction is. The village's 61% at power 1 may be too generous.
-- **The solver is deliberately simple.** It reads clues one at a time and never combines two to rule out a case, so a good player can prove more than it can. Its shares are lower bounds, and it cannot tell an easy move from a hard one.
+- **Metrics need playtesting.** Layers, runs of basic moves and flood sizes expose things to inspect; they do not measure enjoyment. The village's 61% at power 1 may be too generous.
+- **The solver has limits.** Shared-group reasoning currently subtracts subset neighbourhoods. It does not handle general overlap bounds or enumerate cases. Two move orders provide useful route checks, not exhaustive proof of minimum difficulty. NPC clues are excluded and people block walking, matching the displayed evidence and movement rules.
 - **Monster placement is random.** Danger grows with distance and rings are stamped on, but there is no authored structure such as belts, gates or set-piece patterns.
 - **Rings may be too obvious or too rare to teach anything.** We have not tested this with players.
 - **Only levels 1–3 exist.** We do not yet know how readable clues stay at levels 4–6.
 
-## Open questions
+## Direction for new puzzles
 
-These are the questions to answer next:
+[Puzzle design](puzzle-design.md) translates Minesweeper strategies into an authoring policy:
 
-1. What makes a deduction satisfying here, given weighted sums, and which classic ideas survive the translation?
-2. What density and mix of levels make good puzzles at each power? 26–29% is well above classic expert's 21%, but most of ours is free at higher power.
-3. How should a map be structured so that long stretches at one power stay varied?
-4. Should forced guesses exist at all? If so, when, and what should they risk at 3 hearts?
-5. How can we measure puzzle quality, so the generator can rank maps on more than layer size? A stronger solver would help here.
-6. Which set pieces are worth having as reusable patterns, and how should a map teach them?
-7. How much should clues hint at finds, and what makes a hint feel earned?
+- Teach single-clue safety first, then require shared-group reasoning at selected progression milestones.
+- Keep a route through the world without guessing about hidden threats. Known, survivable fights can still cost hearts.
+- Let experts reach some finds early. Check important progression dependencies explicitly instead of treating obscurity as a lock.
+- Measure the reasoning needed to collect finds and reach routes, alongside the existing layer shares. Distinguish revealed ground from reachable ground.
+- Author small encounters, vary them, then validate the complete placement from its actual entrances. Density alone is not a difficulty target.
+
+Playtests still need to establish suitable clue sizes and monster mixes, how long chains remain readable on a phone, spacing between deductions and finds, and whether rings and other hints stay interesting after repetition.
