@@ -240,7 +240,8 @@ export function measureLayers(game: Game, maxPower: number, profile: SolverProfi
           break;
         }
       }
-      if (!move) break;
+      // A lost game ignores every step, so it would never stop offering the same move.
+      if (!move || game.lost) break;
       if (!move.target.revealed) steppedHidden.add(move.target);
       game.player = { x: move.from.x, y: move.from.y };
       step(game, move.target);

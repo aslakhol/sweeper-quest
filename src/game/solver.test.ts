@@ -89,6 +89,12 @@ describe('deduction profiles', () => {
     expect(game.tiles[1].monster?.alive).toBe(false);
   });
 
+  it('stops measuring a lost game instead of retrying the same step', () => {
+    const game = createGame('@ s .');
+    game.lost = true;
+    expect(measureLayers(game, 1).revealed.has(game.tiles[1])).toBe(false);
+  });
+
   it('distinguishes a remote first reveal from stepping onto a hidden tile at the same power', () => {
     const flooded = createGame('@ s .');
     const floodLayers = measureLayers(flooded, 1);
