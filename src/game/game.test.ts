@@ -122,7 +122,7 @@ describe('combat and progression', () => {
   });
   it('reveals a stronger monster without killing, entering, flooding or changing clues', () => {
     const game = createGame('@ g . +', { hero: sturdy() });
-    setNote(game, p(1, 0), 2);
+    setNote(game, p(1, 0), 1);
     expect(step(game, p(1, 0))).toMatchObject([{ type: 'fight', damage: 6 }]);
     expect(game.hero.health).toBe(4);
     expect(game.player).toEqual(p(0, 0));
@@ -447,9 +447,18 @@ describe('routes and notes', () => {
     toggleNote(game, target, 3);
     expect(tileAt(game, target)?.note).toBeUndefined();
   });
-  it('notes never block movement and disappear when revealed', () => {
+  it('blocks a step into a tile marked danger or above your power, without changing the game', () => {
+    const game = createGame('@ s .', { hero: armed() });
+    for (const note of [2, 'danger'] as const) {
+      setNote(game, p(1, 0), note);
+      const before = structuredClone(game);
+      expect(step(game, p(1, 0))).toEqual([{ type: 'blocked', at: p(1, 0) }]);
+      expect(game).toEqual(before);
+    }
+  });
+  it('steps into a tile marked at or below your power and clears the note', () => {
     const game = createGame('@ . . s');
-    setNote(game, p(2, 0), 5);
+    setNote(game, p(2, 0), 1);
     step(game, p(1, 0));
     step(game, p(2, 0));
     expect(same(game.player, p(2, 0))).toBe(true);

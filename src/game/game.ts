@@ -518,6 +518,9 @@ export function step(game: Game, target: Point): GameEvent[] {
   if (forSale(tile) && distance(game.player, target) === 1)
     return [{ type: 'offer', at: target, find: tile.find, price: tile.price }];
   if (!tile || !canStep(game, game.player, target)) return [];
+  // A hidden tile you have marked as too strong blocks like a known monster, until you erase it.
+  if (!tile.revealed && tile.note && (tile.note === 'danger' || tile.note > game.hero.power))
+    return [{ type: 'blocked', at: target }];
   if (tile.person) return talk(game, target, tile.person);
   if (tile.chest) return openChest(game, { x: target.x, y: target.y }, tile);
   const events: GameEvent[] = [];

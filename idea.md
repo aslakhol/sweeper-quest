@@ -35,7 +35,7 @@ Tapping a distant revealed tile walks there over known, unoccupied floor. Auto-w
 
 Tapping a distant hidden target that borders reachable revealed floor walks to the nearest such neighbor and steps in, the same as tapping it from next door. Requiring a second tap felt clumsy after a long walk. A hidden target with no reachable revealed neighbor still routes to the geometrically closest reachable revealed tile; whether it should walk at all is open.
 
-Notes are guesses on hidden floor, not movement barriers. Provide levels 1–5, danger, and an eraser along the bottom of the screen. Choosing a note and marking a tile returns to movement; hold Shift on desktop to keep marking. Placing the same note again clears it; another note replaces it. Long press or right-click cycles 1 through 5, then clear. Number keys mark the hidden tile under the pointer directly, or select the tool when no eligible tile is hovered. Touch usability remains a requirement as the note UI evolves.
+Notes are guesses on hidden floor. Tapping a tile marked danger or above your power shakes the hero like a known stronger monster, so a misclick cannot step in; erase or lower the note first. Provide levels 1–5, danger, and an eraser along the bottom of the screen. Choosing a note and marking a tile returns to movement; hold Shift on desktop to keep marking. Placing the same note again clears it; another note replaces it. Long press or right-click cycles 1 through 5, then clear. Number keys mark the hidden tile under the pointer directly, or select the tool when no eligible tile is hovered. Touch usability remains a requirement as the note UI evolves.
 
 ## Combat, health, and progression
 

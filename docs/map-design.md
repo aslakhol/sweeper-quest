@@ -42,7 +42,7 @@ Hidden finds, chief drops, quests and the shop are the current upgrade sources. 
 - A visible stronger monster blocks attacks without damage or any game-state change. The hero briefly shakes. No required progression may depend on guesses or damage, including attacks used merely to reveal a monster.
 - Auto-walk only crosses known ground, and tapping a hidden tile beside known ground walks there and steps in.
 - Chests block walking like people do, opened or not. A chest must not cut off a route.
-- Notes are the player's own marks on hidden tiles, levels 1–5 and "danger". They never block movement or affect the rules.
+- Notes are the player's own marks on hidden tiles, levels 1–5 and "danger". Stepping into one marked danger or above your power is blocked like a visible stronger monster, without any change to the game. Otherwise they never affect the rules, and the survey ignores them.
 - Game over offers Continue, which wakes you at home with all hearts and the world unchanged. Maps must never rely on it: dying counts as failure.
 
 ### Numbers today
