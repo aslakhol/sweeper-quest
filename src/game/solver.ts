@@ -216,6 +216,12 @@ export function reachableTiles(game: Game) {
 export function measureLayers(game: Game, maxPower: number, profile: SolverProfile = 'bounds') {
   const revealed = new Map<Tile, number>();
   const reachable = new Map<Tile, number>();
+  // A direct step can reveal and collect a find in the same action. Other first reveals
+  // leave the find on the ground for a later pickup, even at the same power.
+  const revealedFromElsewhere = new Map<Tile, number>();
+  const steppedHidden = new Set<Tile>();
+  const start = tileAt(game, game.player);
+  if (start) steppedHidden.add(start);
   for (let power = 1; power <= maxPower; power++) {
     for (;;) {
       game.hero.power = power;
@@ -235,15 +241,18 @@ export function measureLayers(game: Game, maxPower: number, profile: SolverProfi
         }
       }
       if (!move) break;
+      if (!move.target.revealed) steppedHidden.add(move.target);
       game.player = { x: move.from.x, y: move.from.y };
       step(game, move.target);
     }
     for (const tile of game.tiles)
-      if (tile.terrain === 'floor' && tile.revealed && !revealed.has(tile))
+      if (tile.terrain === 'floor' && tile.revealed && !revealed.has(tile)) {
         revealed.set(tile, power);
+        if (!steppedHidden.has(tile)) revealedFromElsewhere.set(tile, power);
+      }
     for (const tile of reachableTiles(game)) if (!reachable.has(tile)) reachable.set(tile, power);
   }
-  return { revealed, reachable };
+  return { revealed, reachable, revealedFromElsewhere };
 }
 
 export function openLayers(game: Game, maxPower: number) {

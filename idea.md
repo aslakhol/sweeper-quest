@@ -47,7 +47,7 @@ Power stays with the character and never resets. Four whetstones raise it by one
 
 Level-ups are rare, with a lot of game between them. Keep the ladder short, around power 5 or 6, so each one is an event and clues stay small. Heart pieces, tools and secrets set the everyday rhythm of rewards. Each power needs a large part of the world designed for it.
 
-The world holds more pieces than you need, so you can move on without finding everything. Most finds are hidden. Maps hint at them with terrain, with rumours from people, and with clues: a ring of monsters around an empty spot makes the numbers climb and invites a look.
+The world holds more pieces than you need, so you can move on without finding everything. Ground finds start hidden, but normally become visible before pickup. Prefer placements uncovered by a zero flood or a free kill that opens nearby ground, so the player discovers an item and then chooses to walk over to it. Stepping onto a hidden item still collects it immediately; this is a placement preference, not a separate inspection action or visibility through covered tiles. Maps hint at them with terrain, with rumours from people, and with clues: a ring of monsters around an empty spot makes the numbers climb and invites a look.
 
 Maps open in layers. At each power, part of the map can be proven free from the clues; the rest waits until you are stronger. A clue at or below your power proves all its neighbours safe, so a new level reopens places you left behind without any extra mechanic. Weaker monsters still add to clues, and killing them cleans up the sums. Check this across the whole world: being stuck in one region is fine, being stuck everywhere is not.
 

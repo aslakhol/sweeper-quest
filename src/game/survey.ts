@@ -3,6 +3,7 @@ import {
   canFinishQuest,
   canStep,
   distance,
+  type Find,
   type Game,
   type GameEvent,
   heal,
@@ -42,6 +43,8 @@ export type SurveyAction = {
   health: number;
   revealed: number;
   events: GameEvent[];
+  // Ground pickups only; quest rewards, purchases and monster drops have no preview tile.
+  groundFind?: { find: Find; revealedBeforePickup: boolean };
   proof?: { upper: number; maxLevel: number; clues: Clue[]; deductions: Deduction[] };
 };
 export type SurveyOptions = {
@@ -148,6 +151,9 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
     const { power, health } = game.hero;
     const before = revealedCount(game);
     const target = tileAt(game, at);
+    const groundFind =
+      target?.terrain === 'floor' && target.price === undefined ? target.find : undefined;
+    const revealedBeforePickup = target?.revealed ?? false;
     if (target && !target.revealed && (!proof || proof.upper > power))
       throw new Error(`No safe deduction for hidden tile ${accessKey(area, at)}.`);
     const events = step(game, at);
@@ -176,6 +182,8 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
       health,
       revealed,
       events: structuredClone(events),
+      groundFind:
+        groundFind && !target?.find ? { find: groundFind, revealedBeforePickup } : undefined,
       proof,
     });
     if (actions.length > 25_000)

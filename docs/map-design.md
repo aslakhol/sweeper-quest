@@ -91,7 +91,11 @@ The eighth whetstone is in the wood at `(18, 1)`, in the north-east pocket. Both
 
 ## Hints for hidden finds
 
-Most finds are hidden and should stay that way. A player needs a reason to look, without being shown the answer:
+Ground finds start hidden. Prefer positions that become visible before the player steps onto them: a nearby zero flood or a free kill can expose the item and create a reason to approach it. This applies to pieces, keepsakes and coins on the ground, not rewards handed over by people or dropped by chiefs. The item must not be drawn through a covered tile.
+
+A zero on the item tile is not enough by itself: entering that hidden tile reveals and collects it in one action. Check that another action uncovers it first. A numbered tile on a flood boundary can work well too. Keep the intended access power and safe route intact; exceptions should be explained in the authoring note rather than changing rewards to satisfy a metric.
+
+Before the reveal, give the player a reason to investigate:
 
 - **Clues:** a ring of bats around an empty centre makes the numbers climb around nothing. Hilde's ring and a heart piece sit in rings today, and Hilde at the inn hints at them.
 - **Terrain:** a gap in the trees, a walled pocket, an island you cannot reach yet.
@@ -99,7 +103,7 @@ Most finds are hidden and should stay that way. A player needs a reason to look,
 
 ## Tools
 
-`pnpm maps [candidates] [output directory]` regenerates the village, wood and cave. Walls, water, exits and chiefs come from the existing map files. Each candidate scatters monsters with density and strength growing with walking distance from the entrances, stamps in rings and gate slimes, and is scored against its layer targets. Finds then go on ground that first opens at the power named in the script, spread apart and preferring tiles beside clues. Settings for each map are at the top of `scripts/generate-maps.ts`. Without an output directory it overwrites the maps, and any changed map drops existing saves.
+`pnpm maps [candidates] [output directory]` regenerates the village, wood and cave. Walls, water, exits and chiefs come from the existing map files. Each candidate scatters monsters with density and strength growing with walking distance from the entrances, stamps in rings and gate slimes, and is scored against its layer targets. Finds then go on ground first revealed and reachable at the power named in the script. Among eligible positions, the generator prefers tiles first revealed from somewhere else, then spreads finds apart. Fixed ring finds are still authored exceptions to inspect. This preference uses the conditional solver trace; the final connected-world report checks what actually happens after rewards are placed. Settings for each map are at the top of `scripts/generate-maps.ts`. Without an output directory it overwrites the maps, and any changed map drops existing saves.
 
 `pnpm maps:check [output directory]` validates the agreed prototype objectives and writes `report.txt` and `report.json` under `output/map-checks` by default. It runs three deduction profiles in two move orders across the connected world, with actual walks and earned rewards. Every attempted fight must be damage-free, and both tested groups orders must reach all objectives. It also measures conditional layers from every entrance, distinguishing visible ground from reachable ground. These layer experiments grant power and do not count as earned world progression.
 
@@ -107,7 +111,7 @@ Most finds are hidden and should stay that way. A player needs a reason to look,
 
 `src/game/solver.ts` separates readable observations from deduction and records the supporting clues and bounds. The generator still uses the bounds profile so adding stronger reasoning does not silently change its scoring. `highestHiddenLevel` is a public roster limit, not a fact inferred from hidden map contents; update it with the player-facing legend when introducing stronger hidden monsters.
 
-`src/game/puzzle-fixtures.ts` contains small authored examples, including shared groups, changing clues after kills and deliberately unresolved frontiers. `src/game/survey.ts` follows connected routes and revisits persistent maps as evidence and power change. The report includes each hidden move's proof and each find's reveal, reach and collection power, using zero-based map coordinates and row-major tile IDs in proofs.
+`src/game/puzzle-fixtures.ts` contains small authored examples, including shared groups, changing clues after kills and deliberately unresolved frontiers. `src/game/survey.ts` follows connected routes and revisits persistent maps as evidence and power change. The report includes each hidden move's proof, each find's reveal, reach and collection power, and whether each collected ground find was already revealed before the pickup step, using zero-based map coordinates and row-major tile IDs in proofs.
 
 ## Known weaknesses
 

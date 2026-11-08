@@ -150,6 +150,11 @@ function summarize(run: Survey) {
     access: run.access,
     visits: run.visits,
     actions: run.actions,
+    groundFinds: run.actions.flatMap((action) =>
+      action.groundFind
+        ? [{ area: action.area, at: action.at, power: action.power, ...action.groundFind }]
+        : [],
+    ),
   };
 }
 
@@ -214,6 +219,16 @@ export function checkMaps() {
     (['forward', 'reverse'] satisfies MoveOrder[]).map((order) => surveyWorld({ profile, order })),
   );
   const assessment = assessObjectives(runs, mapObjectives);
+  const summaries = runs.map(summarize);
+  if (
+    summaries.some(
+      (run) =>
+        run.profile === 'groups' && run.groundFinds.some((find) => !find.revealedBeforePickup),
+    )
+  )
+    assessment.warnings.push(
+      'Some ground finds are collected on the step that reveals them. Review the listed placements; prefer a reveal before pickup.',
+    );
   // Preserve the existing prototype dependency without assuming that every future area holds power.
   const villageOnly = surveyWorld({ profile: 'bounds', destinations: [] });
   if (villageOnly.world.game.hero.power > 1)
@@ -229,11 +244,12 @@ export function checkMaps() {
       'Conditional layers grant power; actual world surveys earn it. Partial regions are allowed.',
       'Traversal items are not implemented. Quest rewards need their keepsakes, and wares need found coins.',
       'Repetition and flood sizes are review diagnostics, not calibrated measures of enjoyment.',
+      'Find previews record tile visibility before pickup, not whether the item was on camera or noticed. Uncollected finds are not counted.',
     ],
     objectives: mapObjectives,
     fixtures,
     layers,
-    runs: runs.map(summarize),
+    runs: summaries,
   };
 }
 
@@ -249,7 +265,12 @@ export function formatMapCheck(report: ReturnType<typeof checkMaps>) {
     lines.push(
       `${run.profile}/${run.order}: power ${run.hero.power}, hearts ${run.hero.health}/${run.hero.maxHealth}, ${run.frontierMoves} frontier moves, ${run.subsetMoves} using shared groups, ${run.damage} damage, ${run.healingVisits} healing visits`,
       `  Largest step reveal: ${run.largestReveal}; longest run without a find or group comparison: ${run.longestBasicRun}`,
+      `  Ground finds revealed before pickup: ${run.groundFinds.filter((find) => find.revealedBeforePickup).length}/${run.groundFinds.length} collected`,
     );
+    for (const find of run.groundFinds.filter((find) => !find.revealedBeforePickup))
+      lines.push(
+        `  Review ${find.area} (${find.at.x}, ${find.at.y}): ${find.find} collected on its reveal step at power ${find.power}`,
+      );
     for (const objective of run.objectives)
       lines.push(
         `  ${objective.name}: ${objective.power === undefined ? 'not reached' : `power ${objective.power}`}`,

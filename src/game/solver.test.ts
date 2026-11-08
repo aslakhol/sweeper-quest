@@ -88,6 +88,20 @@ describe('deduction profiles', () => {
     expect(game.tiles[1].monster?.alive).toBe(false);
   });
 
+  it('distinguishes a remote first reveal from stepping onto a hidden tile at the same power', () => {
+    const flooded = createGame('@ s .');
+    const floodLayers = measureLayers(flooded, 1);
+    expect(floodLayers.revealedFromElsewhere.get(flooded.tiles[2])).toBe(1);
+    expect(floodLayers.revealedFromElsewhere.has(flooded.tiles[1])).toBe(false);
+
+    const direct = createGame('@ .\ns #');
+    const directLayers = measureLayers(direct, 1);
+    expect(directLayers.revealed.get(direct.tiles[1])).toBe(1);
+    expect(directLayers.reachable.get(direct.tiles[1])).toBe(1);
+    // A later kill floods this area, but cannot change how this tile was first revealed.
+    expect(directLayers.revealedFromElsewhere.has(direct.tiles[1])).toBe(false);
+  });
+
   it('rejects contradictory evidence instead of treating an impossible bound as safe', () => {
     const observation: Observation = {
       hidden: [0, 1],

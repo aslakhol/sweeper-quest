@@ -47,6 +47,43 @@ beforeEach(() => {
 });
 
 describe('connected world survey', () => {
+  it.each([
+    { map: '@ +', revealedBeforePickup: true },
+    { map: '@ s +', revealedBeforePickup: true },
+    { map: '@ +\ns #', revealedBeforePickup: false },
+  ])('records ground pickup visibility for $map', ({ map, revealedBeforePickup }) => {
+    areas.village.map = map;
+    const report = surveyWorld({ profile: 'groups' });
+    const pickups = report.actions.filter((action) => action.groundFind);
+    expect(pickups).toHaveLength(1);
+    expect(pickups[0]).toMatchObject({
+      power: 1,
+      groundFind: { find: 'heartPiece', revealedBeforePickup },
+    });
+  });
+
+  it('does not count a chief drop as a ground pickup', () => {
+    areas.village.map = '@ G';
+    const world = createWorld();
+    world.game.hero.power = 3;
+    const report = surveyWorld({ profile: 'groups' }, world);
+    expect(report.actions.flatMap((action) => action.events)).toContainEqual(
+      expect.objectContaining({ type: 'find', find: 'heart' }),
+    );
+    expect(report.actions.some((action) => action.groundFind)).toBe(false);
+  });
+
+  it('does not count displayed shop wares as ground pickups', () => {
+    const world = createWorld();
+    const game = createGame('@ w', { legend: { wares: { w: { find: 'whetstone', price: 1 } } } });
+    game.hero.coins = 1;
+    world.game = game;
+    world.visited.set('village', game);
+    const report = surveyWorld({ profile: 'groups' }, world);
+    expect(game.hero.whetstones).toBe(1);
+    expect(report.actions.some((action) => action.groundFind)).toBe(false);
+  });
+
   it('earns power elsewhere and returns to a persistent region with no power rewards', () => {
     const report = surveyWorld({ profile: 'groups' });
     expect(report.world.game.hero.power).toBe(2);
@@ -77,6 +114,7 @@ describe('connected world survey', () => {
       revealed: 1,
     });
     expect(report.world.game.hero.heartPieces).toBe(0);
+    expect(report.actions.some((action) => action.groundFind)).toBe(false);
   });
 
   it('does not walk through an exit before actually returning from its destination', () => {

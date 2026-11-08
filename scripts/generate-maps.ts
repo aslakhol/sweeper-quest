@@ -2,7 +2,7 @@
 // closest to its layer targets, and writes it back over the map file.
 // Usage: node scripts/generate-maps.ts [candidates] [output directory]
 import { readFileSync, writeFileSync } from 'node:fs';
-import { canStep, createGame, type Legend, neighbors, numberAt, type Point } from '../src/game/game.ts';
+import { canStep, createGame, type Legend, neighbors, type Point } from '../src/game/game.ts';
 import { measureLayers } from '../src/game/solver.ts';
 
 type Spec = {
@@ -121,22 +121,22 @@ function measure(rows: string[][], spec: Spec) {
   // Conditional reachability at the chief's own level is not proof that its required power can
   // be earned. The connected-world check must still rule out circular reward dependencies.
   const chiefInReach = !chief || neighbors(game, chief).some((tile) => canStep(game, tile, chief) && (measured.reachable.get(tile) ?? Infinity) <= (chief.monster?.level ?? 0));
-  return { game, hidden, layer, shares, chiefInReach };
+  return { hidden, layer, reachable: measured.reachable, revealedFromElsewhere: measured.revealedFromElsewhere, shares, chiefInReach };
 }
-// Spread finds apart, and prefer tiles beside clues over open ground.
-function placeFinds(rows: string[][], spec: Spec, { game, hidden, layer }: ReturnType<typeof measure>) {
+// Prefer a first reveal from another tile before pickup; then spread finds apart.
+// This is a placement preference, not a new reveal rule. Replay the finished world to verify it.
+function placeFinds(rows: string[][], spec: Spec, { hidden, layer, reachable, revealedFromElsewhere }: ReturnType<typeof measure>) {
   const placed = (spec.rings ?? []).map(({ x, y, find }) => {
     rows[y][x] = find ?? '+';
     return { x, y };
   });
   for (const [power, symbols] of Object.entries(spec.finds)) {
     for (const symbol of symbols) {
-      const open = hidden.filter((tile) => layer.get(tile) === Number(power) && rows[tile.y][tile.x] === '.' && !tile.monster);
+      const open = hidden.filter((tile) => layer.get(tile) === Number(power) && reachable.get(tile) === Number(power) && rows[tile.y][tile.x] === '.' && !tile.monster);
       const score = (tile: Point) =>
         Math.min(30, ...placed.map((other) => Math.max(Math.abs(other.x - tile.x), Math.abs(other.y - tile.y)))) +
-        (numberAt(game, tile) ? 4 : 0) +
         random();
-      const best = open.map((tile) => ({ tile, score: score(tile) })).sort((a, b) => b.score - a.score)[0]?.tile;
+      const best = open.map((tile) => ({ tile, preview: revealedFromElsewhere.has(tile), score: score(tile) })).sort((a, b) => Number(b.preview) - Number(a.preview) || b.score - a.score)[0]?.tile;
       if (!best) return false;
       rows[best.y][best.x] = symbol;
       placed.push(best);
