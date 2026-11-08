@@ -108,6 +108,7 @@ test('hidden stronger monsters can still end the run', async ({ page, isMobile }
   await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
+  page.once('dialog', (dialog) => dialog.accept());
   await page.locator('#death-dialog').getByRole('button', { name: 'Start over' }).click();
   await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '3 of 3 hearts');
   await position(page, 26, 22);
@@ -120,6 +121,7 @@ test('a reload picks up where you left off until you start over', async ({ page,
   await fallInBattleFromGate(page, isMobile);
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Game over' })).toBeVisible();
+  page.once('dialog', (dialog) => dialog.accept());
   await page.locator('#death-dialog').getByRole('button', { name: 'Start over' }).click();
   await position(page, 26, 22);
   await page.reload();

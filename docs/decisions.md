@@ -70,3 +70,9 @@ The demo previously supplied only seven whetstones before the level-3 cave chief
 
 - **Screen layout, HUD, status line and copy.** These will be redesigned from scratch later.
 - **Note tools.** Revisit once the board plays like a real deduction puzzle.
+
+## Save slots
+
+Three local save slots keep separate playthroughs during development. The menu and game-over screen offer a save picker, and switching saves the outgoing game first. Replacing an occupied slot requires confirmation.
+
+An incompatible save stays stored, even when it was the active slot at startup. Autosave must not replace it with a fresh world. Download exports its original JSON for backup or manual repair; Import accepts a compatible file. The original single save is copied into Save 1 without changing its contents, and the legacy storage entry remains as a backup.

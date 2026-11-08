@@ -41,12 +41,27 @@ describe('saves', () => {
     expect(restored && tileAt(restored.game, slime)?.monster?.alive).toBe(false);
     expect(restored && tileAt(restored.game, find)?.find).toBeUndefined();
   });
-  it('drops saves it cannot trust', () => {
+  it('rejects saves it cannot load', () => {
     const save = JSON.parse(serialize(createWorld()));
     expect(deserialize('not json')).toBeUndefined();
     expect(deserialize(JSON.stringify({ ...save, version: 0 }))).toBeUndefined();
     const edited = [{ ...save.games[0], map: `${areas.village.map}\n` }];
     expect(deserialize(JSON.stringify({ ...save, games: edited }))).toBeUndefined();
+  });
+  it('rejects damaged saves without throwing', () => {
+    const save = JSON.parse(serialize(createWorld()));
+    for (const value of [
+      null,
+      {},
+      { ...save, games: null },
+      { ...save, games: [] },
+      { ...save, hero: {} },
+      { ...save, hero: { ...save.hero, carrying: ['unknown'] } },
+      { ...save, area: 'removed-area' },
+      { ...save, games: [{ ...save.games[0], tiles: [] }] },
+      { ...save, games: [{ ...save.games[0], player: { x: -1, y: 0 } }] },
+    ])
+      expect(deserialize(JSON.stringify(value))).toBeUndefined();
   });
   it('preserves a monster revealed by a failed attack and the blocked player position', () => {
     const world = createWorld();

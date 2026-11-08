@@ -21,8 +21,9 @@ import {
   tileAt,
   toggleNote,
 } from './game/game';
-import { deserialize, serialize } from './game/save';
-import { createWorld, travel, wakeAtHome } from './game/world';
+import { deserialize } from './game/save';
+import { type SaveSlot, SaveSlots, saveSlots } from './game/save-slots';
+import { createWorld, travel, type World, wakeAtHome } from './game/world';
 import { areas } from './maps';
 import {
   cameraTarget,
@@ -69,11 +70,13 @@ app.innerHTML = `
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin and chief</span></div>
   <button class="secondary" data-restart>Start over</button></section>
   <section data-page="Debug"><div class="debug" id="debug"></div><button class="secondary" data-restart>Start over</button></section>
+  <button class="secondary" data-saves>Saves</button>
   <button data-close autofocus>Resume</button></dialog>
+  <dialog id="saves-dialog" aria-labelledby="saves-title"><h2 id="saves-title">Saves</h2><div id="save-slots"></div><p id="save-error" role="alert"></p><button id="saves-close" data-close>Back</button></dialog>
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="offer" class="talk"><p id="offer-line"></p><div class="dialog-actions"><button class="secondary" data-close>No</button><button id="buy">Yes</button></div><button class="talk-next" aria-label="Continue">▸</button></dialog>
   <dialog id="found" class="found"><img id="found-image" alt="" /><p>You found</p><h2 id="found-name"></h2><p id="found-detail"></p></dialog>
-  <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button id="continue">Continue</button></div></dialog>
+  <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button id="continue">Continue</button></div><button class="secondary" data-saves>Saves</button></dialog>
 `;
 function element<T extends Element>(selector: string): T {
   const value = document.querySelector<T>(selector);
@@ -85,9 +88,8 @@ const status = element<HTMLParagraphElement>('#status');
 const hearts = element<HTMLDivElement>('#hearts');
 const power = element<HTMLSpanElement>('#power-value');
 const noteButtons = [...document.querySelectorAll<HTMLButtonElement>('[data-note]')];
-const saveKey = 'sweeper-quest-save';
-const savedGame = localStorage.getItem(saveKey);
-let world = (savedGame && deserialize(savedGame)) || createWorld();
+const saves = new SaveSlots(localStorage);
+let world = saves.open(saves.selected) ?? createWorld();
 let game = world.game;
 let selectedNote: Note | 'erase' | null = null;
 let hovered: Point | undefined;
@@ -193,13 +195,13 @@ function handleEvents(events: GameEvent[]): void {
   const found: Found[] = [];
   for (const [index, event] of events.entries()) {
     switch (event.type) {
-      case 'fight':
-        animate(event.damage ? 'hurt' : 'hit');
       case 'blocked':
         effects = effects.filter((effect) => effect.kind !== 'shake');
         effects.push({ kind: 'shake', at: game.player, started: performance.now() });
         status.textContent = 'Too strong.';
         break;
+      case 'fight':
+        animate(event.damage ? 'hurt' : 'hit');
         if (!event.monster.alive)
           effects.push({
             kind: 'fight',
@@ -534,7 +536,7 @@ document.addEventListener('visibilitychange', () => {
     save();
   }
 });
-const save = () => localStorage.setItem(saveKey, serialize(world));
+const save = () => saves.save(world);
 setInterval(save, 1000);
 window.addEventListener('pagehide', save);
 const menuDialog = element<HTMLDialogElement>('#menu-dialog');
@@ -614,18 +616,34 @@ menuDialog.addEventListener('keydown', (event) => {
 });
 for (const button of document.querySelectorAll('[data-close]'))
   button.addEventListener('click', () => button.closest('dialog')?.close());
-function restart(): void {
+function loadWorld(next: World): void {
   stop();
   cancelPress();
-  world = createWorld();
-  game = world.game;
-  camera = settledCamera();
-  effects = [];
+  conversation = undefined;
+  foundQueue.length = 0;
+  offered = undefined;
+  nextAnnouncement = 0;
+  hovered = undefined;
+  world = next;
+  changeMap();
   flash = undefined;
   selectNote(null);
   updateHud();
-  status.textContent = '';
   for (const dialog of document.querySelectorAll('dialog')) dialog.close();
+  if (game.lost) openDialog('#death-dialog');
+}
+function newGame(slot: SaveSlot): void {
+  save();
+  const saved = saves.read(slot);
+  const warning = saved.status === 'incompatible' ? `Save ${slot} is no longer compatible. ` : '';
+  if (
+    saved.status !== 'empty' &&
+    !window.confirm(`${warning}Replace Save ${slot} with a new game? Its progress will be erased.`)
+  )
+    return;
+  const next = createWorld();
+  saves.replace(slot, next);
+  loadWorld(next);
 }
 element('#continue').addEventListener('click', () => {
   element<HTMLDialogElement>('#death-dialog').close();
@@ -638,7 +656,90 @@ element('#continue').addEventListener('click', () => {
 // Game over needs an answer.
 element('#death-dialog').addEventListener('cancel', (event) => event.preventDefault());
 for (const button of document.querySelectorAll('[data-restart]'))
-  button.addEventListener('click', restart);
+  button.addEventListener('click', () => {
+    if (saves.active !== undefined) newGame(saves.active);
+  });
+
+const savesDialog = element<HTMLDialogElement>('#saves-dialog');
+function showSaves(): void {
+  save();
+  element('#save-error').textContent = '';
+  const rows = saveSlots.map((slot) => {
+    const saved = saves.read(slot);
+    const current = saves.active === slot;
+    const detail =
+      saved.status === 'ready'
+        ? `${areas[saved.world.area].name} · Power ${saved.world.game.hero.power}${saved.world.game.lost ? ' · Game over' : ''}`
+        : saved.status === 'empty'
+          ? 'Empty'
+          : 'No longer compatible';
+    const row = document.createElement('div');
+    row.className = 'save-slot';
+    row.setAttribute('role', 'group');
+    row.setAttribute('aria-label', `Save ${slot}`);
+    row.innerHTML = `
+      <div class="save-heading"><strong>Save ${slot}${current ? ' · Playing' : ''}</strong><span>${detail}</span></div>
+      <button data-play ${current ? 'disabled' : ''}>${current ? 'Playing' : saved.status === 'ready' ? 'Continue' : 'New game'}</button>
+      <div class="save-actions"><button class="secondary" data-download ${saved.status === 'empty' ? 'disabled' : ''}>Download</button><button class="secondary" data-import>Import</button></div>
+      <input type="file" accept=".json,application/json" hidden />`;
+    row.querySelector('[data-play]')?.addEventListener('click', () => {
+      if (saved.status !== 'ready') newGame(slot);
+      else {
+        save();
+        const next = saves.open(slot);
+        if (next) loadWorld(next);
+        else showSaves();
+      }
+    });
+    row.querySelector('[data-download]')?.addEventListener('click', () => {
+      save();
+      const latest = saves.read(slot);
+      if (latest.status === 'empty') return;
+      const url = URL.createObjectURL(new Blob([latest.text], { type: 'application/json' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `sweeper-quest-save-${slot}.json`;
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+    const input = row.querySelector('input');
+    row.querySelector('[data-import]')?.addEventListener('click', () => input?.click());
+    input?.addEventListener('change', async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        const next = deserialize(await file.text());
+        if (!next) {
+          element('#save-error').textContent =
+            'This file is damaged or no longer compatible. Your saves have not changed.';
+          return;
+        }
+        save();
+        if (
+          saves.read(slot).status !== 'empty' &&
+          !window.confirm(`Replace Save ${slot} with this file? Its progress will be erased.`)
+        )
+          return;
+        saves.replace(slot, next);
+        loadWorld(next);
+      } catch {
+        element('#save-error').textContent =
+          'Could not read this file. Your saves have not changed.';
+      } finally {
+        input.value = '';
+      }
+    });
+    return row;
+  });
+  element('#save-slots').replaceChildren(...rows);
+  element<HTMLButtonElement>('#saves-close').hidden = saves.active === undefined;
+  openDialog('#saves-dialog');
+}
+for (const button of document.querySelectorAll('[data-saves]'))
+  button.addEventListener('click', showSaves);
+savesDialog.addEventListener('cancel', (event) => {
+  if (saves.active === undefined) event.preventDefault();
+});
 function frame(time: number): void {
   if (path.length && time - lastWalk >= 75) {
     const next = path.shift();
@@ -659,5 +760,6 @@ function frame(time: number): void {
   requestAnimationFrame(frame);
 }
 updateHud();
-if (game.lost) openDialog('#death-dialog');
+if (saves.active === undefined) showSaves();
+else if (game.lost) openDialog('#death-dialog');
 requestAnimationFrame(frame);

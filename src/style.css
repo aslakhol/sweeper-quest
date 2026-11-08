@@ -405,3 +405,33 @@ dialog .secondary {
   grid-template-columns: 1fr 1fr;
   gap: 0 10px;
 }
+.save-slot {
+  border: 1px solid #4c5c49;
+  border-radius: 8px;
+  padding: 12px;
+  margin-top: 12px;
+  background: #1a2a22;
+}
+.save-heading {
+  display: grid;
+  gap: 4px;
+}
+.save-heading span {
+  color: #c2cfb8;
+  font-size: 13px;
+}
+.save-actions {
+  display: flex;
+  gap: 8px;
+}
+.save-slot button {
+  margin-top: 8px;
+  padding: 8px 12px;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+#save-error:empty {
+  display: none;
+}
