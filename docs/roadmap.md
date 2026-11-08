@@ -4,7 +4,7 @@
 
 ## Phase 1: core loop
 
-A small connected world: a village with a tall-grass meadow to the west, a fixed cave to the north and a wood to the east, plus enterable houses with people to talk to. Monsters of levels 1–3 hide on layered maps with visible level-3 chiefs. Kills give nothing. Hidden whetstones and heart pieces raise power and hearts, and chiefs drop a whole upgrade. Fights resolve in one action and cost hearts when the monster is stronger; the hero starts on 3 hearts. A solver tours the whole world using only visible clues.
+A small connected world: a village with a tall-grass meadow to the west, a fixed cave to the north and a wood to the east, plus enterable houses with people to talk to. Monsters of levels 1–3 hide on layered maps with visible level-3 chiefs. Kills give nothing. Hidden whetstones and heart pieces raise power and hearts, and chiefs drop a whole upgrade. Monsters at or below power die for free. Stronger ones hurt the hero and become visible but survive, keep blocking the tile, and hide their clue. The hero starts on 3 hearts. A solver tours the connected world using visible evidence and damage-free moves; required progression must never depend on guessing or spending hearts.
 
 This world tests layered maps and returning stronger. Its size and density of finds are not the intended structure. This phase does not include a shop, inventory, or tools.
 

@@ -1,5 +1,5 @@
 T T T T T T T T T T T T T T T T T T T T
-T b . . . . . . . T T b . g . s . b . T
+T b . . . . . . . T T b . g . s . b * T
 T . b . . ~ ~ . b . . b . . b T . . . T
 T . . . . ~ ~ ~ . . s . . . g T T b . T
 T . . . . . . . . . . g . s b T g g g T

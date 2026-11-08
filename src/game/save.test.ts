@@ -48,4 +48,26 @@ describe('saves', () => {
     const edited = [{ ...save.games[0], map: `${areas.village.map}\n` }];
     expect(deserialize(JSON.stringify({ ...save, games: edited }))).toBeUndefined();
   });
+  it('preserves a monster revealed by a failed attack and the blocked player position', () => {
+    const world = createWorld();
+    const bat = world.game.tiles.find((tile) => tile.monster?.kind === 'bat');
+    if (!bat) throw new Error('Village has no bat.');
+    const from = world.game.tiles.find(
+      (tile) =>
+        tile.terrain === 'floor' &&
+        !tile.monster &&
+        !tile.person &&
+        Math.max(Math.abs(tile.x - bat.x), Math.abs(tile.y - bat.y)) === 1,
+    );
+    if (!from) throw new Error('Bat has no approach.');
+    world.game.player = { x: from.x, y: from.y };
+    step(world.game, bat);
+    const restored = deserialize(serialize(world));
+    expect(restored?.game.player).toEqual(world.game.player);
+    expect(restored?.game.hero.health).toBe(1);
+    expect(restored && tileAt(restored.game, bat)).toMatchObject({
+      revealed: true,
+      monster: { alive: true },
+    });
+  });
 });

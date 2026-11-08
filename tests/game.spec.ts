@@ -53,7 +53,7 @@ async function enterMeadow(page: Page, touch: boolean) {
   await position(page, 15, 23);
 }
 
-// A reckless route through a bat, then into a goblin that takes the last heart.
+// Repeatedly attacking a bat above our power reveals it, then takes the last heart.
 async function fallInBattle(page: Page, touch: boolean) {
   await enterMeadow(page, touch);
   await fallInBattleFromGate(page, touch);
@@ -64,9 +64,9 @@ async function fallInBattleFromGate(page: Page, touch: boolean) {
   await tap(page, 15, 18, touch);
   await position(page, 15, 18);
   await tap(page, 14, 17, touch);
-  await position(page, 14, 17);
+  await position(page, 15, 18);
   await expect(page.locator('#hearts')).toHaveAttribute('aria-label', '1 of 3 hearts');
-  await tap(page, 13, 17, touch);
+  await tap(page, 14, 17, touch);
 }
 
 test('a fight moves you onto the tile and gives nothing', async ({ page, isMobile }) => {
@@ -140,6 +140,7 @@ test('a door leads into a house where you can talk to people', async ({ page, is
   await expect(talk).toContainText('Welcome to the inn.');
   await talk.click();
   await expect(talk).toContainText('whatever they are hiding');
+  await talk.click();
   await talk.click();
   await talk.click();
   await talk.getByRole('button', { name: 'Continue' }).click();

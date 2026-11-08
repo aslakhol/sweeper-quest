@@ -59,6 +59,18 @@ describe('deduction profiles', () => {
     expect(deduce(observe(hiddenClue), 'groups').bounds.get(2)?.high).toBe(3);
   });
 
+  it('uses an exposed monster level but never its covered clue', () => {
+    const game = createGame('@ b s');
+    step(game, { x: 1, y: 0 });
+    const observation = observe(game);
+    expect(observation.clues.map((clue) => clue.at)).toEqual([0]);
+    expect(observation.clues[0]).toMatchObject({ value: 2, sum: 0, cells: [] });
+    expect(deduce(observation, 'groups').bounds.get(2)?.high).toBe(3);
+    expect(reachableTiles(game).map((tile) => tile.x)).toEqual([0]);
+    const layers = measureLayers(game, 2, 'groups');
+    expect(layers.reachable.get(game.tiles[2])).toBe(2);
+  });
+
   it('separates visibility from movement when a flood crosses a blocked diagonal', () => {
     const game = createGame('@ #\n# +');
     const find = game.tiles[3];

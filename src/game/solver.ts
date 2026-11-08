@@ -224,7 +224,10 @@ export function measureLayers(game: Game, maxPower: number, profile: SolverProfi
       for (const from of reachableTiles(game)) {
         const target = neighbors(game, from).find(
           (tile) =>
-            canStep(game, from, tile) && !tile.revealed && (high.get(tile) ?? Infinity) <= power,
+            canStep(game, from, tile) &&
+            (tile.revealed
+              ? tile.monster?.alive && tile.monster.level <= power
+              : (high.get(tile) ?? Infinity) <= power),
         );
         if (target) {
           move = { from, target };

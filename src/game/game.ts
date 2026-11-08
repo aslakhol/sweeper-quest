@@ -348,7 +348,7 @@ function talk(game: Game, at: Point, person: Person): GameEvent[] {
   hero.returned.push(quest.wants);
   return [{ type: 'talk', person, lines: quest.thanks }, ...collect(game, at, quest.reward)];
 }
-// Fights always resolve: the monster dies unless its damage kills you first.
+// Stronger monsters hurt the hero and become visible, but keep blocking the tile.
 export function step(game: Game, target: Point): GameEvent[] {
   if (game.lost || !canStep(game, game.player, target)) return [];
   const tile = tileAt(game, target);
@@ -366,6 +366,7 @@ export function step(game: Game, target: Point): GameEvent[] {
       events.push({ type: 'death' });
       return events;
     }
+    if (damage) return events;
     tile.monster.alive = false;
     // Removing a monster can turn previously revealed neighboring clues into zeros.
     for (const neighbor of neighbors(game, tile)) {

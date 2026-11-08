@@ -37,17 +37,20 @@ Partial access at a given power is intentional. The player explores elsewhere, g
 
 ## First playtest
 
-The first demo could be won without reading a clue, so these rules make deduction the way you survive. They still stand. Its XP, run and tuning rules were replaced by the section above.
+The first demo could be won without reading a clue. The subsequent playtest also found forced guesses and required damage unsatisfying. The rules below incorporate both findings; the earlier model of paying hearts to kill a stronger monster is retired.
 
 ## Combat
 
-- **Fights always resolve.** Attacking a monster always kills it. If its level is above your power, you take damage. You die only if that damage exceeds your remaining health.
-- **Winning moves you onto the tile.** One tap per fight.
-- **Taps on stronger monsters are never blocked.** Taking damage to get through is a legitimate choice, and the health bar is the warning.
+- **Power determines whether a monster can die.** At or below your power, it dies for free and you enter its tile.
+- **A stronger monster survives.** Attacking reveals it and costs `level × (level − power)` hearts. The hero stays put, its clue stays hidden, nearby sums stay unchanged, and no reward or flood occurs. Losing the last heart is lethal.
+- **Hearts cover mistakes, not passage.** Healing and repeated attacks cannot break a power gate.
+- **Required progression is safe.** The connected world must have a route to its objectives without guessing or taking any damage. A region can remain partially blocked while another reachable region supplies clues, quests or upgrades. A required upgrade cannot be locked behind a monster that needs that upgrade.
+
+The demo previously supplied only seven whetstones before the level-3 cave chief, whose greatstone supplied the missing power. With stronger monsters now surviving attacks, that became a circular dependency. Aslak chose to add an eighth whetstone elsewhere. It sits in the wood's power-2 north-east pocket; the chief keeps its reward. Clearing the demo can consequently reach power 4.
 
 ## Monsters and corpses
 
-- **Monster tiles never show a clue while the monster is alive.** Monsters are only revealed by fighting them, so a living monster is normally visible only during the fight. If something later reveals living monsters (bombs), show the sprite only and tint it when it is stronger than you. The level legend lists each monster's level.
+- **Monster tiles never show a clue while the monster is alive.** An unsuccessful attack leaves the living monster visible. Show its sprite without the underlying clue and tint it when it is stronger than you. Future reveal tools must follow the same rule. The level legend lists each monster's level.
 - **Kills must be felt.** The monster appears, takes the hit and pops before the player steps in. Clues that change because of the kill visibly update.
 - **Corpses become remains.** A faint species-specific mark is drawn under the tile's clue and never covers it. There is no corpse inspection.
 

@@ -21,8 +21,14 @@ describe('the world', () => {
   it('opens up power by power until a careful player has found everything', () => {
     const world = createWorld();
     const { hero } = world.game;
-    surveyWorld({ profile: 'bounds' }, world);
-    expect(hero.power).toBe(3);
+    const report = surveyWorld({ profile: 'bounds' }, world);
+    expect(
+      report.actions
+        .flatMap((action) => action.events)
+        .filter((event) => event.type === 'fight')
+        .every((fight) => fight.damage === 0),
+    ).toBe(true);
+    expect(hero.power).toBe(4);
     expect(hero.maxHealth).toBeGreaterThanOrEqual(5);
     for (const game of world.visited.values()) {
       expect(game.lost).toBe(false);

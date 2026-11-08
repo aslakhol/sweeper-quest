@@ -1,6 +1,5 @@
 import {
   canStep,
-  fightDamage,
   type Game,
   type GameEvent,
   heal,
@@ -145,16 +144,24 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
     const { area, game } = world;
     const { power, health } = game.hero;
     const before = revealedCount(game);
+    const target = tileAt(game, at);
+    if (target && !target.revealed && (!proof || proof.upper > power))
+      throw new Error(`No safe deduction for hidden tile ${accessKey(area, at)}.`);
     const events = step(game, at);
     if (events.some((event) => event.type === 'talk' && event.person.heals))
       events.push(...heal(game));
     const revealed = revealedCount(game) - before;
     if (!events.length && !revealed) return;
     if (game.lost) throw new Error(`Survey died at ${accessKey(area, at)}.`);
+    if (events.some((event) => event.type === 'fight' && event.damage > 0))
+      throw new Error(
+        `Survey took damage at ${accessKey(area, at)}; progression is not certified.`,
+      );
     let eventPower = power;
     for (const event of events) {
       if (event.type === 'find') getAccess(area, event.at).collected ??= eventPower;
-      if (event.type === 'fight') getAccess(area, event.at).defeated ??= eventPower;
+      if (event.type === 'fight' && !event.monster.alive)
+        getAccess(area, event.at).defeated ??= eventPower;
       if (event.type === 'powerUp') eventPower = event.power;
     }
     actions.push({
@@ -241,13 +248,9 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
         });
         continue;
       }
-      // Known fights are allowed only when the complete damage is survivable. Hidden moves above
-      // power are never attempted, even when their worst case might be affordable.
+      // A known stronger monster is a power gate, regardless of available hearts or healing.
       const fight = candidates.find(
-        (tile) =>
-          tile.revealed &&
-          tile.monster?.alive &&
-          fightDamage(game, tile.monster) < game.hero.health,
+        (tile) => tile.revealed && tile.monster?.alive && tile.monster.level <= game.hero.power,
       );
       if (fight) {
         walk(fight, 'fight');

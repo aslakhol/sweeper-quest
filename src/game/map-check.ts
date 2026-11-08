@@ -27,6 +27,23 @@ export function objectivePower(run: Survey, objective: MapObjective) {
 export function assessObjectives(runs: Survey[], objectives: readonly MapObjective[]) {
   const errors: string[] = [];
   const warnings: string[] = [];
+  for (const run of runs) {
+    if (
+      run.actions.some((action) =>
+        action.events.some((event) => event.type === 'fight' && event.damage > 0),
+      )
+    )
+      errors.push(
+        `${run.profile}/${run.order} takes damage. Required progression must be damage-free.`,
+      );
+    if (
+      run.actions.some(
+        (action) =>
+          action.kind === 'deduction' && (!action.proof || action.proof.upper > action.power),
+      )
+    )
+      errors.push(`${run.profile}/${run.order} enters a hidden tile without a safe bound.`);
+  }
   const intended = runs.filter((run) => run.profile === 'groups');
   const completing = intended.filter((run) =>
     objectives.every((objective) => objectivePower(run, objective) !== undefined),
@@ -36,8 +53,8 @@ export function assessObjectives(runs: Survey[], objectives: readonly MapObjecti
       'No groups run reaches all agreed objectives in one playthrough. Progression is not certified.',
     );
   else if (completing.length !== intended.length)
-    warnings.push(
-      'Some groups move orders stall before the objectives. Inspect the successful route and the stalled frontiers.',
+    errors.push(
+      'Some groups move orders stall before the objectives. Resolve the stalled safe routes before accepting this world.',
     );
   for (const objective of objectives) {
     const weakerProfile = objective.requiresBeyond;
@@ -226,11 +243,11 @@ export function formatMapCheck(report: ReturnType<typeof checkMaps>) {
     ...report.errors.map((error) => `ERROR: ${error}`),
     ...report.warnings.map((warning) => `REVIEW: ${warning}`),
     '',
-    'World runs: real rewards, persistent maps, hidden moves cost no health.',
+    'World runs: real rewards, persistent maps, no guesses and no damage from any fight.',
   ];
   for (const run of report.runs) {
     lines.push(
-      `${run.profile}/${run.order}: power ${run.hero.power}, hearts ${run.hero.health}/${run.hero.maxHealth}, ${run.frontierMoves} frontier moves, ${run.subsetMoves} using shared groups, ${run.damage} known-fight damage, ${run.healingVisits} healing visits`,
+      `${run.profile}/${run.order}: power ${run.hero.power}, hearts ${run.hero.health}/${run.hero.maxHealth}, ${run.frontierMoves} frontier moves, ${run.subsetMoves} using shared groups, ${run.damage} damage, ${run.healingVisits} healing visits`,
       `  Largest step reveal: ${run.largestReveal}; longest run without a find or group comparison: ${run.longestBasicRun}`,
     );
     for (const objective of run.objectives)

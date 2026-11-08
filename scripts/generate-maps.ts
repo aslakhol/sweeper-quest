@@ -2,8 +2,8 @@
 // closest to its layer targets, and writes it back over the map file.
 // Usage: node scripts/generate-maps.ts [candidates] [output directory]
 import { readFileSync, writeFileSync } from 'node:fs';
-import { createGame, type Legend, neighbors, numberAt, type Point } from '../src/game/game.ts';
-import { openLayers } from '../src/game/solver.ts';
+import { canStep, createGame, type Legend, neighbors, numberAt, type Point } from '../src/game/game.ts';
+import { measureLayers } from '../src/game/solver.ts';
 
 type Spec = {
   // File name in src/maps. Walls, water, exits and chiefs are kept; everything else is redrawn.
@@ -20,43 +20,44 @@ type Spec = {
   targets: [number, number];
   // A slime in every gateway keeps the map closed until the first kill.
   guards?: Point[];
-  // Rings of bats around a hidden heart piece: climbing clues around an empty spot.
-  rings?: Point[];
+  // Rings of bats around a hidden find: climbing clues around an empty spot.
+  rings?: (Point & { find?: string })[];
   // Finds to place on ground that first opens at each power.
   finds: Record<number, string[]>;
 };
 const specs: Spec[] = [
   {
     file: 'village',
-    legend: { exits: { 1: { to: '', look: 'door' }, 2: { to: '', look: 'door' }, 3: { to: '', look: 'door' }, 4: { to: '', look: 'gate' }, '>': { to: '', look: 'stairs' } } },
+    legend: { finds: { '?': 'ring' }, exits: { 1: { to: '', look: 'door' }, 2: { to: '', look: 'door' }, 3: { to: '', look: 'door' }, 4: { to: '', look: 'gate' }, '>': { to: '', look: 'stairs' } } },
     entries: [{ x: 15, y: 8 }, { x: 15, y: 23 }],
     clearing: 3,
     density: [0.14, 0.26],
     targets: [0.6, 0.88],
     guards: [{ x: 15, y: 8 }, { x: 15, y: 23 }],
-    rings: [{ x: 5, y: 12 }],
+    rings: [{ x: 5, y: 12, find: '?' }],
     finds: { 1: ['*', '*', '+'], 2: ['*'] },
   },
   {
     file: 'wood',
-    legend: { exits: { '<': { to: 'village', look: 'gate' } } },
+    legend: { finds: { '?': 'spectacles' }, exits: { '<': { to: 'village', look: 'gate' } } },
     from: 'village',
     entries: [{ x: 2, y: 11 }],
     clearing: 3,
     density: [0.14, 0.26],
     targets: [0.45, 0.85],
-    finds: { 1: ['*', '*'], 2: ['*', '+'], 3: ['+'] },
+    // The extra power-2 stone makes power 3 possible before the cave chief.
+    finds: { 1: ['*'], 2: ['?', '*', '*', '+'], 3: ['+'] },
   },
   {
     file: 'cave',
-    legend: { floor: 'cave', exits: { '<': { to: 'village', look: 'stairs' } } },
+    legend: { floor: 'cave', finds: { '?': 'marble' }, exits: { '<': { to: 'village', look: 'stairs' } } },
     from: 'village',
     entries: [{ x: 7, y: 15 }],
     clearing: 2,
     density: [0.16, 0.26],
     targets: [0.4, 0.8],
     rings: [{ x: 7, y: 11 }],
-    finds: { 1: ['*', '+'] },
+    finds: { 1: ['?', '+'] },
   },
 ];
 
@@ -69,7 +70,7 @@ const load = (file: string) =>
   readFileSync(new URL(`../src/maps/${file}.txt`, import.meta.url), 'utf8')
     .trim()
     .split('\n')
-    .map((row) => row.trim().split(/\s+/).map((symbol) => ('sbg*+'.includes(symbol) ? '.' : symbol)));
+    .map((row) => row.trim().split(/\s+/).map((symbol) => ('sbg*+?'.includes(symbol) ? '.' : symbol)));
 // Walking distance from the nearest entry over hidden floor.
 function distances(rows: string[][], entries: Point[]) {
   const distance = rows.map((row) => row.map(() => Infinity));
@@ -113,16 +114,19 @@ function placeMonsters(terrain: string[][], spec: Spec) {
 function measure(rows: string[][], spec: Spec) {
   const game = createGame(rows.map((row) => row.join(' ')).join('\n'), { legend: spec.legend, from: spec.from });
   const hidden = game.tiles.filter((tile) => tile.terrain === 'floor' && !tile.revealed);
-  const layer = openLayers(game, 3);
+  const measured = measureLayers(game, 3);
+  const layer = measured.revealed;
   const shares = [1, 2, 3].map((power) => hidden.filter((tile) => (layer.get(tile) ?? Infinity) <= power).length / hidden.length);
   const chief = game.tiles.find((tile) => tile.monster?.goal);
-  const chiefInReach = !chief || neighbors(game, chief).some((tile) => (layer.get(tile) ?? Infinity) <= 2);
+  // Conditional reachability at the chief's own level is not proof that its required power can
+  // be earned. The connected-world check must still rule out circular reward dependencies.
+  const chiefInReach = !chief || neighbors(game, chief).some((tile) => canStep(game, tile, chief) && (measured.reachable.get(tile) ?? Infinity) <= (chief.monster?.level ?? 0));
   return { game, hidden, layer, shares, chiefInReach };
 }
 // Spread finds apart, and prefer tiles beside clues over open ground.
 function placeFinds(rows: string[][], spec: Spec, { game, hidden, layer }: ReturnType<typeof measure>) {
-  const placed = (spec.rings ?? []).map(({ x, y }) => {
-    rows[y][x] = '+';
+  const placed = (spec.rings ?? []).map(({ x, y, find }) => {
+    rows[y][x] = find ?? '+';
     return { x, y };
   });
   for (const [power, symbols] of Object.entries(spec.finds)) {
@@ -160,3 +164,4 @@ for (const spec of specs) {
   const rows = generate(spec, candidates);
   writeFileSync(`${output}/${spec.file}.txt`, `${rows.map((row) => row.join(' ')).join('\n')}\n`);
 }
+console.log('Conditional layers only. Run pnpm maps:check before accepting these maps; required progression must use no guesses or damage.');

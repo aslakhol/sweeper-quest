@@ -39,7 +39,7 @@ Notes are guesses on hidden floor, not movement barriers. Provide levels 1–5, 
 
 ## Combat, health, and progression
 
-A fight is one action. At or below your power, the enemy dies without hurting you. A stronger enemy deals damage first; if you survive, it dies and you move onto its tile. Attacking stronger enemies is allowed, including taking a deliberate hit to get through. Repeated attacks against a surviving blocking enemy are no longer the combat model.
+At or below your power, an enemy dies without hurting you and you move onto its tile. Attacking a stronger enemy costs hearts and reveals the monster, but it survives and you stay where you are. Its own clue stays hidden, its contribution to neighbouring clues stays unchanged, and no flood or reward is triggered. Repeated attacks and healing cannot force a way through; return with sufficient power.
 
 Current damage tuning is `monster level × max(0, monster level − player power)` hearts. At power 1 a bat costs 2 hearts and a goblin costs 6; at power 2 a goblin costs 3. Reaching zero health is lethal: the monster survives and you do not move.
 
@@ -51,9 +51,9 @@ The world holds more pieces than you need, so you can move on without finding ev
 
 Maps open in layers. At each power, part of the map can be proven free from the clues; the rest waits until you are stronger. A clue at or below your power proves all its neighbours safe, so a new level reopens places you left behind without any extra mechanic. Weaker monsters still add to clues, and killing them cleans up the sums. Check this across the whole world: being stuck in one region is fine, being stuck everywhere is not.
 
-Slimes are level 1, bats level 2, and goblins level 3. Chiefs are visible and currently level 3, because the test world only reaches power 3. The planned dungeon boss starts from the original level-5 proposal.
+Slimes are level 1, bats level 2, and goblins level 3. Chiefs are visible and currently level 3. The demo provides eight whetstones before their rewards, so they can be defeated without damage. The cave chief's greatstone can then raise power to 4. The planned dungeon boss starts from the original level-5 proposal.
 
-The hero starts with 3 hearts so early damage is scary. Hearts are a failsafe: at power P, about 2P + 1 hearts survives one mistake against a monster one level above you, and hearts beyond that are breathing room. Each level-up eats some of it, because stronger monsters hit harder. A monster two levels above you is lethal early on, so early maps must not force guesses you cannot survive. Mum's home-cooked meal in the village restores all hearts, as often as you walk back; a shop or a smaller meal may change that. Death shows a game over screen. Continue wakes you beside your bed at home, Mum says something, and the world stays as it was, so the cost is the walk back. It still counts as a failure: maps must be solvable without dying, and the solver never does.
+The hero starts with 3 hearts so early damage is scary. Hearts are a failsafe: at power P, about 2P + 1 hearts survives one mistake against a monster one level above you, and hearts beyond that are breathing room. Each level-up eats some of it, because stronger monsters hit harder. A monster two levels above you is lethal early on. No required route may force a guess or any damage, even if the player could survive it. Mum's home-cooked meal in the village restores all hearts, as often as you walk back; a shop or a smaller meal may change that. Death shows a game over screen. Continue wakes you beside your bed at home, Mum says something, and the world stays as it was, so the cost is the walk back. It still counts as a failure: the connected world must offer a route to its required objectives using only provably safe moves and damage-free fights.
 
 Kills need clear feedback: reveal the enemy, show the hit and defeat, then move the hero in. Show damage, finds and level-ups, and make changed clues noticeable. Keep remains subtle enough to preserve the puzzle.
 
@@ -63,7 +63,7 @@ Build and tune the deduction, movement, notes, combat, and find-driven progressi
 
 The present small world tests layered maps, finds and returning stronger. It compresses what should be a long stretch of play, so finds are far denser than in the final game.
 
-This phase succeeds when careful clue reading reliably outperforms random exploration, a new level reopens old places in a satisfying way, and spending health is a meaningful choice. Test both touch and desktop input, and use clue-based solvers to check the world without giving them hidden information.
+This phase succeeds when careful clue reading reliably outperforms random exploration, a new level reopens old places in a satisfying way, and every required objective can be reached without guessing or taking damage. Hearts protect against mistakes; they do not buy passage through stronger monsters. Test both touch and desktop input, and use clue-based solvers to check the world without giving them hidden information.
 
 ## Phase 2: grow the world
 
@@ -98,7 +98,7 @@ Dungeons with finds are fixed maps, because a layout rebuilt on every visit woul
 
 A 2×2 level-5 boss occupies four tiles but counts as one monster in neighboring clue sums. Deduplicate its contribution when several occupied tiles touch the same clue. Rules for clues within its footprint, movement after victory, and remains still need definition.
 
-The boss follows the same combat model: power 5 would make it safe; lower power can win if the player survives the damage. Tune power and hearts together. Its planned reward remains a heart container and a Lantern. For this adventure, the Lantern opens the next-zone gate.
+The boss follows the same combat model: power 5 is required to defeat it. Lower-power attacks reveal it and hurt the player without killing it. The power needed to win must be available before the boss, independently of its reward. Its planned reward remains a heart container and a Lantern. For this adventure, the Lantern opens the next-zone gate.
 
 ### Persistence and completion
 

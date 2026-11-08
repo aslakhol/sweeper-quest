@@ -47,7 +47,7 @@ app.innerHTML = `
     <li>A zero opens its whole connected empty area and the numbers around it. Monsters stay hidden until you try their tile.</li>
     <li>Tap a distant tile to walk over known ground. A hidden tile next to known ground is entered at the end of the walk.</li>
     <li>Choose a note, then tap a hidden tile to mark it. Number keys 1–5 mark the tile under the mouse, or pick that note. Hold Shift to keep marking. Mark a tile with the same note again to clear it. Hold or right-click a tile to cycle 1–5.</li>
-    <li>You always win a fight. A monster above your power hits you first: its level times the levels it has over you. Running out of hearts ends the run.</li>
+    <li>Monsters at or below your power fall without hurting you. A stronger monster is revealed and survives: you lose its level times the levels it has over you in hearts, and stay where you are. Its clue stays hidden. Running out of hearts ends the run.</li>
     <li>Four whetstones raise your power. Four heart pieces add a heart. Chiefs drop a whole one.</li>
     <li>Move with WASD or arrows. Hold two directions, or use Q / E / Z / C, for diagonals. Escape stops walking and clears the note tool.</li>
   </ul>
@@ -166,7 +166,7 @@ function handleEvents(events: GameEvent[]): void {
     switch (event.type) {
       case 'fight':
         animate(event.damage ? 'hurt' : 'hit');
-        if (!game.lost)
+        if (!event.monster.alive)
           effects.push({
             kind: 'fight',
             from: event.from,
@@ -253,7 +253,7 @@ function move(target: Point): boolean {
   // Clues already on screen around a kill drop; point them out.
   const clues = neighbors(game, target).filter((tile) => tile.revealed && tile.terrain === 'floor');
   const events = step(game, target);
-  if (events.some((event) => event.type === 'fight') && !game.lost)
+  if (events.some((event) => event.type === 'fight' && !event.monster.alive))
     for (const at of clues) effects.push({ kind: 'pulse', at, started: performance.now() });
   if (same(before, game.player) && !events.length) feedback(target);
   handleEvents(events);

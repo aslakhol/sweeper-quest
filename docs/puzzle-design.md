@@ -34,7 +34,7 @@ These are useful authoring profiles, not formal skill ratings. A player may know
 | --- | --- | --- |
 | Beginner | A satisfied number makes its remaining neighbours safe. If the remaining mine count equals the covered neighbours, all are mines. Marks help track deductions. | Read a small clue, subtract a visible monster, identify an isolated monster, and learn that free kills change nearby clues. |
 | Intermediate | Compare overlapping neighbourhoods, subtract confirmed mines, recognise patterns such as 1-2-1, and carry deductions around corners. | Compare sums shared by two clues; bound a group without locating every monster; use a free kill or another approach to obtain the next clue. |
-| Expert | Combine longer chains, eliminate hypothetical cases, enumerate configurations, use the global mine count, and reason about uncertainty. | Find less obvious bounds, approach from another entrance, expose secrets early, and choose useful information or a deliberate health expense. |
+| Expert | Combine longer chains, eliminate hypothetical cases, enumerate configurations, use the global mine count, and reason about uncertainty. | Find less obvious bounds, approach from another entrance, expose secrets early, and choose moves that expose useful information without taking damage. |
 
 Classic patterns depend on their complete neighbourhoods, not just the printed numbers. Reduction and shared groups explain many familiar patterns; longer chains and global mine counting extend them. [Pattern guide](https://minesweeper.online/help/patterns)
 
@@ -52,12 +52,11 @@ Let a hidden tile's value be its living monster's level, or zero if empty. Value
 sum of hidden neighbouring values
   = displayed clue − known living neighbouring monster levels
 
-free move:       highest possible target value <= player power
-survivable move: highest possible damage < current hearts
-damage:         level × max(0, level − player power)
+safe move:      highest possible target value <= player power
+failed attack: level × (level − player power) damage; monster survives
 ```
 
-"Free" means no damage, even if there is a monster. A survivable move may spend hearts and belongs to a different policy. Multiple hidden arrangements can remain possible while a move is certainly free. We do not need a unique solution for every monster.
+"Free" means no damage, even if there is a monster. Surviving an attack on a stronger monster does not let you enter its tile. Multiple hidden arrangements can remain possible while a move is certainly free. We do not need a unique solution for every monster.
 
 Only subtract living monsters from the current displayed clue. A corpse's contribution has already disappeared. Notes are hypotheses unless proved. A regional monster cap is usable evidence only if the player knows it; never infer it from hidden map contents or the generator's settings.
 
@@ -123,8 +122,8 @@ Classic endgame mine counting has no equivalent unless we deliberately reveal a 
 2. **Teach before requiring.** Introduce one relationship with few unknown tiles and visible supporting clues. Repeat it with a different orientation or level total, then combine it with something familiar. Teach through small encounters and feedback; avoid tutorial paragraphs in the map UI.
 3. **Require comparisons at selected milestones.** Early exploration can use single clues. Later, a player who only follows small numbers must eventually need to compare clues to advance through the adventure. The payoff can be a route, door or quest objective, without a power reward. Do not require a new trick at every find or impose a difficulty quota on every region.
 4. **Keep required proofs local enough to read on a phone.** The first shared-group puzzles should fit in one camera view. Longer chains and evidence from another approach can appear later. Offscreen clues increase memory and navigation demands independently of logic.
-5. **Provide a route through the world without guessing hidden threats.** Individual areas may stop yielding progress. Somewhere else reachable must provide evidence, a suitable reward, or a known survivable gate. Never require death or repeated blind attacks.
-6. **Let expertise open soft gates early.** A find intended for power 2 may be deducible at power 1. Report that; do not automatically reject it. If early access breaks the world, use an actual traversal restriction or a correctly budgeted unavoidable fight. Obscurity is not a reliable lock.
+5. **Provide a route through the world without guessing hidden threats.** Individual areas may stop yielding progress. Somewhere else reachable must provide evidence, a suitable reward, or a damage-free fight. Never require a guess, a damaging attack to obtain information, or damage to pass a known monster. Validate required upgrades independently of the monsters they unlock.
+6. **Let expertise open soft gates early.** A find intended for power 2 may be deducible at power 1. Report that; do not automatically reject it. If early access breaks the world, use an actual traversal restriction or a known monster above the earlier power. Obscurity is not a reliable lock.
 7. **Make kills change the puzzle usefully.** Place some free monsters where their removal clarifies another frontier or triggers a satisfying opening. Confirm the next step from the resulting clues, rather than assuming that any kill improves the route.
 8. **Protect discovery from accidental floods.** Inspect what becomes visible and what can actually be walked to. Floods can cross diagonals that movement cannot. A find seen early is different from a find collected early.
 9. **Vary the work between rewards.** Alternate small deductions, short chains, openings, choices of route and returns to familiar places. Long corridors of identical forced taps add labour without teaching anything.
@@ -134,13 +133,13 @@ The main route should eventually expect intermediate reasoning. Optional finds c
 
 ### Health and uncertainty
 
-Offer deliberate spending when the player can understand the cost. At power 1 with 3 hearts, a tile proved to be at most level 2 costs at most 2 hearts and is survivable. If level 3 is still possible, its 6 damage makes the move potentially lethal. Strictly less than current health is the survival condition.
+Required progression must be possible without guessing or taking any damage. Hearts are protection against mistakes. A stronger monster survives every attack until the player's power reaches its level, so neither spare hearts nor repeated healing can buy passage. Its tile exposes the monster's identity, not its clue; it still contributes to neighbouring sums. Solvers must not spend health to obtain that identity.
 
-For required routes, allow damage from an identified, affordable gatekeeper while keeping a route that never guesses about hidden threats. Optional shortcuts may offer bounded uncertainty with a known worst case and a safe way back. Budget the whole trip, including subsequent fights and access to healing; surviving the first step is insufficient.
+Every hidden move on a validated route needs an upper bound at or below current power, derived only from readable evidence and the public monster roster. A lucky guess at an actually harmless tile does not count. A known monster is attackable on that route only at or below power. If all reachable regions stall before the required objectives, reject the world until there is a demonstrated safe route. Do not silently add rewards or lower objectives to make it pass.
 
-Free healing and permanent kills mean a sequence of individually survivable barriers can be chipped away over repeated trips. Audit that possibility before calling a monster belt a power gate. A deduction bypass bought with many trips may be acceptable, but it should be a deliberate tradeoff.
+A region may remain unresolved until growth elsewhere. Check that the upgrade can be obtained without crossing the gate it unlocks. Quests must include safely obtaining and delivering their items. Difficult logic is allowed, but a solver stall is not proof that no logic exists. Until the available tools can explain a safe route, mark progression unverified and repair the encounter or extend the reasoning with a tested example.
 
-Do not assign a "50% chance" merely because two arrangements fit. Hand-authored placements have no automatically justified probability distribution. Use guaranteed bounds for acceptance checks. Guesses can remain a player's choice without becoming a requirement or pretending to have known odds.
+Do not assign a "50% chance" merely because two arrangements fit. Hand-authored placements have no automatically justified probability distribution. Use guaranteed bounds for acceptance checks. Players may guess, but no required route may depend on their doing so.
 
 ## Reusable puzzle encounters
 
@@ -169,17 +168,17 @@ Use nested profiles with the same movement, combat and observation rules. Each p
 
 Run the cheapest available rule first and record an explanation for each bound and move: supporting clues, contributing deductions, target bound, power and resulting access. Keep rule complexity, number of dependent steps and spatial spread separate. A profile gives an upper bound on the reasoning needed, not a validated human difficulty score.
 
-For a designated comparison milestone, exhaust B's accessible progress across the implemented world, including alternative finds, revisits and earned upgrades. Include quest and shop rewards with their real prerequisites when those systems exist. If B reaches the milestone, a harder move in C's chosen route proves nothing. Accept the intended comparison requirement when B stalls short and C reaches it under the same health policy. Check A separately when the lesson is simply to go beyond small clues. Apply this requirement only to agreed milestones; a region being partly blocked at a given power is expected, not a validation failure.
+For a designated comparison milestone, exhaust B's accessible progress across the implemented world, including alternative finds, revisits and earned upgrades. Include quest and shop rewards with their real prerequisites when those systems exist. If B reaches the milestone, a harder move in C's chosen route proves nothing. Accept the intended comparison requirement when B stalls short and C reaches it under the same no-guess, no-damage policy. Check A separately when the lesson is simply to go beyond small clues. Apply this requirement only to agreed milestones; a region being partly blocked at a given power is expected, not a validation failure.
 
-A stalled run shows a limitation of that strategy and route policy, not mathematical impossibility. Try alternative move and area orders when they affect access, health or information. Do not label a progression requirement "proved necessary" from one greedy trace. Keep stronger proofs and lower-skill bypass searches as different checks.
+A stalled run shows a limitation of that strategy and route policy, not mathematical impossibility. Try alternative move and area orders when they affect access or information. Do not label a progression requirement "proved necessary" from one greedy trace. Keep stronger proofs and lower-skill bypass searches as different checks.
 
 ### What the current tools certify
 
 `observe` exposes readable clues, known living contributions and hidden tile positions. `deduce` receives only that observation. NPC tiles supply no clue, notes carry no authority and hidden rewards cannot guide deductions. Tests enumerate small constraint systems to check that every valid assignment stays inside the solver's bounds.
 
-`surveyWorld` follows real paths and exits, collects rewards encountered along the way, and revisits persistent maps after new evidence or upgrades. It refuses hidden moves above power and known fights costing the last heart. Healing requires reaching and speaking to a healer. Separate connected parts of a map remain separate until an actual route reaches them.
+`surveyWorld` follows real paths and exits, collects rewards encountered along the way, and revisits persistent maps after new evidence or upgrades. It refuses hidden moves whose upper bound exceeds power and every known monster above power. Any damage invalidates the survey, even if healing later restores those hearts. Healing remains available when surveying a state after a player mistake, through an actual visit to a healer. Separate connected parts of a map remain separate until an actual route reaches them.
 
-`pnpm maps:check` runs all three profiles in forward and reverse candidate order. At least one groups run must reach all declared objectives in the same playthrough. A designated `requiresBeyond` check fails if a tested weaker strategy reaches that objective. This detects observed bypasses; failure to find one in two orders is not proof that none exists. The command reports which move opened a frontier and the evidence behind it, rather than claiming a human difficulty rating.
+`pnpm maps:check` runs all three profiles in forward and reverse candidate order. Both tested groups runs must each reach all declared objectives in a single playthrough without guessing or damage. A tested safe move order that stalls is a failure to investigate, not a warning to ignore. A designated `requiresBeyond` check fails if a tested weaker strategy reaches that objective. This detects observed bypasses; failure to find one in two orders is not proof that none exists. The command reports which move opened a frontier and the evidence behind it, rather than claiming a human difficulty rating.
 
 `measureLayers` distinguishes visible from reachable floor at successively granted powers. `openLayers` keeps its original revealed-floor result for the generator. These conditional experiments are separate from surveys that earn upgrades.
 
@@ -193,14 +192,14 @@ Reject failures of the agreed progression contract before ranking candidates. A 
 
 | Check | Record | Acceptance policy |
 | --- | --- | --- |
-| Whole-world progression | Rewards acquired from all implemented sources, upgrades earned, reachable exits and objectives, health and deaths. | C can reach the agreed objectives in the implemented world without hidden-threat guesses or death, respecting actual prerequisites, costs and healing. The ending is checked when it exists. Neither full regional clears nor collection of every optional find is required. |
+| Whole-world progression | Rewards acquired from all implemented sources, upgrades earned, reachable exits and objectives, health and deaths. | Both tested C routes reach the agreed objectives without guesses or any damage, respecting actual prerequisites. Health and healing cannot substitute for power. The ending is checked when it exists. Neither full regional clears nor collection of every optional find is required. |
 | Return visits | Newly reachable doors, routes, rewards and objectives after an earned power or item upgrade. | Check the intended reasons to return using persistent map state. Regions need not supply their own upgrades. |
 | Required learning | Earliest milestone reached by A, B and C. | At selected later milestones, the designated weaker profile stalls and C succeeds. Check alternative reward routes. |
 | Early access | Earliest reveal and collection of each key find by profile and power. | Report expert shortcuts. Reject only those violating an explicitly protected progression dependency. |
 | Proof readability | Rule, dependency depth, number of clues, and their spatial span. | Review required proofs on a phone; tune limits from playtests. |
 | Payoff and repetition | New reachable frontier, routes or finds per deduction; runs of repeated trivial moves. | Prefer useful consequences and varied sequences. Do not maximise total deduction count. |
 | Flood behaviour | Initial and post-kill reveal sizes, exposed rewards, unreachable revealed floor. | Preserve intended discoveries while allowing satisfying openings. |
-| Health bypass | Worst-case damage per proposed move and feasible return trips. | No required deaths; early access through repeated healing is understood. |
+| Safe progression | Proven upper bound and power before each hidden move; level of each known opponent; damage over the entire route. | Every hidden bound and known opponent is at or below power. Total fight damage is zero. Unsuccessful attacks cannot be used to gather required evidence. |
 
 Track total monster density, harmful-monster density at each power, clue sizes and the number of unknown neighbours as diagnostics. None alone defines difficulty. Strong monsters can make a dense region inaccessible; free monsters can make the same density easy to dismantle. Larger sums may increase arithmetic without adding an interesting decision.
 
@@ -213,7 +212,7 @@ Layer percentages remain useful for tuning how much a power increase opens. They
 1. Read the region's purpose and the agreed reward changes. State its entrances, expected early access, reasons to return, and any dependency on a future quest, shop or traversal item. Choose local layouts and deductions autonomously. Keep key rewards and acquisition rules within the world changes agreed with Aslak.
 2. Use `src/game/puzzle-fixtures.ts` as worked examples. Make each intended deduction lead to evidence, a route, a discovery or an objective. Check the complete neighbourhood when adapting an example. Avoid filling a region with repeated stamps or inserting an upgrade to resolve a local stall.
 3. Update `src/maps/puzzle-checks.ts` only for agreed objectives. A coordinate objective can require `revealed`, `reachable`, `collected` or `defeated`; a power objective checks an earned upgrade. Set `requiresBeyond: 'direct'` or `'bounds'` only at a designated learning milestone. Set `notBeforePower` only for an explicitly protected dependency. Ordinary intended access powers are tuning notes, not locks.
-4. Run `pnpm maps:check` and inspect `output/map-checks/report.txt`. Fix failures in the map or implementation without quietly removing an objective or lowering its requirements. Review the partial layers, return visits, known-fight damage, healing trips, long stretches of basic moves and large floods. A warning does not automatically disqualify a map.
+4. Run `pnpm maps:check` and inspect `output/map-checks/report.txt`. Fix failures in the map or implementation without quietly removing an objective or lowering its requirements. Review the partial layers, return visits, proofs, long stretches of basic moves and large floods. Any fight damage or globally stalled tested groups route is an error. A warning does not automatically disqualify a map.
 5. Inspect relevant actions in `report.json`. Each hidden move includes its level upper bound, supporting clue snapshots and a deduction chain. Proof tile IDs are `y * mapWidth + x`; coordinates are zero-based. Check when a find first becomes visible, reachable and collected. Check the intended comparison actually affects access, including alternative routes.
 6. Inspect the real reveal sequence at phone size when changing a map's layout. Confirm that the evidence can be noticed, the consequence is useful and returning feels worthwhile. Logical checks cannot establish these qualities. Run `pnpm check` before handing back the change.
 7. Include a short authoring note with the change: the region's role, intended deductions, unresolved areas at entry power, reasons to return, agreed rewards or external dependencies, and any validation warnings. Report assumed future upgrades as assumptions. Do not claim a complete world route until their actual acquisition rules are implemented and checked.

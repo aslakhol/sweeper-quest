@@ -57,7 +57,7 @@ export const puzzleFixtures: PuzzleFixture[] = [
   {
     name: 'Return stronger',
     lesson:
-      'The bat is known but costs health at power 1. Power 2 opens the corridor and its find.',
+      'The clues identify the bat, but it cannot be killed at power 1. Power 2 opens the corridor and its find.',
     map: '@ b . +',
     target: { x: 1, y: 0 },
     high: { direct: 2, bounds: 2, groups: 2 },

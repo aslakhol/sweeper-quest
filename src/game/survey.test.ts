@@ -122,7 +122,7 @@ describe('connected world survey', () => {
     expect(report.world.game.hero.heartPieces).toBe(1);
   });
 
-  it('can pay for known barriers over real return trips to a healer', () => {
+  it('leaves stronger barriers intact despite spare hearts and access to a healer', () => {
     areas.village.map = '@ , w , h';
     areas.wood.map = '< , G , G';
     const world = createWorld();
@@ -136,15 +136,16 @@ describe('connected world survey', () => {
     world.visited.set('wood', wood);
     const report = surveyWorld({ profile: 'groups' }, world);
     const fights = report.actions.filter((action) => action.kind === 'fight');
-    expect(fights).toHaveLength(2);
-    expect(fights.every((action) => action.health === 4)).toBe(true);
+    expect(fights).toHaveLength(0);
+    expect(report.world.game.hero.health).toBe(4);
     expect(report.actions.some((action) => action.area === 'home' && action.kind === 'heal')).toBe(
-      true,
+      false,
     );
-    expect(wood.tiles.filter((tile) => tile.monster?.alive)).toHaveLength(0);
+    expect(wood.tiles.filter((tile) => tile.monster?.alive)).toHaveLength(2);
+    expect(report.access.some((entry) => entry.defeated !== undefined)).toBe(false);
   });
 
-  it('refuses a known fight costing the last heart and never spends health on a hidden threat', () => {
+  it('never spends health on known or hidden stronger monsters', () => {
     areas.village.map = '@ , w';
     areas.wood.map = '< , G';
     const world = createWorld();
@@ -156,6 +157,14 @@ describe('connected world survey', () => {
     const hidden = surveyWorld({ profile: 'groups' });
     expect(hidden.world.game.hero.health).toBe(3);
     expect(hidden.world.game.tiles[1].monster?.alive).toBe(true);
+  });
+
+  it('stalls on a genuinely ambiguous frontier instead of gambling', () => {
+    areas.village.map = '# b + #\n# @ # #';
+    const report = surveyWorld({ profile: 'groups' });
+    expect(report.actions).toEqual([]);
+    expect(report.world.game.hero.health).toBe(3);
+    expect(report.world.game.tiles.filter((tile) => !tile.revealed)).toHaveLength(2);
   });
 
   it('does not invent external upgrades when all known routes are blocked', () => {

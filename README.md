@@ -38,7 +38,8 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 
 - Tap a neighboring tile to move or fight. Arrow keys and WASD work too. Combine directions for diagonals, or use Q/E/Z/C.
 - Numbers sum the levels of living monsters in the eight neighboring tiles. Zeros are blank and open their whole connected empty area plus its bordering numbers.
-- Fights always resolve and move you onto the tile. A monster at or below your power costs nothing. A stronger one first costs its level times the levels it has over you, in hearts. You start with 3 hearts. Finishing a conversation with Mum at home (the north-east house) restores them all.
+- A monster at or below your power dies for free and you enter its tile. A stronger one is revealed but survives and blocks the way. Its clue stays hidden, and you lose its level times the levels it has over you in hearts. Return with enough power to defeat it. You start with 3 hearts. Finishing a conversation with Mum at home (the north-east house) restores them all.
+- Required progression must be possible through deduction without guesses or damage. Getting stuck in one region is a reason to explore elsewhere and return stronger.
 - Four whetstones raise your power by one, and four heart pieces add a filled heart. They lie hidden on tiles and are picked up by walking onto them. Chiefs are visible, and drop a whole heart or a greatstone worth four whetstones.
 - Step onto a door to go inside, and onto the doormat to come back out. The stairs north of the village lead to the cave, and the timber gate at the east edge leads to the wood. Every map keeps its state while you are away, and your hearts and power come with you.
 - Walk into a person, or tap them from across the room, to talk. Tap anywhere to show the next line.

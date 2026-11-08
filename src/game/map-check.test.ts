@@ -48,12 +48,36 @@ describe('authoring acceptance checks', () => {
     );
   });
 
-  it('allows partially solved regions and reports route-order limitations', () => {
+  it('allows partially solved regions but rejects a tested order that stalls globally', () => {
+    expect(assessObjectives([run('groups', [1])], [objective]).errors).toEqual([]);
     const assessment = assessObjectives([run('groups', [1]), run('groups', [])], [objective]);
-    expect(assessment.errors).toEqual([]);
-    expect(assessment.warnings).toContainEqual(
+    expect(assessment.errors).toContainEqual(
       expect.stringContaining('Some groups move orders stall'),
     );
+  });
+
+  it('rejects completed objectives if the route took damage or guessed', () => {
+    const unsafe = run('groups', [1]);
+    unsafe.actions.push({
+      area: 'wood',
+      at: { x: 1, y: 0 },
+      kind: 'deduction',
+      power: 1,
+      health: 3,
+      revealed: 1,
+      events: [
+        {
+          type: 'fight',
+          from: { x: 0, y: 0 },
+          at: { x: 1, y: 0 },
+          damage: 2,
+          monster: { kind: 'bat', level: 2, alive: true, goal: false },
+        },
+      ],
+    });
+    const assessment = assessObjectives([unsafe], [objective]);
+    expect(assessment.errors).toContainEqual(expect.stringContaining('takes damage'));
+    expect(assessment.errors).toContainEqual(expect.stringContaining('without a safe bound'));
   });
 
   it('checks the actual prototype, all entrances and authored examples', () => {
