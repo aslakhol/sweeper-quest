@@ -1,4 +1,5 @@
 import {
+  type Building,
   type Find,
   type Game,
   type Monster,
@@ -307,10 +308,559 @@ function rects(
 }
 const lawn = (tile: Point) => ((tile.x + tile.y) % 2 ? '#31443b' : '#34473e');
 
+// Each building has its own roof, walls, floor and furnishings, inside and out.
+type Palette = { base: string; line: string; top: string; foot: string };
+const roofs: Record<Building, Palette & { side: string }> = {
+  cottage: { base: '#a3834b', line: '#86683a', top: '#c1a165', foot: '#5f4a28', side: '#7a5f33' },
+  hall: { base: '#55606c', line: '#434c57', top: '#7c8896', foot: '#333a43', side: '#3d454f' },
+  inn: { base: '#7d4536', line: '#673629', top: '#9b5a45', foot: '#4e2a22', side: '#5a3027' },
+  shop: { base: '#4d6b4c', line: '#3d573c', top: '#6b8a64', foot: '#2f432f', side: '#364b35' },
+  dojo: { base: '#3b3d44', line: '#2c2e34', top: '#5a5d66', foot: '#8a3a2c', side: '#2a2c31' },
+};
+// Outside walls, and the face of inside walls seen from the room.
+const walls: Record<Building, Palette> = {
+  cottage: { base: '#d9cfb6', line: '#c4b99d', top: '#e8e0ca', foot: '#7d7260' },
+  hall: { base: '#8f8b80', line: '#76726a', top: '#a29e93', foot: '#5c5952' },
+  inn: { base: '#d3c094', line: '#4a3424', top: '#e0d0a8', foot: '#5b4a38' },
+  shop: { base: '#9c7c52', line: '#866843', top: '#b08e62', foot: '#5e4a33' },
+  dojo: { base: '#e6dfcb', line: '#3e2c22', top: '#f2ecdc', foot: '#3e2c22' },
+};
+const rooms: Record<Building, Palette> = {
+  cottage: { base: '#b9a07a', line: '#a48b66', top: '#8a6e4c', foot: '#6e5a42' },
+  hall: { base: '#5e4634', line: '#4b3727', top: '#6e5440', foot: '#3a2a1e' },
+  inn: { base: '#c8b48a', line: '#4a3424', top: '#b39f76', foot: '#4a3424' },
+  shop: { base: '#9a7d58', line: '#856a48', top: '#a88a62', foot: '#5e4a33' },
+  dojo: { base: '#e6dfcb', line: '#7a5a3e', top: '#f2ecdc', foot: '#4a3626' },
+};
+const floors: Record<Building, Palette> = {
+  cottage: { base: '#5c4632', line: '#4f3c2b', top: '#604934', foot: '#4f3c2b' },
+  hall: { base: '#4f4c45', line: '#3e3c36', top: '#54514a', foot: '#3e3c36' },
+  inn: { base: '#6a5034', line: '#55402a', top: '#6e5437', foot: '#55402a' },
+  shop: { base: '#7d6a4c', line: '#6a583e', top: '#806d4f', foot: '#6a583e' },
+  dojo: { base: '#a39b66', line: '#545b3a', top: '#b0a873', foot: '#8e8758' },
+};
+
+function drawFloor(
+  ctx: CanvasRenderingContext2D,
+  building: Building,
+  tile: Tile,
+  x: number,
+  y: number,
+) {
+  const { base, line, top, foot } = floors[building];
+  const odd = (tile.x + tile.y) % 2 === 1;
+  switch (building) {
+    case 'hall':
+      // Flagstones.
+      rects(ctx, odd ? top : base, x, y, [[1, 1, 46, 46]]);
+      rects(ctx, line, x, y, [
+        [1, 23, 46, 2],
+        [odd ? 16 : 30, 1, 2, 22],
+        [odd ? 34 : 12, 25, 2, 22],
+      ]);
+      return;
+    case 'dojo': {
+      // Mats two tiles long, laid in a brick pattern, edged with dark cloth.
+      rects(ctx, base, x, y, [[1, 1, 46, 46]]);
+      for (let stripe = 6; stripe < 46; stripe += 6) rects(ctx, top, x, y, [[stripe, 3, 1, 42]]);
+      rects(ctx, foot, x, y, [[1, 23, 46, 1]]);
+      rects(ctx, line, x, y, [[1, 1, 46, 3], [1, 44, 46, 3], odd ? [44, 1, 3, 46] : [1, 1, 3, 46]]);
+      return;
+    }
+    default: {
+      // Boards; the inn's are wide and the shop's narrow.
+      const rows = building === 'inn' ? [24] : building === 'shop' ? [12, 24, 36] : [16, 32];
+      rects(ctx, odd ? top : base, x, y, [[1, 1, 46, 46]]);
+      rects(
+        ctx,
+        line,
+        x,
+        y,
+        rows.map((row) => [1, row, 46, 1]),
+      );
+      [1, ...rows].forEach((row, index, all) => {
+        const end = all[index + 1] ?? 47;
+        const joint = (tile.y + index) % 2 ? 14 : 34;
+        rects(ctx, foot, x, y, [[joint, row, 1, end - row]]);
+      });
+    }
+  }
+}
+
+function drawRoof(
+  ctx: CanvasRenderingContext2D,
+  building: Building,
+  x: number,
+  y: number,
+  joins: (dx: number, dy: number) => boolean,
+  odd: boolean,
+) {
+  const { base, line, top, foot, side } = roofs[building];
+  rects(ctx, base, x, y, [[0, 0, 48, 48]]);
+  switch (building) {
+    case 'cottage':
+      // Thatch, in staggered tufts.
+      for (let row = 0; row < 48; row += 8)
+        for (let column = row % 16 ? 4 : 0; column < 48; column += 8)
+          rects(ctx, line, x, y, [[column, row + 2, 2, 6]]);
+      break;
+    case 'hall':
+      // Small slates.
+      for (let row = 0; row < 48; row += 8) {
+        rects(ctx, line, x, y, [[0, row + 6, 48, 2]]);
+        for (let column = row % 16 ? 4 : 10; column < 48; column += 12)
+          rects(ctx, line, x, y, [[column, row, 1, 6]]);
+      }
+      break;
+    case 'inn':
+      rects(ctx, line, x, y, [
+        [0, 10, 48, 2],
+        [0, 22, 48, 2],
+        [0, 34, 48, 2],
+        [odd ? 12 : 36, 0, 2, 10],
+        [odd ? 36 : 12, 12, 2, 10],
+        [odd ? 12 : 36, 24, 2, 10],
+      ]);
+      break;
+    case 'shop':
+      // Standing seams.
+      rects(
+        ctx,
+        line,
+        x,
+        y,
+        [0, 1, 2, 3, 4, 5].map((seam) => [seam * 8 + 3, 0, 2, 48]),
+      );
+      rects(
+        ctx,
+        top,
+        x,
+        y,
+        [0, 1, 2, 3, 4, 5].map((seam) => [seam * 8 + 3, 0, 1, 48]),
+      );
+      break;
+    case 'dojo':
+      // Rows of round tiles.
+      for (let row = 0; row < 48; row += 6) {
+        rects(ctx, line, x, y, [[0, row + 4, 48, 2]]);
+        for (let column = 2; column < 48; column += 6) rects(ctx, top, x, y, [[column, row, 2, 4]]);
+      }
+      break;
+  }
+  if (!joins(0, -1)) rects(ctx, top, x, y, [[0, 0, 48, 5]]);
+  if (!joins(-1, 0)) rects(ctx, side, x, y, [[0, 0, 3, 48]]);
+  if (!joins(1, 0)) rects(ctx, side, x, y, [[45, 0, 3, 48]]);
+  if (!joins(0, 1)) rects(ctx, foot, x, y, [[0, 42, 48, 6]]);
+  if (building === 'dojo' && !joins(0, 1)) {
+    // Eaves that sweep up at the corners.
+    rects(ctx, '#b0503c', x, y, [[0, 42, 48, 1]]);
+    if (!joins(-1, 0))
+      rects(ctx, foot, x, y, [
+        [0, 34, 4, 8],
+        [4, 38, 4, 4],
+      ]);
+    if (!joins(1, 0))
+      rects(ctx, foot, x, y, [
+        [44, 34, 4, 8],
+        [40, 38, 4, 4],
+      ]);
+  }
+  if (building === 'cottage' && !joins(0, -1) && joins(1, 0) && !joins(2, 0))
+    // A chimney near the right-hand end.
+    rects(ctx, '#7a7068', x, y, [
+      [16, 4, 14, 20],
+      [14, 2, 18, 4],
+    ]);
+}
+
+// The windows, doors and signs on a building's front wall.
+function drawWall(
+  ctx: CanvasRenderingContext2D,
+  building: Building,
+  tile: Tile,
+  x: number,
+  y: number,
+  sign: boolean,
+) {
+  const { base, line, top, foot } = walls[building];
+  rects(ctx, base, x, y, [[0, 0, 48, 48]]);
+  switch (building) {
+    case 'cottage':
+      rects(ctx, top, x, y, [[0, 0, 48, 3]]);
+      rects(ctx, foot, x, y, [[0, 40, 48, 8]]);
+      rects(ctx, line, x, y, [
+        [8, 40, 1, 8],
+        [24, 40, 1, 8],
+        [40, 40, 1, 8],
+      ]);
+      break;
+    case 'hall':
+      // Dressed stone.
+      for (const [row, offset] of [
+        [0, 0],
+        [10, 12],
+        [20, 0],
+        [30, 12],
+      ])
+        rects(ctx, line, x, y, [
+          [0, row + 9, 48, 1],
+          [offset + 6, row, 1, 9],
+          [offset + 30, row, 1, 9],
+        ]);
+      rects(ctx, foot, x, y, [[0, 40, 48, 8]]);
+      break;
+    case 'inn':
+      // Timber framing.
+      rects(ctx, line, x, y, [
+        [0, 0, 48, 4],
+        [0, 0, 4, 42],
+        [44, 0, 4, 42],
+        [0, 36, 48, 3],
+      ]);
+      rects(ctx, foot, x, y, [[0, 39, 48, 9]]);
+      break;
+    case 'shop':
+      rects(
+        ctx,
+        line,
+        x,
+        y,
+        [0, 1, 2, 3, 4, 5].map((board) => [board * 8 + 7, 0, 1, 42]),
+      );
+      rects(ctx, foot, x, y, [[0, 42, 48, 6]]);
+      break;
+    case 'dojo':
+      rects(ctx, line, x, y, [
+        [0, 0, 4, 48],
+        [44, 0, 4, 48],
+        [0, 0, 48, 4],
+      ]);
+      rects(ctx, foot, x, y, [[0, 38, 48, 10]]);
+      break;
+  }
+  if (tile.look === 'door') return drawDoor(ctx, building, x, y);
+  if (sign) return drawSign(ctx, building, x, y);
+  drawWindow(ctx, building, x, y);
+}
+
+function drawWindow(ctx: CanvasRenderingContext2D, building: Building, x: number, y: number) {
+  switch (building) {
+    case 'cottage':
+      rects(ctx, '#5e4a33', x, y, [[13, 9, 22, 20]]);
+      rects(ctx, '#3e5f6b', x, y, [[16, 12, 16, 14]]);
+      rects(ctx, '#5e4a33', x, y, [[23, 12, 2, 14]]);
+      // A flower box.
+      rects(ctx, '#4f7d4f', x, y, [[12, 27, 24, 3]]);
+      rects(ctx, '#d96a6a', x, y, [
+        [14, 25, 3, 3],
+        [22, 24, 3, 3],
+        [30, 25, 3, 3],
+      ]);
+      rects(ctx, '#7a5236', x, y, [[11, 30, 26, 5]]);
+      return;
+    case 'hall':
+      // Tall arched windows.
+      rects(ctx, '#4d4a44', x, y, [
+        [16, 8, 16, 30],
+        [18, 5, 12, 3],
+      ]);
+      rects(ctx, '#3e5f6b', x, y, [
+        [19, 10, 10, 26],
+        [21, 8, 6, 2],
+      ]);
+      rects(ctx, '#4d4a44', x, y, [[19, 22, 10, 2]]);
+      return;
+    case 'inn':
+      // Warm light from inside.
+      rects(ctx, '#4a3424', x, y, [[12, 9, 24, 22]]);
+      rects(ctx, '#e3b862', x, y, [[15, 12, 18, 16]]);
+      rects(ctx, '#4a3424', x, y, [
+        [23, 12, 2, 16],
+        [15, 19, 18, 2],
+      ]);
+      return;
+    case 'shop':
+      // A striped awning over a wide display window.
+      rects(ctx, '#3f2c1e', x, y, [[8, 14, 32, 22]]);
+      rects(ctx, '#6f95a0', x, y, [[10, 16, 28, 18]]);
+      rects(ctx, '#e1bf76', x, y, [
+        [14, 28, 4, 4],
+        [22, 26, 6, 6],
+        [31, 29, 4, 3],
+      ]);
+      for (let stripe = 0; stripe < 48; stripe += 8) {
+        rects(ctx, '#b8483e', x, y, [[stripe, 4, 4, 9]]);
+        rects(ctx, '#e8dcc0', x, y, [[stripe + 4, 4, 4, 9]]);
+      }
+      rects(ctx, '#7a2f28', x, y, [[0, 13, 48, 2]]);
+      return;
+    case 'dojo':
+      // Paper screens.
+      rects(ctx, '#f6f0e0', x, y, [[8, 8, 32, 28]]);
+      rects(ctx, '#7a5a3e', x, y, [
+        [8, 8, 32, 2],
+        [8, 34, 32, 2],
+        [8, 8, 2, 28],
+        [38, 8, 2, 28],
+        [18, 10, 1, 24],
+        [29, 10, 1, 24],
+        [10, 17, 28, 1],
+        [10, 26, 28, 1],
+      ]);
+      return;
+  }
+}
+
+function drawDoor(ctx: CanvasRenderingContext2D, building: Building, x: number, y: number) {
+  switch (building) {
+    case 'cottage':
+      rects(ctx, '#3f2c1e', x, y, [[12, 10, 24, 38]]);
+      rects(ctx, '#557447', x, y, [[15, 13, 18, 35]]);
+      rects(ctx, '#466139', x, y, [[15, 28, 18, 2]]);
+      rects(ctx, '#d8b46a', x, y, [[28, 32, 3, 3]]);
+      return;
+    case 'hall':
+      // Heavy double doors under an arch.
+      rects(ctx, '#5c5952', x, y, [
+        [9, 8, 30, 40],
+        [12, 5, 24, 3],
+      ]);
+      rects(ctx, '#3a2a1c', x, y, [
+        [12, 11, 24, 37],
+        [15, 8, 18, 3],
+      ]);
+      rects(ctx, '#2a1e14', x, y, [[23, 8, 2, 40]]);
+      rects(ctx, '#9a9890', x, y, [
+        [15, 18, 2, 2],
+        [31, 18, 2, 2],
+        [15, 36, 2, 2],
+        [31, 36, 2, 2],
+        [20, 28, 2, 3],
+        [26, 28, 2, 3],
+      ]);
+      return;
+    case 'inn':
+      rects(ctx, '#4a3424', x, y, [[8, 8, 32, 40]]);
+      rects(ctx, '#7a5434', x, y, [[11, 11, 26, 37]]);
+      rects(ctx, '#5e4028', x, y, [
+        [23, 11, 2, 37],
+        [11, 24, 26, 2],
+      ]);
+      rects(ctx, '#d8b46a', x, y, [
+        [19, 30, 3, 3],
+        [26, 30, 3, 3],
+      ]);
+      return;
+    case 'shop':
+      rects(ctx, '#3f2c1e', x, y, [[11, 8, 26, 40]]);
+      rects(ctx, '#6a4a2e', x, y, [[14, 11, 20, 37]]);
+      rects(ctx, '#6f95a0', x, y, [[17, 14, 14, 12]]);
+      rects(ctx, '#d8b46a', x, y, [[29, 32, 3, 3]]);
+      return;
+    case 'dojo':
+      // Sliding screens behind a short indigo curtain.
+      rects(ctx, '#3e2c22', x, y, [[8, 4, 32, 44]]);
+      rects(ctx, '#d8d0b8', x, y, [[10, 6, 28, 42]]);
+      rects(ctx, '#3e2c22', x, y, [
+        [23, 6, 2, 42],
+        [10, 30, 28, 1],
+        [10, 40, 28, 1],
+      ]);
+      rects(ctx, '#2f3e66', x, y, [
+        [8, 4, 10, 18],
+        [19, 4, 10, 18],
+        [30, 4, 10, 18],
+      ]);
+      rects(ctx, '#e6dfcb', x, y, [[21, 10, 6, 6]]);
+      return;
+  }
+}
+
+// A board hanging beside the door says what is inside.
+function drawSign(ctx: CanvasRenderingContext2D, building: Building, x: number, y: number) {
+  if (building !== 'inn' && building !== 'shop') return drawWindow(ctx, building, x, y);
+  rects(ctx, '#3f2c1e', x, y, [
+    [4, 6, 30, 3],
+    [12, 9, 2, 4],
+    [28, 9, 2, 4],
+  ]);
+  rects(ctx, '#5e4028', x, y, [[6, 13, 30, 22]]);
+  rects(ctx, '#8a6a44', x, y, [[8, 15, 26, 18]]);
+  if (building === 'inn') {
+    // A foaming mug.
+    rects(ctx, '#f2ead0', x, y, [[15, 17, 10, 4]]);
+    rects(ctx, '#d39a3e', x, y, [[15, 21, 10, 10]]);
+    rects(ctx, '#d39a3e', x, y, [
+      [25, 23, 4, 2],
+      [27, 25, 2, 4],
+      [25, 28, 4, 2],
+    ]);
+  } else {
+    rects(ctx, '#e1bf76', x, y, [[15, 18, 12, 12]]);
+    rects(ctx, '#a8843e', x, y, [[20, 20, 2, 8]]);
+  }
+}
+
+// Inside walls show their face toward the room and their dark top elsewhere.
+function drawRoomWall(ctx: CanvasRenderingContext2D, building: Building, x: number, y: number) {
+  const { base, line, top, foot } = rooms[building];
+  rects(ctx, base, x, y, [[0, 0, 48, 48]]);
+  switch (building) {
+    case 'cottage':
+      // Plaster above wood panelling.
+      rects(ctx, top, x, y, [[0, 26, 48, 18]]);
+      rects(ctx, line, x, y, [
+        [0, 25, 48, 2],
+        [12, 27, 1, 17],
+        [36, 27, 1, 17],
+      ]);
+      break;
+    case 'hall':
+      // Dark panelling.
+      rects(ctx, top, x, y, [
+        [4, 6, 16, 34],
+        [28, 6, 16, 34],
+      ]);
+      rects(ctx, line, x, y, [
+        [6, 8, 12, 30],
+        [30, 8, 12, 30],
+      ]);
+      break;
+    case 'inn':
+      // Plaster between posts and beams.
+      rects(ctx, line, x, y, [
+        [0, 0, 48, 4],
+        [0, 0, 3, 44],
+        [45, 0, 3, 44],
+        [0, 22, 48, 3],
+      ]);
+      break;
+    case 'shop':
+      rects(
+        ctx,
+        line,
+        x,
+        y,
+        [0, 1, 2, 3, 4, 5].map((board) => [board * 8 + 7, 0, 1, 44]),
+      );
+      break;
+    case 'dojo':
+      rects(ctx, line, x, y, [
+        [0, 0, 48, 3],
+        [0, 0, 3, 44],
+        [45, 0, 3, 44],
+        [16, 3, 1, 41],
+        [31, 3, 1, 41],
+        [3, 15, 42, 1],
+        [3, 29, 42, 1],
+      ]);
+      break;
+  }
+  rects(ctx, foot, x, y, [[0, 44, 48, 4]]);
+}
+
+function drawShelf(
+  ctx: CanvasRenderingContext2D,
+  building: Building,
+  tile: Tile,
+  x: number,
+  y: number,
+) {
+  const rows = [6, 20, 34];
+  rects(ctx, '#3f2c1e', x, y, [[2, 0, 44, 46]]);
+  switch (building) {
+    case 'cottage':
+      // A dresser of plates over a cupboard.
+      for (const row of rows.slice(0, 2))
+        for (let plate = 0; plate < 3; plate++) {
+          rects(ctx, '#d8d4c8', x, y, [[8 + plate * 12, row, 9, 10]]);
+          rects(ctx, '#5a7a9a', x, y, [[10 + plate * 12, row + 2, 5, 6]]);
+        }
+      rects(ctx, '#6e4a2e', x, y, [
+        [6, 33, 17, 11],
+        [25, 33, 17, 11],
+      ]);
+      rects(ctx, '#d8b46a', x, y, [
+        [20, 38, 2, 2],
+        [26, 38, 2, 2],
+      ]);
+      return;
+    case 'inn':
+      // Bottles over a pair of kegs.
+      for (const row of rows.slice(0, 2))
+        for (let bottle = 0; bottle < 5; bottle++) {
+          const color = ['#4f7d4f', '#7a4a2a', '#5a6a8a'][(bottle + row + tile.x) % 3];
+          rects(ctx, color, x, y, [
+            [7 + bottle * 7, row + 3, 5, 7],
+            [8 + bottle * 7, row, 3, 3],
+          ]);
+        }
+      for (const keg of [6, 25]) {
+        rects(ctx, '#8a6238', x, y, [[keg, 33, 17, 12]]);
+        rects(ctx, '#4a4440', x, y, [
+          [keg, 35, 17, 2],
+          [keg, 41, 17, 2],
+        ]);
+      }
+      return;
+    case 'shop':
+      // Jars, crates and sacks.
+      for (let jar = 0; jar < 4; jar++)
+        rects(ctx, jar % 2 ? '#b06a44' : '#c8a060', x, y, [
+          [6 + jar * 9, rows[0] + 2, 7, 8],
+          [7 + jar * 9, rows[0], 5, 2],
+        ]);
+      rects(ctx, '#9a7a4a', x, y, [
+        [6, rows[1], 16, 11],
+        [25, rows[1], 16, 11],
+      ]);
+      rects(ctx, '#6e5434', x, y, [
+        [6, rows[1] + 5, 16, 1],
+        [25, rows[1] + 5, 16, 1],
+      ]);
+      rects(ctx, '#c8b48a', x, y, [
+        [6, rows[2] + 1, 16, 10],
+        [25, rows[2] + 1, 16, 10],
+      ]);
+      rects(ctx, '#a08a64', x, y, [
+        [11, rows[2], 6, 2],
+        [30, rows[2], 6, 2],
+      ]);
+      return;
+    case 'dojo':
+      // A rack of wooden practice swords and staffs.
+      rects(ctx, floors.dojo.base, x, y, [[2, 0, 44, 46]]);
+      rects(ctx, '#6e4a2e', x, y, [
+        [4, 2, 4, 44],
+        [40, 2, 4, 44],
+        [4, 12, 40, 3],
+        [4, 34, 40, 3],
+      ]);
+      for (const [index, column] of [12, 19, 26, 33].entries())
+        rects(ctx, index % 2 ? '#8a6a44' : '#c9a978', x, y, [[column, 4, 3, 40]]);
+      rects(ctx, '#3e2c22', x, y, [
+        [12, 26, 3, 3],
+        [26, 26, 3, 3],
+      ]);
+      return;
+    default:
+      for (const [index, row] of rows.entries())
+        for (let book = 0; book < 5; book++)
+          rects(
+            ctx,
+            ['#8a3b3b', '#4d6b8a', '#7a8a4d', '#a08050'][(book + index + tile.x) % 4],
+            x,
+            y,
+            [[6 + book * 7, row, 5, 10]],
+          );
+  }
+}
+
 // Ground keeps a one-pixel grid gap for counting; buildings fill their tile to join up.
 function drawGround(ctx: CanvasRenderingContext2D, game: Game, tile: Tile, x: number, y: number) {
   const joins = (dx: number, dy: number) =>
     tileAt(game, { x: tile.x + dx, y: tile.y + dy })?.look === tile.look;
+  const building = tile.building ?? 'cottage';
   ctx.fillStyle = '#16231f';
   ctx.fillRect(x, y, TILE_SIZE, TILE_SIZE);
   switch (tile.look) {
@@ -415,60 +965,28 @@ function drawGround(ctx: CanvasRenderingContext2D, game: Game, tile: Tile, x: nu
       rects(ctx, '#3b6a40', x, y, [[14, 9, 9, 6]]);
       return;
     case 'roof':
-      rects(ctx, '#7d4536', x, y, [[0, 0, 48, 48]]);
-      rects(ctx, '#673629', x, y, [
-        [0, 10, 48, 2],
-        [0, 22, 48, 2],
-        [0, 34, 48, 2],
-        [tile.x % 2 ? 12 : 36, 0, 2, 10],
-        [tile.x % 2 ? 36 : 12, 12, 2, 10],
-        [tile.x % 2 ? 12 : 36, 24, 2, 10],
-      ]);
-      if (!joins(0, -1)) rects(ctx, '#9b5a45', x, y, [[0, 0, 48, 5]]);
-      if (!joins(0, 1)) rects(ctx, '#4e2a22', x, y, [[0, 42, 48, 6]]);
-      if (!joins(-1, 0)) rects(ctx, '#5a3027', x, y, [[0, 0, 3, 48]]);
-      if (!joins(1, 0)) rects(ctx, '#5a3027', x, y, [[45, 0, 3, 48]]);
+      drawRoof(ctx, building, x, y, joins, tile.x % 2 === 1);
       return;
     case 'house':
     case 'door':
-      rects(ctx, '#b49e77', x, y, [[0, 0, 48, 48]]);
-      rects(ctx, '#a08a64', x, y, [
-        [0, 12, 48, 2],
-        [0, 26, 48, 2],
-      ]);
-      rects(ctx, '#6c5f4f', x, y, [[0, 42, 48, 6]]);
-      if (tile.look === 'house') {
-        rects(ctx, '#5e4a33', x, y, [[13, 13, 22, 18]]);
-        rects(ctx, '#3e5f6b', x, y, [[16, 16, 16, 12]]);
-        rects(ctx, '#6f95a0', x, y, [[18, 18, 4, 4]]);
-        return;
-      }
-      rects(ctx, '#3f2c1e', x, y, [[11, 8, 26, 40]]);
-      rects(ctx, '#5b3f2a', x, y, [[14, 11, 20, 37]]);
-      rects(ctx, '#4b3423', x, y, [[23, 11, 2, 37]]);
-      rects(ctx, '#d8b46a', x, y, [[28, 30, 3, 3]]);
+      drawWall(
+        ctx,
+        building,
+        tile,
+        x,
+        y,
+        tileAt(game, { x: tile.x - 1, y: tile.y })?.look === 'door',
+      );
       return;
     case 'wood':
-      rects(ctx, (tile.x + tile.y) % 2 ? '#5c4632' : '#604934', x, y, [[1, 1, 46, 46]]);
-      rects(ctx, '#4f3c2b', x, y, [
-        [1, 16, 46, 1],
-        [1, 32, 46, 1],
-        [tile.y % 2 ? 14 : 34, 1, 1, 15],
-        [tile.y % 2 ? 30 : 10, 17, 1, 15],
-      ]);
+      drawFloor(ctx, building, tile, x, y);
       return;
     case 'interior':
     case 'mat': {
-      // Walls show their face toward the room and their dark top elsewhere.
       const below = tileAt(game, { x: tile.x, y: tile.y + 1 });
-      if (tile.look === 'mat' || (below && below.look !== 'interior')) {
-        rects(ctx, '#8c7458', x, y, [[0, 0, 48, 48]]);
-        rects(ctx, '#7a6349', x, y, [
-          [0, 15, 48, 2],
-          [0, 31, 48, 2],
-        ]);
-        rects(ctx, '#5b4836', x, y, [[0, 44, 48, 4]]);
-      } else rects(ctx, '#2a211a', x, y, [[0, 0, 48, 48]]);
+      if (tile.look === 'mat' || (below && below.look !== 'interior'))
+        drawRoomWall(ctx, building, x, y);
+      else rects(ctx, '#2a211a', x, y, [[0, 0, 48, 48]]);
       if (tile.look === 'mat') {
         rects(ctx, '#31443b', x, y, [[8, 4, 32, 44]]);
         rects(ctx, '#8a3b3b', x, y, [[6, 34, 36, 14]]);
@@ -476,33 +994,40 @@ function drawGround(ctx: CanvasRenderingContext2D, game: Game, tile: Tile, x: nu
       }
       return;
     }
-    case 'table':
-      rects(ctx, '#5c4632', x, y, [[1, 1, 46, 46]]);
+    case 'table': {
+      drawFloor(ctx, building, tile, x, y);
       rects(ctx, '#7b5636', x, y, [[joins(-1, 0) ? 0 : 4, joins(0, -1) ? 0 : 6, 48, 48]]);
-      rects(ctx, '#5c4632', x, y, [
+      const { base } = floors[building];
+      rects(ctx, base, x, y, [
         ...(joins(1, 0) ? [] : [[44, 0, 4, 48]]),
         ...(joins(0, 1) ? [] : [[0, 40, 48, 8]]),
       ]);
       if (!joins(0, 1))
         rects(ctx, '#4a3324', x, y, [[joins(-1, 0) ? 0 : 4, 38, joins(1, 0) ? 48 : 40, 4]]);
+      if (building === 'inn')
+        // Mugs left out on the tables.
+        rects(ctx, '#d39a3e', x, y, [[(tile.x + tile.y) % 2 ? 26 : 14, 16, 8, 10]]);
+      if (building === 'hall' && !joins(-1, 0) && !joins(0, -1)) {
+        // Papers and a candle on the elder's desk.
+        rects(ctx, '#e8e0ca', x, y, [
+          [12, 14, 14, 10],
+          [20, 18, 14, 10],
+        ]);
+        rects(ctx, '#e6dfcb', x, y, [[38, 10, 4, 10]]);
+        rects(ctx, '#f3d794', x, y, [[39, 6, 2, 4]]);
+      }
       return;
+    }
     case 'bed':
-      rects(ctx, '#5c4632', x, y, [[1, 1, 46, 46]]);
+      drawFloor(ctx, building, tile, x, y);
       rects(ctx, '#6e4a2e', x, y, [[joins(-1, 0) ? 0 : 3, 6, joins(1, 0) ? 48 : 42, 38]]);
-      rects(ctx, '#5a7a9a', x, y, [[joins(-1, 0) ? 0 : 6, 9, joins(1, 0) ? 48 : 36, 32]]);
+      rects(ctx, building === 'inn' ? '#5f7f55' : '#5a7a9a', x, y, [
+        [joins(-1, 0) ? 0 : 6, 9, joins(1, 0) ? 48 : 36, 32],
+      ]);
       if (!joins(-1, 0)) rects(ctx, '#e3dccb', x, y, [[8, 12, 14, 26]]);
       return;
     case 'shelf':
-      rects(ctx, '#3f2c1e', x, y, [[2, 0, 44, 46]]);
-      for (const [index, row] of [6, 20, 34].entries())
-        for (let book = 0; book < 5; book++)
-          rects(
-            ctx,
-            ['#8a3b3b', '#4d6b8a', '#7a8a4d', '#a08050'][(book + index + tile.x) % 4],
-            x,
-            y,
-            [[6 + book * 7, row, 5, 10]],
-          );
+      drawShelf(ctx, building, tile, x, y);
       return;
     case 'fence':
       rects(ctx, lawn(tile), x, y, [[1, 1, 46, 46]]);
