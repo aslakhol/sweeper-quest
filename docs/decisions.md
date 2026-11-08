@@ -8,7 +8,7 @@ XP clicked on small maps, where going from weak to strong fits inside one board.
 - **Power and hearts come from finds.** Four whetstones raise power; four heart pieces add a heart. Chiefs can drop a whole one: a greatstone or a heart.
 - **Whetstones, not shards.** Sharpening fits what power does: the same sword now cuts through what used to hurt you. A find is small enough that collecting four feels natural.
 - **Level-ups are rare.** There should be a lot of game between them, so heart pieces, tools and secrets carry the everyday rewards.
-- **Ground finds start hidden, then become visible before pickup.** Playtesting found it more satisfying to spot an item on the ground before collecting it. Prefer a flood or a free kill that reveals the item from another tile, followed by walking over to it. Do not show items through covered tiles or add a pickup confirmation. Terrain, rumours and monster groups can still hint where to explore. This is the default placement preference, not a ban on every instant discovery.
+- **Items come in chests; coins lie on the ground.** See [Chests](#chests).
 - **One world, not stages.** It holds more pieces than you need, and being stuck in one region and returning stronger is intended. Solvers check the whole world, not each region.
 - **Hearts start at 3** so early damage is scary. Mum's full heal stays for now.
 - **Death costs the walk back.** Game over offers Continue, which wakes you at home with the world unchanged. It is still a failure: maps are never balanced around dying.
@@ -64,7 +64,18 @@ The demo previously supplied only seven whetstones before the level-3 cave chief
 
 ## Coins
 
-- **Coins are hidden finds.** They were removed because they had no use and cost taps. They came back to buy the shop's single whetstone, and are picked up by walking onto them like any other find.
+- **Coins are hidden finds.** They were removed because they had no use and cost taps. They came back to buy the shop's single whetstone, and are picked up by walking onto them. They stay loose on the ground rather than in chests, so they cost no extra taps.
+
+## Chests
+
+Items scattered on the ground did not feel like rewards. Whetstones, heart pieces and keepsakes now come in chests.
+
+- **Chests start hidden** like any tile and are never drawn through covered ground.
+- **You always see a chest before opening it.** Stepping into a hidden chest uncovers its tile, which can flood like any reveal, but you stay where you are. Tapping it again opens it. A distant chest is walked up to like a person.
+- **Prefer chests revealed from elsewhere**, by a flood or a free kill, so the player spots one and walks over to it.
+- **A chest never hides a monster**, but the solver gets no hint about that: a hidden chest is an unknown tile until uncovered.
+- **Chests block walking**, opened or not. Maps must not place one where it cuts off a route.
+- **Coins stay loose.** They start hidden and are picked up by walking onto them. Reveal a coin from another tile before pickup where possible.
 
 ## Deferred
 

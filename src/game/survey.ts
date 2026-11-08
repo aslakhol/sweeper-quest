@@ -44,7 +44,7 @@ export type SurveyAction = {
   health: number;
   revealed: number;
   events: GameEvent[];
-  // Ground pickups only; quest rewards, purchases and monster drops have no preview tile.
+  // Loose ground pickups only; chests, quest rewards, purchases and drops have no preview tile.
   groundFind?: { find: Find; revealedBeforePickup: boolean };
   proof?: { upper: number; maxLevel: number; clues: Clue[]; deductions: Deduction[] };
 };
@@ -153,7 +153,9 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
     const before = revealedCount(game);
     const target = tileAt(game, at);
     const groundFind =
-      target?.terrain === 'floor' && target.price === undefined ? target.find : undefined;
+      target?.terrain === 'floor' && !target.chest && target.price === undefined
+        ? target.find
+        : undefined;
     const revealedBeforePickup = target?.revealed ?? false;
     if (target && !target.revealed && (!proof || proof.upper > power))
       throw new Error(`No safe deduction for hidden tile ${accessKey(area, at)}.`);

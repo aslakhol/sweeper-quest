@@ -10,6 +10,7 @@ import {
   cycleNote,
   heal,
   numberAt,
+  type Point,
   planWalk,
   same,
   setNote,
@@ -185,23 +186,42 @@ describe('combat and progression', () => {
     });
     expect(hero.sword).toBe(true);
   });
+  it('uncovers a chest on the first tap and opens it on the next, without entering', () => {
+    const game = createGame('@ * .\ns # #');
+    expect(step(game, p(1, 0))).toEqual([{ type: 'uncover', at: p(1, 0) }]);
+    expect(tileAt(game, p(1, 0))?.revealed).toBe(true);
+    expect(step(game, p(1, 0))).toEqual([{ type: 'find', at: p(1, 0), find: 'whetstone' }]);
+    expect(step(game, p(1, 0))).toEqual([]);
+    expect(game.player).toEqual(p(0, 0));
+    expect(planWalk(game, p(2, 0))).toBeNull();
+  });
+  it('walks up to a distant chest and uncovers it', () => {
+    const game = createGame('@ , , *');
+    expect(planWalk(game, p(3, 0))).toEqual([p(1, 0), p(2, 0), p(3, 0)]);
+  });
+  it('leaves coins loose on the ground', () => {
+    const game = createGame('@ $');
+    expect(step(game, p(1, 0))).toEqual([{ type: 'find', at: p(1, 0), find: 'coin' }]);
+    expect(game.player).toEqual(p(1, 0));
+  });
   it('raises power on the fourth whetstone, wherever you are', () => {
-    const game = createGame('@ * * * * s', { hero: armed() });
-    for (let x = 1; x <= 3; x++) step(game, p(x, 0));
+    const game = createGame('* * *\n* @ s', { hero: armed() });
+    const open = (at: Point) => [...step(game, at), ...step(game, at)];
+    for (const at of [p(0, 0), p(1, 0), p(2, 0)]) open(at);
     expect([game.hero.whetstones, game.hero.power]).toEqual([3, 1]);
-    expect(step(game, p(4, 0))).toEqual([
-      { type: 'find', at: p(4, 0), find: 'whetstone' },
-      { type: 'powerUp', at: p(4, 0), power: 2 },
+    expect(open(p(0, 1)).slice(-2)).toEqual([
+      { type: 'find', at: p(0, 1), find: 'whetstone' },
+      { type: 'powerUp', at: p(0, 1), power: 2 },
     ]);
-    expect(tileAt(game, p(4, 0))?.find).toBeUndefined();
-    expect(step(game, p(3, 0))).toEqual([]);
+    expect(tileAt(game, p(0, 1))?.find).toBeUndefined();
   });
   it('adds a filled heart on the fourth heart piece', () => {
-    const game = createGame('@ + + + +');
+    const game = createGame('+ + +\n+ @ ,');
     game.hero.health = 1;
-    for (let x = 1; x <= 3; x++) step(game, p(x, 0));
+    const open = (at: Point) => [...step(game, at), ...step(game, at)];
+    for (const at of [p(0, 0), p(1, 0), p(2, 0)]) open(at);
     expect(game.hero.health).toBe(1);
-    expect(step(game, p(4, 0))).toContainEqual({ type: 'heartUp', at: p(4, 0), maxHealth: 4 });
+    expect(open(p(0, 1))).toContainEqual({ type: 'heartUp', at: p(0, 1), maxHealth: 4 });
     expect([game.hero.health, game.hero.maxHealth]).toEqual([4, 4]);
   });
   it('keeps pieces towards the next upgrade when a chief drops a whole one', () => {

@@ -158,6 +158,42 @@ const findSprites: Record<Find, { rows: string[]; palette: Record<string, string
   spectacles: { rows: spectacles, palette: { f: '#c9a35a', l: '#cfe3ea' } },
   ring: { rows: ring, palette: { r: '#e1bf76', l: '#9fd4e0' } },
 };
+// A chest that has been opened shows its dark, empty inside under the raised lid.
+const chests = {
+  closed: [
+    ' wwwwwwww ',
+    'wllllllllw',
+    'wwwwwwwwww',
+    'bbbbyybbbb',
+    'wwwwyywwww',
+    'wllllllllw',
+    'wllllllllw',
+    'dddddddddd',
+  ],
+  open: [
+    ' wwwwwwww ',
+    'wllllllllw',
+    'wkkkkkkkkw',
+    'wkkkkkkkkw',
+    'bbbbbbbbbb',
+    'wllllllllw',
+    'wllllllllw',
+    'dddddddddd',
+  ],
+};
+const chestColors = {
+  w: '#7a5530',
+  l: '#a8784a',
+  b: '#c9a35a',
+  y: '#e8ce95',
+  d: '#4a3420',
+  k: '#1e1610',
+};
+
+function drawChest(ctx: CanvasRenderingContext2D, open: boolean, x: number, y: number) {
+  sprite(ctx, chests[open ? 'open' : 'closed'], chestColors, x + 9, y + 21);
+}
+
 const bag = {
   rows: [
     '   dddd   ',
@@ -1119,13 +1155,14 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
       continue;
     }
     if (tile.monster) drawMonster(ctx, tile.monster, x, y, { remains: true });
-    if (tile.find) drawFind(ctx, tile.find, x, y);
+    if (tile.chest) drawChest(ctx, !tile.find, x, y);
+    else if (tile.find) drawFind(ctx, tile.find, x, y);
     const number = numberAt(game, tile);
     if (number) {
       ctx.fillStyle = colors[Math.min(number, 5)];
       ctx.font = '600 20px monospace';
-      // A clue sits above the hero or a find on its tile.
-      const raised = same(tile, game.player) || tile.find;
+      // A clue sits above the hero, a find or a chest on its tile.
+      const raised = same(tile, game.player) || tile.find || tile.chest;
       ctx.fillText(String(number), x + 24, raised ? y + 13 : y + 25);
     }
   }

@@ -19,7 +19,7 @@ Hidden finds, chief drops, quests and the shop are the current upgrade sources. 
 - Clues change. A kill lowers every clue around it, so a number on screen is always the current one, not a fixed fact from when it was revealed.
 - Every revealed floor tile shows its clue, including village ground and exits, unless someone is standing there. Zeros are drawn blank.
 - A living monster's tile shows no clue. A dead monster leaves faint remains and shows its clue like any other tile.
-- Finds, people and exits add nothing to clues.
+- Finds, chests, people and exits add nothing to clues.
 - Visible chiefs do add to clues, so their level has to be subtracted when reading around them.
 
 ### Revealing
@@ -29,7 +29,8 @@ Hidden finds, chief drops, quests and the shop are the current upgrade sources. 
 - A kill that turns a revealed clue into zero floods from that tile too.
 - **Floods pass through any floor, not just hidden floor.** A zero on the village lawn flows through an open fence gap into the tall grass, which is why each grass entrance holds a slime.
 - Floods ignore the diagonal movement rule, so they can reveal ground you cannot walk to yet.
-- A flood reveals finds but does not collect them. You pick one up by walking onto it.
+- A flood reveals coins but does not collect them. You pick one up by walking onto it.
+- Items come in chests, which start hidden and never hide a monster. Stepping into a hidden chest uncovers its tile, flood included, without moving you or opening it. Tapping it again opens it.
 - Walls, trees, fences and water are always visible and never flood.
 
 ### Moving and fighting
@@ -40,6 +41,7 @@ Hidden finds, chief drops, quests and the shop are the current upgrade sources. 
 - A hidden stronger one costs `level × (level − power)` hearts but survives. You stay put. Its clue stays hidden, neighbouring clues do not change, and no flood, drop or victory occurs. If that takes your last heart you lose.
 - A visible stronger monster blocks attacks without damage or any game-state change. The hero briefly shakes. No required progression may depend on guesses or damage, including attacks used merely to reveal a monster.
 - Auto-walk only crosses known ground, and tapping a hidden tile beside known ground walks there and steps in.
+- Chests block walking like people do, opened or not. A chest must not cut off a route.
 - Notes are the player's own marks on hidden tiles, levels 1–5 and "danger". They never block movement or affect the rules.
 - Game over offers Continue, which wakes you at home with all hearts and the world unchanged. Maps must never rely on it: dying counts as failure.
 
@@ -91,13 +93,13 @@ This test world holds 8 whetstones and 6 heart pieces, counting two whetstones a
 
 The eighth whetstone is in the wood at `(18, 1)`, in the north-east pocket. Both bounds and groups reach it at power 2 in the tested orders. It supplies the missing stone before either level-3 chief is defeated. The cave chief keeps its greatstone, so completing the demo can now reach power 4. This extra reward was agreed with Aslak to remove the dependency on taking damage; the monster roster still ends at level 3.
 
-## Hints for hidden finds
+## Hints for finds
 
-Ground finds start hidden. Prefer positions that become visible before the player steps onto them: a nearby zero flood or a free kill can expose the item and create a reason to approach it. This applies to pieces, keepsakes and coins on the ground, not rewards handed over by people or dropped by chiefs. The item must not be drawn through a covered tile.
+Whetstones, heart pieces and keepsakes on a map are chests; coins lie loose. Both start hidden and are never drawn through a covered tile. Keep chests off chokepoints, because they block walking.
 
-A zero on the item tile is not enough by itself: entering that hidden tile reveals and collects it in one action. Check that another action uncovers it first. A numbered tile on a flood boundary can work well too. Keep the intended access power and safe route intact; exceptions should be explained in the authoring note rather than changing rewards to satisfy a metric.
+Prefer positions that become visible before the player steps onto them: a nearby zero flood or a free kill can expose the find and create a reason to approach it. Stepping into a hidden chest only uncovers it, but a coin is collected on the step that reveals it, so check that another action uncovers a coin first. A numbered tile on a flood boundary can work well too. Keep the intended access power and safe route intact; exceptions should be explained in the authoring note rather than changing rewards to satisfy a metric.
 
-Before the reveal, give the player a reason to investigate:
+Give the player a reason to investigate:
 
 - **Clues:** a ring of bats around an empty centre makes the numbers climb around nothing. Hilde's ring and a heart piece sit in rings today, and Hilde at the inn hints at them.
 - **Terrain:** a gap in the trees, a walled pocket, an island you cannot reach yet.
@@ -113,7 +115,7 @@ Before the reveal, give the player a reason to investigate:
 
 `src/game/solver.ts` separates readable observations from deduction and records the supporting clues and bounds. The generator still uses the bounds profile so adding stronger reasoning does not silently change its scoring. `highestHiddenLevel` is a public roster limit, not a fact inferred from hidden map contents; update it with the player-facing legend when introducing stronger hidden monsters.
 
-`src/game/puzzle-fixtures.ts` contains small authored examples, including shared groups, changing clues after kills and deliberately unresolved frontiers. `src/game/survey.ts` follows connected routes and revisits persistent maps as evidence and power change. The report includes each hidden move's proof, each find's reveal, reach and collection power, and whether each collected ground find was already revealed before the pickup step, using zero-based map coordinates and row-major tile IDs in proofs.
+`src/game/puzzle-fixtures.ts` contains small authored examples, including shared groups, changing clues after kills and deliberately unresolved frontiers. `src/game/survey.ts` follows connected routes and revisits persistent maps as evidence and power change. The report includes each hidden move's proof, each find's reveal, reach and collection power, and whether each collected coin was already revealed before the pickup step, using zero-based map coordinates and row-major tile IDs in proofs.
 
 ## Known weaknesses
 

@@ -43,7 +43,7 @@ beforeEach(() => {
     '# # # # # #',
   ].join('\n');
   // Its reciprocal exit leads back to the wood, so this tests travel beyond a village-centred star.
-  areas.cave.map = 'w , * * * *';
+  areas.cave.map = 'w , , ,\n* * * *';
 });
 
 // These surveys start in the village with a sword, rather than beside the bed at home.
@@ -55,9 +55,9 @@ function inVillage(): World {
 
 describe('connected world survey', () => {
   it.each([
-    { map: '@ +', revealedBeforePickup: true },
-    { map: '@ s +', revealedBeforePickup: true },
-    { map: '@ +\ns #', revealedBeforePickup: false },
+    { map: '@ $', revealedBeforePickup: true },
+    { map: '@ s $', revealedBeforePickup: true },
+    { map: '@ $\ns #', revealedBeforePickup: false },
   ])('records ground pickup visibility for $map', ({ map, revealedBeforePickup }) => {
     areas.village.map = map;
     const report = surveyWorld({ profile: 'groups' }, inVillage());
@@ -65,7 +65,7 @@ describe('connected world survey', () => {
     expect(pickups).toHaveLength(1);
     expect(pickups[0]).toMatchObject({
       power: 1,
-      groundFind: { find: 'heartPiece', revealedBeforePickup },
+      groundFind: { find: 'coin', revealedBeforePickup },
     });
   });
 
@@ -101,7 +101,6 @@ describe('connected world survey', () => {
       report.access.find((access) => access.area === 'wood' && access.at.y === 4),
     ).toMatchObject({
       revealed: 2,
-      reachable: 2,
       collected: 2,
     });
     expect(
@@ -137,7 +136,7 @@ describe('connected world survey', () => {
   });
 
   it('returns through an exit to explore its other side without needing a power increase', () => {
-    areas.village.map = '@ w +';
+    areas.village.map = '@ w $';
     areas.wood.map = '< ,';
     const report = surveyWorld({ profile: 'groups' }, inVillage());
     expect(
@@ -204,8 +203,19 @@ describe('connected world survey', () => {
     expect(hidden.world.game.tiles[1].monster?.alive).toBe(true);
   });
 
+  it('uncovers a hidden chest on one step and opens it on the next', () => {
+    areas.village.map = '# + #\n# @ s';
+    const report = surveyWorld({ profile: 'groups' }, inVillage());
+    expect(report.actions.slice(0, 2)).toMatchObject([
+      { kind: 'deduction', events: [{ type: 'uncover' }] },
+      { kind: 'collect', events: [{ type: 'find', find: 'heartPiece' }] },
+    ]);
+    expect(report.actions.some((action) => action.groundFind)).toBe(false);
+    expect(report.world.game.hero.heartPieces).toBe(1);
+  });
+
   it('stalls on a genuinely ambiguous frontier instead of gambling', () => {
-    areas.village.map = '# b + #\n# @ # #';
+    areas.village.map = '# b $ #\n# @ # #';
     const report = surveyWorld({ profile: 'groups' }, inVillage());
     expect(report.actions).toEqual([]);
     expect(report.world.game.hero.health).toBe(3);

@@ -202,6 +202,7 @@ export function reachableTiles(game: Game) {
         next.revealed &&
         !next.monster?.alive &&
         !next.person &&
+        !next.chest &&
         !next.exit &&
         canStep(game, tile, next)
       )

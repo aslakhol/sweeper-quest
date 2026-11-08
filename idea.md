@@ -49,7 +49,7 @@ Power stays with the character and never resets. The sword gives the first point
 
 Level-ups are rare, with a lot of game between them. Keep the ladder short, around power 5 or 6, so each one is an event and clues stay small. Heart pieces, tools and secrets set the everyday rhythm of rewards. Each power needs a large part of the world designed for it.
 
-The world holds more pieces than you need, so you can move on without finding everything. Ground finds start hidden, but normally become visible before pickup. Prefer placements uncovered by a zero flood or a free kill that opens nearby ground, so the player discovers an item and then chooses to walk over to it. Stepping onto a hidden item still collects it immediately; this is a placement preference, not a separate inspection action or visibility through covered tiles. Maps hint at them with terrain, with rumours from people, and with clues: a ring of monsters around an empty spot makes the numbers climb and invites a look.
+The world holds more pieces than you need, so you can move on without finding everything. Items come in chests, which start hidden like any tile. A chest never hides a monster and blocks walking. Stepping into a hidden chest uncovers it without opening it, so the player always sees a chest before tapping it again to open it. Prefer placements uncovered by a zero flood or a free kill, so the player spots a chest and then walks over to it. Coins lie loose on the ground instead, and stepping onto a hidden coin collects it immediately. Maps hint at finds with terrain, with rumours from people, and with clues: a ring of monsters around an empty spot makes the numbers climb and invites a look.
 
 Maps open in layers. At each power, part of the map can be proven free from the clues; the rest waits until you are stronger. A clue at or below your power proves all its neighbours safe, so a new level reopens places you left behind without any extra mechanic. Weaker monsters still add to clues, and killing them cleans up the sums. Check this across the whole world: being stuck in one region is fine, being stuck everywhere is not.
 
@@ -82,7 +82,7 @@ Terrain and landmarks are hand-drawn. Monsters and finds can be generated and tu
 
 ### Shop and items
 
-Bram's shop in the village sells one whetstone for five coins. Coins lie hidden in the world like other finds and are picked up by walking onto them, so they cost no extra taps. The whetstone sits on Bram's counter; walking up to it asks whether to buy it, with Yes and No. A thumb-friendly bottom sheet can come when the shop sells more than one thing. A wider economy still needs deliberate design, including earnings and farm balance. Do not bring back mandatory corpse-looting taps by default.
+Bram's shop in the village sells one whetstone for five coins. Coins lie hidden on the ground and are picked up by walking onto them, so they cost no extra taps. The whetstone sits on Bram's counter; walking up to it asks whether to buy it, with Yes and No. A thumb-friendly bottom sheet can come when the shop sells more than one thing. A wider economy still needs deliberate design, including earnings and farm balance. Do not bring back mandatory corpse-looting taps by default.
 
 The original shop is a proposal to revisit, not settled balance:
 

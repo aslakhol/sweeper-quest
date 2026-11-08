@@ -46,8 +46,11 @@ export type Tile = Point & {
   revealed: boolean;
   note?: Note;
   monster?: Monster;
-  // Lies hidden on the tile until someone walks onto it.
+  // Lies hidden on the tile until someone walks onto it, unless it is in a chest.
   find?: Find;
+  // Holds its find, if not yet opened. A chest never hides a monster and blocks walking.
+  // Stepping into a hidden one only uncovers it, so it is always seen before it is opened.
+  chest?: boolean;
   // A find on display that walking up to offers to sell.
   price?: number;
   // The map that stepping onto this tile leads to.
@@ -142,6 +145,7 @@ export type GameEvent =
   | { type: 'talk'; person: Person; lines: readonly string[] }
   | { type: 'heal'; at: Point; amount: number }
   | { type: 'find'; at: Point; find: Find }
+  | { type: 'uncover'; at: Point }
   | { type: 'offer'; at: Point; find: Find; price: number }
   | { type: 'ask'; at: Point; person: Person; question: string }
   | { type: 'lesson'; area: string }
@@ -251,8 +255,17 @@ export function createGame(
       }
       const find =
         legend.finds?.[symbol] ?? (isKey(findSymbols, symbol) ? findSymbols[symbol] : undefined);
+      // Coins lie loose on the ground; every other find comes in a chest.
       if (find)
-        return { x, y, terrain: 'floor', look: legend.floor ?? 'grass', revealed: false, find };
+        return {
+          x,
+          y,
+          terrain: 'floor',
+          look: legend.floor ?? 'grass',
+          revealed: false,
+          find,
+          chest: find !== 'coin',
+        };
       if (symbol === '.' && legend.floor)
         return { x, y, terrain: 'floor', look: legend.floor, revealed: false };
       if (isKey(grounds, symbol)) return { x, y, ...grounds[symbol] };
@@ -487,6 +500,16 @@ export function buy(game: Game, at: Point): GameEvent[] {
   delete tile.find;
   return events;
 }
+function openChest(game: Game, at: Point, chest: Tile): GameEvent[] {
+  if (!chest.revealed) {
+    revealStep(game, at);
+    return [{ type: 'uncover', at }];
+  }
+  if (!chest.find) return [];
+  const events = collect(game, at, chest.find);
+  delete chest.find;
+  return events;
+}
 // Hidden stronger monsters hurt and reveal themselves; known ones block without a fight.
 export function step(game: Game, target: Point): GameEvent[] {
   if (game.lost) return [];
@@ -496,6 +519,7 @@ export function step(game: Game, target: Point): GameEvent[] {
     return [{ type: 'offer', at: target, find: tile.find, price: tile.price }];
   if (!tile || !canStep(game, game.player, target)) return [];
   if (tile.person) return talk(game, target, tile.person);
+  if (tile.chest) return openChest(game, { x: target.x, y: target.y }, tile);
   const events: GameEvent[] = [];
   if (tile.monster?.alive) {
     if (tile.revealed && tile.monster.level > game.hero.power)
@@ -541,7 +565,7 @@ export function step(game: Game, target: Point): GameEvent[] {
 
 // A single breadth-first search visits only known, unoccupied floor tiles.
 // Unknown contents never influence the route or the stopping position.
-// A hidden target or a person that borders reachable known ground is stepped into at the end
+// A hidden target, a person or a chest that borders reachable known ground is stepped into at the end
 // of the walk; otherwise the walk stops on the known tile closest to a hidden target.
 export function planWalk(game: Game, target: Point): Point[] | null {
   const targetTile = tileAt(game, target);
@@ -561,7 +585,8 @@ export function planWalk(game: Game, target: Point): Point[] | null {
     if (
       ware
         ? distance(current, target) === 1
-        : (!targetTile.revealed || targetTile.person) && canStep(game, current, target)
+        : (!targetTile.revealed || targetTile.person || targetTile.chest) &&
+          canStep(game, current, target)
     ) {
       closest = current;
       enter = true;
@@ -579,6 +604,7 @@ export function planWalk(game: Game, target: Point): Point[] | null {
         !next.revealed ||
         next.monster?.alive ||
         next.person ||
+        next.chest ||
         // Walking over an exit would leave the map partway.
         (next.exit && !same(next, target))
       )
