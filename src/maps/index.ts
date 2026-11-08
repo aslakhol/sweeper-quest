@@ -7,7 +7,6 @@ import inn from './inn.txt?raw';
 import lesson1 from './lesson-1.txt?raw';
 import lesson2 from './lesson-2.txt?raw';
 import lesson3 from './lesson-3.txt?raw';
-import lesson4 from './lesson-4.txt?raw';
 import shop from './shop.txt?raw';
 import village from './village.txt?raw';
 import wood from './wood.txt?raw';
@@ -175,14 +174,6 @@ export const areas = {
             {
               area: 'lesson-3',
               lines: [
-                'Now there are three.',
-                'A blank tile has no monsters next to it, and opens up the ground around it.',
-                'Defeating a monster lowers the numbers around it.',
-              ],
-            },
-            {
-              area: 'lesson-4',
-              lines: [
                 'This time a bat hides among the slimes.',
                 'A bat is level 2. Step on it and it will hurt you.',
                 'Next to a 1, nothing can be stronger than you.',
@@ -210,7 +201,6 @@ export const areas = {
   'lesson-1': lesson(lesson1),
   'lesson-2': lesson(lesson2),
   'lesson-3': lesson(lesson3),
-  'lesson-4': lesson(lesson4),
   shop: {
     name: 'Shop',
     map: shop,

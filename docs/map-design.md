@@ -87,7 +87,7 @@ The world test also checks that:
 - the village and its dojo alone cannot give you power 2, so being stuck sends you elsewhere
 - every find and chief can be reached without a guess or any damage, by touring all maps repeatedly
 
-The tour starts beside the bed at home, at power 0. It agrees to Doctor Madeleine's training and wins all four lessons with the same deduction rules, so each lesson is checked to be winnable without guesses or damage.
+The tour starts beside the bed at home, at power 0. It agrees to Doctor Madeleine's training and wins all three lessons with the same deduction rules, so each lesson is checked to be winnable without guesses or damage.
 
 This test world holds 8 whetstones and 6 heart pieces, counting two whetstones and a heart piece that villagers give as quest rewards and the whetstone Bram sells. Seven coins are hidden in the village, wood and cave, two more than the whetstone costs. It compresses a long stretch of play into a short test. Real maps should hold far fewer.
 

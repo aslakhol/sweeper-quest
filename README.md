@@ -36,7 +36,7 @@ Vercel hosts the `sweeper-quest` project in the personal `aslakhols-projects` ac
 
 ## Play
 
-- A new game starts at home without a sword, at power 0, where even a slime hurts. Mum sends you to the dojo in the south-east of the village. Doctor Madeleine asks whether you will help, hands over a sword when you say yes, and teaches the rules in four short lessons. Each lesson is won by defeating every monster you are strong enough for, and puts you back beside her for the next.
+- A new game starts at home without a sword, at power 0, where even a slime hurts. Mum sends you to the dojo in the south-east of the village. Doctor Madeleine asks whether you will help, hands over a sword when you say yes, and teaches the rules in three short lessons. Each lesson is won by defeating every monster you are strong enough for, and puts you back beside her for the next.
 - Tap a neighboring tile to move or fight. Arrow keys and WASD work too. Combine directions for diagonals, or use Q/E/Z/C.
 - Numbers sum the levels of living monsters in the eight neighboring tiles. Zeros are blank and open their whole connected empty area plus its bordering numbers.
 - A monster at or below your power dies for free and you enter its tile. A stronger one is revealed but survives and blocks the way. Its clue stays hidden, and you lose its level times the levels it has over you in hearts. Return with enough power to defeat it. You start with 3 hearts. Finishing a conversation with Mum at home (the north-east house) restores them all.

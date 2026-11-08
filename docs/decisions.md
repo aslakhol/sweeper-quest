@@ -84,7 +84,7 @@ Items scattered on the ground did not feel like rewards. Whetstones, heart piece
 
 ## Tutorial start
 
-A new game wakes up at home. Mum sends you to Doctor Madeleine's dojo, where she asks for help against the goblin chiefs and hands over a sword when you agree. Four short lessons teach the clue rules before the open world.
+A new game wakes up at home. Mum sends you to Doctor Madeleine's dojo, where she asks for help against the goblin chiefs and hands over a sword when you agree. Three short lessons teach the clue rules before the open world.
 
 - **No sword means power 0.** The sword gives the first point of power, and whetstones add to it. Leaving the village before training is allowed but dangerous, because even a slime hurts. No extra lock is needed.
 - **Lessons are separate maps without exits.** A lesson starts afresh each time on its `@`, and is won by defeating every monster at or below your power. That lets a lesson include a stronger monster to leave alone. Winning puts you back beside her for the next one.

@@ -1,7 +1,0 @@
-W W W W W W W W W
-W . . . . . . . W
-W . b . . . s . W
-W . . . . . . . W
-W . s . . . . . W
-W . . . . . . . W
-W W W W @ W W W W
