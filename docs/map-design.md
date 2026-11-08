@@ -8,7 +8,7 @@ Before authoring or regenerating maps, read [puzzle design](puzzle-design.md). I
 
 You walk a connected world of hidden tiles. Monsters hide on tiles and sum into clues. Kills give nothing. You grow only by finding hidden items: four whetstones raise your power, four heart pieces add a heart. Level-ups should be rare, so most play happens at one fixed power. Maps are not boards to clear; they are places you explore, get stuck in, leave, and return to stronger.
 
-Hidden finds and chief drops are the current upgrade sources. As the world grows, quests and shops may also provide items and power. Key reward placement and acquisition remain collaborative with Aslak. A region may have few or no power-up items and depend on growth elsewhere to reveal another door, reward or quest objective on a later visit. The test world's reward density and layer ranges below are prototype measurements, not quotas for future regions.
+Hidden finds, chief drops and quests are the current upgrade sources. A quest giver asks for a keepsake lost out in the world and hands over a reward when you bring it back. As the world grows, shops may also provide items and power. Key reward placement and acquisition remain collaborative with Aslak. A region may have few or no power-up items and depend on growth elsewhere to reveal another door, reward or quest objective on a later visit. The test world's reward density and layer ranges below are prototype measurements, not quotas for future regions.
 
 ## Exact rules
 
@@ -84,13 +84,13 @@ The world test also checks that:
 - the village alone cannot give you power 2, so being stuck sends you elsewhere
 - every find and chief can be reached without a guess, a hit from a hidden monster, or a death, by touring all maps repeatedly
 
-This test world holds 7 whetstones and 6 heart pieces, because it compresses a long stretch of play into a short test. Real maps should hold far fewer.
+This test world holds 7 whetstones and 6 heart pieces, counting two whetstones and a heart piece that villagers give as quest rewards. It compresses a long stretch of play into a short test. Real maps should hold far fewer.
 
 ## Hints for hidden finds
 
 Most finds are hidden and should stay that way. A player needs a reason to look, without being shown the answer:
 
-- **Clues:** a ring of bats around an empty centre makes the numbers climb around nothing. Two heart pieces sit in rings today, and Hilde at the inn hints at them.
+- **Clues:** a ring of bats around an empty centre makes the numbers climb around nothing. Hilde's ring and a heart piece sit in rings today, and Hilde at the inn hints at them.
 - **Terrain:** a gap in the trees, a walled pocket, an island you cannot reach yet.
 - **People:** rumours about something out in the world.
 

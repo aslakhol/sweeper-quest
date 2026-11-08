@@ -151,6 +151,9 @@ const findNames: Record<Find, string> = {
   greatstone: 'Greatstone',
   heartPiece: 'Heart piece',
   heart: 'Heart',
+  marble: 'Lucky marble',
+  spectacles: 'Spectacles',
+  ring: 'Ring',
 };
 function changeMap(): void {
   game = world.game;
@@ -159,7 +162,7 @@ function changeMap(): void {
   status.textContent = areas[world.area].name;
 }
 function handleEvents(events: GameEvent[]): void {
-  for (const event of events) {
+  for (const [index, event] of events.entries()) {
     switch (event.type) {
       case 'fight':
         animate(event.damage ? 'hurt' : 'hit');
@@ -191,8 +194,9 @@ function handleEvents(events: GameEvent[]): void {
         changeMap();
         break;
       case 'talk':
-        talk(event.person);
-        break;
+        // A reward is handed over once they have finished speaking.
+        talk(event.person, event.lines, events.slice(index + 1));
+        return;
       case 'heal':
         announce(event.at, 'Healed!', '#a5c97c');
         status.textContent = `Hearts restored: +${event.amount}.`;
@@ -218,14 +222,16 @@ function handleEvents(events: GameEvent[]): void {
   if (events.length) stop();
 }
 const talkDialog = element<HTMLDialogElement>('#talk');
-let conversation: { person: Person; lines: readonly string[]; line: number } | undefined;
+let conversation:
+  | { person: Person; lines: readonly string[]; line: number; after: GameEvent[] }
+  | undefined;
 function showLine(): void {
   if (!conversation) return;
   element('#talk-name').textContent = conversation.person.name;
   element('#talk-line').textContent = conversation.lines[conversation.line];
 }
-function talk(person: Person, lines = person.lines): void {
-  conversation = { person, lines, line: 0 };
+function talk(person: Person, lines: readonly string[], after: GameEvent[] = []): void {
+  conversation = { person, lines, line: 0, after };
   showLine();
   openDialog('#talk');
 }
@@ -237,6 +243,7 @@ talkDialog.addEventListener('click', () => {
   else talkDialog.close();
 });
 talkDialog.addEventListener('close', () => {
+  if (conversation) handleEvents(conversation.after);
   if (conversation?.person.heals) handleEvents(heal(game));
   conversation = undefined;
   updateHud();

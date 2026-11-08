@@ -35,7 +35,7 @@ export type Access = {
 export type SurveyAction = {
   area: AreaId;
   at: Point;
-  kind: 'deduction' | 'collect' | 'fight' | 'heal' | 'travel' | 'walk';
+  kind: 'deduction' | 'collect' | 'quest' | 'fight' | 'heal' | 'travel' | 'walk';
   power: number;
   health: number;
   revealed: number;
@@ -206,6 +206,13 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
       );
       if (healer) {
         walk(healer, 'heal');
+        continue;
+      }
+      const questGiver = candidates.find(
+        (tile) => tile.person?.quest && game.hero.carrying.includes(tile.person.quest.wants),
+      );
+      if (questGiver) {
+        walk(questGiver, 'quest');
         continue;
       }
       const find = candidates.find(

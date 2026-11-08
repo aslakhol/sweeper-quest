@@ -1,4 +1,5 @@
 import {
+  type Find,
   type Game,
   type Monster,
   numberAt,
@@ -106,6 +107,16 @@ const whetstone = [
   ' dds    ',
 ];
 const heartPiece = ['rrr     ', 'rlrr    ', 'rrrrr   ', ' rrrrr  ', '  rrr   ', '   r    '];
+const marble = ['  bbb  ', ' bllbb ', 'bllbbbd', 'bbbbbbd', ' bbbbd ', '  ddd  '];
+const spectacles = [' ff    ff ', 'fllf  fllf', 'flllfflllf', 'fllf  fllf', ' ff    ff '];
+const ring = ['  ll  ', ' rllr ', 'r    r', 'r    r', 'r    r', ' rrrr '];
+const findSprites: Partial<Record<Find, { rows: string[]; palette: Record<string, string> }>> = {
+  whetstone: { rows: whetstone, palette: { s: '#8c9aa0', l: '#d5dde0', d: '#566268' } },
+  heartPiece: { rows: heartPiece, palette: { r: '#e0655f', l: '#f4b5a8' } },
+  marble: { rows: marble, palette: { b: '#7aa0d8', l: '#d8e6f4', d: '#4a6a9a' } },
+  spectacles: { rows: spectacles, palette: { f: '#c9a35a', l: '#cfe3ea' } },
+  ring: { rows: ring, palette: { r: '#e1bf76', l: '#9fd4e0' } },
+};
 const slime = [
   '   ggg   ',
   ' ggggggg ',
@@ -199,15 +210,9 @@ function drawHero(ctx: CanvasRenderingContext2D, x: number, y: number) {
   );
 }
 
-function drawFind(
-  ctx: CanvasRenderingContext2D,
-  find: 'whetstone' | 'heartPiece',
-  x: number,
-  y: number,
-) {
-  if (find === 'whetstone')
-    sprite(ctx, whetstone, { s: '#8c9aa0', l: '#d5dde0', d: '#566268' }, x + 13, y + 22, 3);
-  else sprite(ctx, heartPiece, { r: '#e0655f', l: '#f4b5a8' }, x + 13, y + 22, 3);
+function drawFind(ctx: CanvasRenderingContext2D, find: Find, x: number, y: number) {
+  const found = findSprites[find];
+  if (found) sprite(ctx, found.rows, found.palette, x + 24 - found.rows[0].length * 1.5, y + 22);
 }
 
 function rects(
@@ -505,7 +510,7 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
       continue;
     }
     if (tile.monster) drawMonster(ctx, tile.monster, x, y, { remains: true });
-    if (tile.find === 'whetstone' || tile.find === 'heartPiece') drawFind(ctx, tile.find, x, y);
+    if (tile.find) drawFind(ctx, tile.find, x, y);
     const number = numberAt(game, tile);
     if (number) {
       ctx.fillStyle = colors[Math.min(number, 5)];

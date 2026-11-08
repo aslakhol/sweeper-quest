@@ -17,6 +17,6 @@ T . . . . s ~ ~ . . . . . . . . . . . T
 T s . s . . s . . . . T T . . . T g * T
 T s . . T . . . . b . T . . . . T g b T
 T . . s T . . . b . . . b . . . . g . T
-T . . b b g . * T T . . g b . g g b . T
+T . . b b g . ? T T . . g b . g g b . T
 T . b . . s g . . . b . . . . g g + . T
 T T T T T T T T T T T T T T T T T T T T

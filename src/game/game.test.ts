@@ -215,23 +215,45 @@ describe('routes and notes', () => {
     const game = createGame('@ , , a', { legend: { people: { a: person } } });
     expect(planWalk(game, p(3, 0))).toEqual([p(1, 0), p(2, 0), p(3, 0)]);
     game.player = p(2, 0);
-    expect(step(game, p(3, 0))).toEqual([{ type: 'talk', person }]);
+    expect(step(game, p(3, 0))).toEqual([{ type: 'talk', person, lines: ['Hi'] }]);
     expect(game.player).toEqual(p(2, 0));
   });
-  it('restores every heart only once the conversation is over', () => {
+  it('rewards bringing a person what they lost, once', () => {
+    const pip = {
+      name: 'Pip',
+      lines: ['Find my marble?'],
+      colors: { hair: '#000', shirt: '#fff' },
+      quest: { wants: 'marble', reward: 'whetstone', thanks: ['Thanks!'], after: ['Hi again'] },
+    } as const;
+    const game = createGame('p @ ?', { legend: { people: { p: pip }, finds: { '?': 'marble' } } });
+    expect(step(game, p(0, 0))).toEqual([{ type: 'talk', person: pip, lines: pip.lines }]);
+    expect(step(game, p(2, 0))).toEqual([{ type: 'find', at: p(2, 0), find: 'marble' }]);
+    expect(game.hero.carrying).toEqual(['marble']);
+    game.player = p(1, 0);
+    expect(step(game, p(0, 0))).toEqual([
+      { type: 'talk', person: pip, lines: ['Thanks!'] },
+      { type: 'find', at: p(0, 0), find: 'whetstone' },
+    ]);
+    expect(game.hero).toMatchObject({ whetstones: 1, carrying: [], returned: ['marble'] });
+    expect(step(game, p(0, 0))).toEqual([{ type: 'talk', person: pip, lines: ['Hi again'] }]);
+    expect(game.hero.whetstones).toBe(1);
+  });
+  it('restores every heart only once the conversation is over, then has nothing to heal', () => {
     const mum = {
       name: 'Mum',
       lines: ['Eat up'],
       colors: { hair: '#000', shirt: '#fff' },
       heals: true,
+      fullHealthLines: ['Not a scratch'],
     };
     const game = createGame('@ m', { legend: { people: { m: mum } } });
     game.hero.health = 1;
-    expect(step(game, p(1, 0))).toEqual([{ type: 'talk', person: mum }]);
+    expect(step(game, p(1, 0))).toEqual([{ type: 'talk', person: mum, lines: ['Eat up'] }]);
     expect(game.hero.health).toBe(1);
     expect(heal(game)).toEqual([{ type: 'heal', at: p(0, 0), amount: 2 }]);
     expect(game.hero.health).toBe(3);
     expect(heal(game)).toEqual([]);
+    expect(step(game, p(1, 0))).toEqual([{ type: 'talk', person: mum, lines: ['Not a scratch'] }]);
   });
   it('does not route through a visible living monster', () => {
     const game = createGame('@ s .');

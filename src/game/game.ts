@@ -7,7 +7,9 @@ export type Monster = {
   goal: boolean;
   drop?: Find;
 };
-export type Find = 'whetstone' | 'greatstone' | 'heartPiece' | 'heart';
+// Things villagers have lost out in the world. Bringing one back earns their reward.
+export type Keepsake = 'marble' | 'spectacles' | 'ring';
+export type Find = 'whetstone' | 'greatstone' | 'heartPiece' | 'heart' | Keepsake;
 export type Tile = Point & {
   terrain: 'floor' | 'wall' | 'water';
   // How the tile is drawn. Only terrain affects the rules.
@@ -45,8 +47,17 @@ export type Person = {
   colors: { hair: string; shirt: string };
   // Finishing a conversation with them restores every heart.
   heals?: boolean;
+  // What they say instead when you already have every heart.
+  fullHealthLines?: readonly string[];
   // What they say when you wake up after a defeat.
   wakeLines?: readonly string[];
+  quest?: {
+    wants: Keepsake;
+    reward: Find;
+    thanks: readonly string[];
+    // What they say once the quest is done, instead of their usual lines.
+    after: readonly string[];
+  };
 };
 // Symbols a particular map adds on top of the shared ones.
 export type Legend = {
@@ -54,6 +65,8 @@ export type Legend = {
   floor?: Tile['look'];
   exits?: Record<string, { to: string; look: Tile['look'] }>;
   people?: Record<string, Person>;
+  // Finds that belong to this map, such as a villager's keepsake.
+  finds?: Record<string, Find>;
 };
 // The hero's stats travel with the player from map to map.
 export type Hero = {
@@ -62,6 +75,8 @@ export type Hero = {
   power: number;
   whetstones: number;
   heartPieces: number;
+  carrying: Keepsake[];
+  returned: Keepsake[];
 };
 export type Game = {
   width: number;
@@ -78,7 +93,7 @@ export type GameEvent =
   | { type: 'death' }
   | { type: 'win' }
   | { type: 'travel'; to: string }
-  | { type: 'talk'; person: Person }
+  | { type: 'talk'; person: Person; lines: readonly string[] }
   | { type: 'heal'; at: Point; amount: number }
   | { type: 'find'; at: Point; find: Find }
   | { type: 'powerUp'; at: Point; power: number }
@@ -126,6 +141,8 @@ export function createHero(): Hero {
     power: 1,
     whetstones: 0,
     heartPieces: 0,
+    carrying: [],
+    returned: [],
   };
 }
 
@@ -165,15 +182,10 @@ export function createGame(
           monster: { ...monster, alive: true },
         };
       }
-      if (isKey(findSymbols, symbol))
-        return {
-          x,
-          y,
-          terrain: 'floor',
-          look: legend.floor ?? 'grass',
-          revealed: false,
-          find: findSymbols[symbol],
-        };
+      const find =
+        legend.finds?.[symbol] ?? (isKey(findSymbols, symbol) ? findSymbols[symbol] : undefined);
+      if (find)
+        return { x, y, terrain: 'floor', look: legend.floor ?? 'grass', revealed: false, find };
       if (symbol === '.' && legend.floor)
         return { x, y, terrain: 'floor', look: legend.floor, revealed: false };
       if (isKey(grounds, symbol)) return { x, y, ...grounds[symbol] };
@@ -295,32 +307,53 @@ export function heal(game: Game): GameEvent[] {
 function collect(game: Game, at: Point, find: Find): GameEvent[] {
   const { hero } = game;
   const events: GameEvent[] = [{ type: 'find', at, find }];
-  if (find === 'whetstone' || find === 'greatstone') {
-    hero.whetstones += find === 'whetstone' ? 1 : piecesPerUpgrade;
-    const power = 1 + Math.floor(hero.whetstones / piecesPerUpgrade);
-    if (power > hero.power) {
-      hero.power = power;
-      events.push({ type: 'powerUp', at, power });
+  switch (find) {
+    case 'whetstone':
+    case 'greatstone': {
+      hero.whetstones += find === 'whetstone' ? 1 : piecesPerUpgrade;
+      const power = 1 + Math.floor(hero.whetstones / piecesPerUpgrade);
+      if (power > hero.power) {
+        hero.power = power;
+        events.push({ type: 'powerUp', at, power });
+      }
+      break;
     }
-  } else {
-    hero.heartPieces += find === 'heartPiece' ? 1 : piecesPerUpgrade;
-    const maxHealth = startingHearts + Math.floor(hero.heartPieces / piecesPerUpgrade);
-    if (maxHealth > hero.maxHealth) {
-      hero.maxHealth = maxHealth;
-      hero.health = maxHealth;
-      events.push({ type: 'heartUp', at, maxHealth });
+    case 'heartPiece':
+    case 'heart': {
+      hero.heartPieces += find === 'heartPiece' ? 1 : piecesPerUpgrade;
+      const maxHealth = startingHearts + Math.floor(hero.heartPieces / piecesPerUpgrade);
+      if (maxHealth > hero.maxHealth) {
+        hero.maxHealth = maxHealth;
+        hero.health = maxHealth;
+        events.push({ type: 'heartUp', at, maxHealth });
+      }
+      break;
     }
+    default:
+      hero.carrying.push(find);
   }
   return events;
+}
+// Bringing a person what they lost hands over their reward along with their thanks.
+function talk(game: Game, at: Point, person: Person): GameEvent[] {
+  const { quest } = person;
+  const { hero } = game;
+  if (person.fullHealthLines && hero.health === hero.maxHealth)
+    return [{ type: 'talk', person, lines: person.fullHealthLines }];
+  if (quest && hero.returned.includes(quest.wants))
+    return [{ type: 'talk', person, lines: quest.after }];
+  if (!quest || !hero.carrying.includes(quest.wants))
+    return [{ type: 'talk', person, lines: person.lines }];
+  hero.carrying = hero.carrying.filter((keepsake) => keepsake !== quest.wants);
+  hero.returned.push(quest.wants);
+  return [{ type: 'talk', person, lines: quest.thanks }, ...collect(game, at, quest.reward)];
 }
 // Fights always resolve: the monster dies unless its damage kills you first.
 export function step(game: Game, target: Point): GameEvent[] {
   if (game.lost || !canStep(game, game.player, target)) return [];
   const tile = tileAt(game, target);
   if (!tile) return [];
-  if (tile.person) {
-    return [{ type: 'talk', person: tile.person }];
-  }
+  if (tile.person) return talk(game, target, tile.person);
   const events: GameEvent[] = [];
   if (tile.monster?.alive) {
     tile.revealed = true;

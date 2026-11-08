@@ -141,6 +141,7 @@ test('a door leads into a house where you can talk to people', async ({ page, is
   await talk.click();
   await expect(talk).toContainText('whatever they are hiding');
   await talk.click();
+  await talk.click();
   await talk.getByRole('button', { name: 'Continue' }).click();
   await expect(talk).not.toBeVisible();
   await position(page, 4, 3);

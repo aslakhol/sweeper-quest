@@ -14,6 +14,7 @@ export const areas = {
   village: {
     name: 'Village',
     map: village,
+    finds: { '?': 'ring' },
     exits: {
       1: { to: 'elder-house', look: 'door' },
       2: { to: 'home', look: 'door' },
@@ -36,7 +37,17 @@ export const areas = {
           'A slime counts one, a bat two, a goblin three.',
           'Their chief waits in the far corner, and you are no match for him yet.',
           'Whetstones lie out in the wild. Four would put a real edge on that sword.',
+          'And if you go through the east gate, keep an eye out for my spectacles.',
         ],
+        quest: {
+          wants: 'spectacles',
+          reward: 'whetstone',
+          thanks: [
+            'My spectacles! Now I can see who I am talking to.',
+            'Take this whetstone. It is no use to me.',
+          ],
+          after: ['I can read again. The numbers out there are no easier, though.'],
+        },
       },
     },
   },
@@ -50,6 +61,7 @@ export const areas = {
         name: 'Mum',
         colors: { hair: '#8a5a3a', shirt: '#c08a9a' },
         heals: true,
+        fullHealthLines: ['Not a scratch on you. Good.', 'Dinner will be ready when you need it.'],
         wakeLines: [
           'You are awake! They carried you back half dead.',
           'Be more careful out there. Please.',
@@ -71,9 +83,23 @@ export const areas = {
         colors: { hair: '#b0603a', shirt: '#6a8a5a' },
         lines: [
           'Welcome to the inn.',
-          'Goblins and bats crowd around whatever they are hiding.',
-          'If the numbers climb around an empty spot, it is worth a look.',
+          'Bats and goblins crowd around whatever they are hiding.',
+          'One of them made off with my ring out in the tall grass.',
+          'If the numbers climb around an empty spot, look there.',
+          'Bring my ring back and I will make it worth your while.',
         ],
+        quest: {
+          wants: 'ring',
+          reward: 'heartPiece',
+          thanks: [
+            'My ring! I never thought I would see it again.',
+            'Take this charm. My mother swore it kept her heart strong.',
+          ],
+          after: [
+            'The ring stays on my finger now.',
+            'There is more out there. Watch for numbers that climb around nothing.',
+          ],
+        },
       },
       p: {
         name: 'Pip',
@@ -82,7 +108,17 @@ export const areas = {
           'I went down the cave stairs once!',
           'There was a goblin with a crown. I ran straight back up.',
           'The stairs are right where you arrive. Just step on them again.',
+          'I dropped my lucky marble down there. Can you get it back?',
         ],
+        quest: {
+          wants: 'marble',
+          reward: 'whetstone',
+          thanks: [
+            'My marble! You went all the way down there?',
+            'Here, swap you for this whetstone.',
+          ],
+          after: ['Did you see the crowned goblin? I am never going back.'],
+        },
       },
     },
   },
@@ -90,11 +126,13 @@ export const areas = {
     name: 'Cave',
     map: cave,
     floor: 'cave',
+    finds: { '?': 'marble' },
     exits: { '<': { to: 'village', look: 'stairs' } },
   },
   wood: {
     name: 'Wood',
     map: wood,
+    finds: { '?': 'spectacles' },
     exits: { '<': { to: 'village', look: 'gate' } },
   },
 } satisfies Record<string, Area>;
