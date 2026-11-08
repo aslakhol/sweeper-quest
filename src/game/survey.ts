@@ -1,6 +1,8 @@
 import {
+  buy,
   canStep,
   canTrade,
+  distance,
   type Game,
   type GameEvent,
   heal,
@@ -35,7 +37,7 @@ export type Access = {
 export type SurveyAction = {
   area: AreaId;
   at: Point;
-  kind: 'deduction' | 'collect' | 'trade' | 'fight' | 'heal' | 'travel' | 'walk';
+  kind: 'deduction' | 'collect' | 'trade' | 'buy' | 'fight' | 'heal' | 'travel' | 'walk';
   power: number;
   health: number;
   revealed: number;
@@ -151,6 +153,7 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
     const events = step(game, at);
     if (events.some((event) => event.type === 'talk' && event.person.heals))
       events.push(...heal(game));
+    if (events.some((event) => event.type === 'offer')) events.push(...buy(game, at));
     const revealed = revealedCount(game) - before;
     if (!events.length && !revealed) return;
     if (game.lost) throw new Error(`Survey died at ${accessKey(area, at)}.`);
@@ -219,6 +222,17 @@ export function surveyWorld(options: SurveyOptions, world = createWorld()) {
       const trader = candidates.find((tile) => tile.person && canTrade(game.hero, tile.person));
       if (trader) {
         walk(trader, 'trade');
+        continue;
+      }
+      const ware = game.tiles.find(
+        (tile) =>
+          tile.find &&
+          tile.price !== undefined &&
+          tile.price <= game.hero.coins &&
+          reached.some((from) => distance(from, tile) === 1),
+      );
+      if (ware) {
+        walk(ware, 'buy');
         continue;
       }
       const find = candidates.find(

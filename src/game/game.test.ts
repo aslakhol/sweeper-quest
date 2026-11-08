@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { areas } from '../maps';
 import {
+  buy,
   canStep,
   createGame,
   createHero,
@@ -260,23 +261,20 @@ describe('routes and notes', () => {
     expect(step(game, p(0, 0))).toEqual([{ type: 'talk', person: pip, lines: ['Hi again'] }]);
     expect(game.hero.whetstones).toBe(1);
   });
-  it('sells for coins picked up along the way', () => {
-    const bram = {
-      name: 'Bram',
-      lines: ['Five coins'],
-      colors: { hair: '#000', shirt: '#fff' },
-      trade: { wants: { coins: 5 }, reward: 'whetstone', thanks: ['Sold'], after: ['Sold out'] },
-    } as const;
-    const game = createGame('k @ $', { legend: { people: { k: bram } } });
+  it('offers a find for sale when walking up to it, and sells it once for coins', () => {
+    const wares = { w: { find: 'whetstone', price: 5 } } as const;
+    const game = createGame('w @ , $', { legend: { wares } });
     game.hero.coins = 4;
-    expect(step(game, p(0, 0))).toEqual([{ type: 'talk', person: bram, lines: ['Five coins'] }]);
+    expect(planWalk(game, p(0, 0))).toEqual([p(0, 0)]);
+    const offer = { type: 'offer', at: p(0, 0), find: 'whetstone', price: 5 };
+    expect(step(game, p(0, 0))).toEqual([offer]);
+    expect(buy(game, p(0, 0))).toEqual([]);
     step(game, p(2, 0));
+    step(game, p(3, 0));
     game.player = p(1, 0);
-    expect(step(game, p(0, 0))).toEqual([
-      { type: 'talk', person: bram, lines: ['Sold'] },
-      { type: 'find', at: p(0, 0), find: 'whetstone' },
-    ]);
+    expect(buy(game, p(0, 0))).toEqual([{ type: 'find', at: p(0, 0), find: 'whetstone' }]);
     expect(game.hero).toMatchObject({ coins: 0, whetstones: 1 });
+    expect(step(game, p(0, 0))).toEqual([]);
   });
   it('restores every heart only once the conversation is over, then has nothing to heal', () => {
     const mum = {

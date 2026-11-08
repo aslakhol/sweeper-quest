@@ -211,6 +211,10 @@ dialog button {
   border: 0;
   font-weight: 700;
 }
+dialog button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
 .dialog-actions {
   display: flex;
   gap: 10px;

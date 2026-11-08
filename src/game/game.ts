@@ -37,6 +37,8 @@ export type Tile = Point & {
   monster?: Monster;
   // Lies hidden on the tile until someone walks onto it.
   find?: Find;
+  // A find on display that walking up to offers to sell.
+  price?: number;
   // The map that stepping onto this tile leads to.
   exit?: string;
   person?: Person;
@@ -53,7 +55,7 @@ export type Person = {
   wakeLines?: readonly string[];
   // They hand over a reward, once, for what they want.
   trade?: {
-    wants: Keepsake | { coins: number };
+    wants: Keepsake;
     reward: Find;
     thanks: readonly string[];
     // What they say once the trade is done, instead of their usual lines.
@@ -68,6 +70,8 @@ export type Legend = {
   people?: Record<string, Person>;
   // Finds that belong to this map, such as a villager's keepsake.
   finds?: Record<string, Find>;
+  // Finds for sale on a table.
+  wares?: Record<string, { find: Find; price: number }>;
 };
 // The hero's stats travel with the player from map to map.
 export type Hero = {
@@ -99,6 +103,7 @@ export type GameEvent =
   | { type: 'talk'; person: Person; lines: readonly string[] }
   | { type: 'heal'; at: Point; amount: number }
   | { type: 'find'; at: Point; find: Find }
+  | { type: 'offer'; at: Point; find: Find; price: number }
   | { type: 'powerUp'; at: Point; power: number }
   | { type: 'heartUp'; at: Point; maxHealth: number };
 
@@ -171,6 +176,8 @@ export function createGame(
     row.map((symbol, x): Tile => {
       const exit = legend.exits?.[symbol];
       if (exit) return { x, y, terrain: 'floor', look: exit.look, revealed: true, exit: exit.to };
+      const ware = legend.wares?.[symbol];
+      if (ware) return { x, y, terrain: 'wall', look: 'table', revealed: true, ...ware };
       const person = legend.people?.[symbol];
       if (person)
         return { x, y, terrain: 'floor', look: legend.floor ?? 'grass', revealed: true, person };
@@ -342,9 +349,7 @@ function collect(game: Game, at: Point, find: Find): GameEvent[] {
   return events;
 }
 export function canTrade(hero: Hero, { name, trade }: Person): boolean {
-  if (!trade || hero.traded.includes(name)) return false;
-  const { wants } = trade;
-  return typeof wants === 'string' ? hero.carrying.includes(wants) : hero.coins >= wants.coins;
+  return !!trade && !hero.traded.includes(name) && hero.carrying.includes(trade.wants);
 }
 // Bringing a person what they want hands over their reward along with their thanks.
 function talk(game: Game, at: Point, person: Person): GameEvent[] {
@@ -355,17 +360,29 @@ function talk(game: Game, at: Point, person: Person): GameEvent[] {
   if (trade && hero.traded.includes(person.name))
     return [{ type: 'talk', person, lines: trade.after }];
   if (!trade || !canTrade(hero, person)) return [{ type: 'talk', person, lines: person.lines }];
-  const { wants } = trade;
-  if (typeof wants === 'string') hero.carrying = hero.carrying.filter((item) => item !== wants);
-  else hero.coins -= wants.coins;
+  hero.carrying = hero.carrying.filter((keepsake) => keepsake !== trade.wants);
   hero.traded.push(person.name);
   return [{ type: 'talk', person, lines: trade.thanks }, ...collect(game, at, trade.reward)];
 }
+function forSale(tile: Tile | undefined): tile is Tile & { find: Find; price: number } {
+  return !!tile?.find && tile.price !== undefined;
+}
+export function buy(game: Game, at: Point): GameEvent[] {
+  const tile = tileAt(game, at);
+  if (!tile?.find || tile.price === undefined || game.hero.coins < tile.price) return [];
+  game.hero.coins -= tile.price;
+  const events = collect(game, at, tile.find);
+  delete tile.find;
+  return events;
+}
 // Stronger monsters hurt the hero and become visible, but keep blocking the tile.
 export function step(game: Game, target: Point): GameEvent[] {
-  if (game.lost || !canStep(game, game.player, target)) return [];
+  if (game.lost) return [];
   const tile = tileAt(game, target);
-  if (!tile) return [];
+  // Walking up to a find for sale offers it; buying is a separate choice.
+  if (forSale(tile) && distance(game.player, target) === 1)
+    return [{ type: 'offer', at: target, find: tile.find, price: tile.price }];
+  if (!tile || !canStep(game, game.player, target)) return [];
   if (tile.person) return talk(game, target, tile.person);
   const events: GameEvent[] = [];
   if (tile.monster?.alive) {
@@ -413,7 +430,8 @@ export function step(game: Game, target: Point): GameEvent[] {
 // of the walk; otherwise the walk stops on the known tile closest to a hidden target.
 export function planWalk(game: Game, target: Point): Point[] | null {
   const targetTile = tileAt(game, target);
-  if (targetTile?.terrain !== 'floor') return null;
+  const ware = forSale(targetTile);
+  if (targetTile?.terrain !== 'floor' && !ware) return null;
   const key = (p: Point) => p.y * game.width + p.x;
   const queue: Point[] = [game.player];
   const previous = new Map<number, Point | null>([[key(game.player), null]]);
@@ -425,7 +443,11 @@ export function planWalk(game: Game, target: Point): Point[] | null {
       closest = current;
       break;
     }
-    if ((!targetTile.revealed || targetTile.person) && canStep(game, current, target)) {
+    if (
+      ware
+        ? distance(current, target) === 1
+        : (!targetTile.revealed || targetTile.person) && canStep(game, current, target)
+    ) {
       closest = current;
       enter = true;
       break;

@@ -1,6 +1,6 @@
 W W W W W W W W W
 W S S S S S S S W
 W _ _ _ k _ _ _ W
-W O O O _ O O O W
+W O O w _ O O O W
 W _ _ _ _ _ _ _ W
 W W W W < W W W W

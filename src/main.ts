@@ -1,5 +1,6 @@
 import './style.css';
 import {
+  buy,
   canNote,
   cycleNote,
   distance,
@@ -55,6 +56,7 @@ app.innerHTML = `
   <div class="bestiary" aria-label="Monster levels"><span class="slime-key">1 · Slime</span><span class="bat-key">2 · Bat</span><span class="goblin-key">3 · Goblin and chief</span></div>
   <div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button data-close>Resume</button></div></dialog>
   <dialog id="talk" class="talk"><div class="talk-name" id="talk-name"></div><p id="talk-line"></p><button class="talk-next" aria-label="Continue">▸</button></dialog>
+  <dialog id="offer"><p id="offer-question"></p><div class="dialog-actions"><button class="secondary" data-close>No</button><button id="buy">Yes</button></div></dialog>
   <dialog id="death-dialog"><h2>Game over</h2><div class="dialog-actions"><button class="secondary" data-restart>Start over</button><button id="continue">Continue</button></div></dialog>
 `;
 function element<T extends Element>(selector: string): T {
@@ -197,6 +199,9 @@ function handleEvents(events: GameEvent[]): void {
         travel(world, event.to);
         changeMap();
         break;
+      case 'offer':
+        offer(event.at, event.find, event.price);
+        break;
       case 'talk':
         // A reward is handed over once they have finished speaking.
         talk(event.person, event.lines, events.slice(index + 1));
@@ -225,6 +230,20 @@ function handleEvents(events: GameEvent[]): void {
   }
   if (events.length) stop();
 }
+const offerDialog = element<HTMLDialogElement>('#offer');
+let offered: Point | undefined;
+function offer(at: Point, find: Find, price: number): void {
+  offered = at;
+  element('#offer-question').textContent =
+    `Buy ${findNames[find].toLowerCase()} for ${price} coins?`;
+  element<HTMLButtonElement>('#buy').disabled = game.hero.coins < price;
+  openDialog('#offer');
+}
+element('#buy').addEventListener('click', () => {
+  offerDialog.close();
+  if (offered) handleEvents(buy(game, offered));
+  updateHud();
+});
 const talkDialog = element<HTMLDialogElement>('#talk');
 let conversation:
   | { person: Person; lines: readonly string[]; line: number; after: GameEvent[] }

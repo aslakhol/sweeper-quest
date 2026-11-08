@@ -128,20 +128,15 @@ export const areas = {
     name: 'Shop',
     map: shop,
     ...indoors,
+    wares: { w: { find: 'whetstone', price: 5 } },
     people: {
       k: {
         name: 'Bram',
         colors: { hair: '#3a3a3a', shirt: '#8a6a3a' },
         lines: [
-          'Welcome! I have one whetstone left. Five coins.',
-          'Folk drop coins all over out there. Bring me five.',
+          'Welcome! Whatever is on the counter is for sale.',
+          'Folk drop coins all over out there.',
         ],
-        trade: {
-          wants: { coins: 5 },
-          reward: 'whetstone',
-          thanks: ['Five coins, one whetstone. Pleasure doing business.'],
-          after: ['Sold out, I am afraid. The next cart is due in spring.'],
-        },
       },
     },
   },

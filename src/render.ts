@@ -486,7 +486,11 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
     const x = tile.x * TILE_SIZE;
     const y = tile.y * TILE_SIZE;
     drawGround(ctx, game, tile, x, y);
-    if (tile.terrain !== 'floor') continue;
+    // Wares stand on display.
+    if (tile.terrain !== 'floor') {
+      if (tile.find && tile.price !== undefined) drawFind(ctx, tile.find, x, y);
+      continue;
+    }
     if (tile.person) {
       drawPerson(ctx, tile.person, x, y);
       continue;

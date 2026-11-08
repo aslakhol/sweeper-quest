@@ -80,7 +80,7 @@ Terrain and landmarks are hand-drawn. Monsters and finds can be generated and tu
 
 ### Shop and items
 
-Bram's shop in the village sells one whetstone for five coins. Coins lie hidden in the world like other finds and are picked up by walking onto them, so they cost no extra taps. You buy by talking to Bram; a thumb-friendly bottom sheet can come when the shop sells more than one thing. A wider economy still needs deliberate design, including earnings and farm balance. Do not bring back mandatory corpse-looting taps by default.
+Bram's shop in the village sells one whetstone for five coins. Coins lie hidden in the world like other finds and are picked up by walking onto them, so they cost no extra taps. The whetstone sits on Bram's counter; walking up to it asks whether to buy it, with Yes and No. A thumb-friendly bottom sheet can come when the shop sells more than one thing. A wider economy still needs deliberate design, including earnings and farm balance. Do not bring back mandatory corpse-looting taps by default.
 
 The original shop is a proposal to revisit, not settled balance:
 
