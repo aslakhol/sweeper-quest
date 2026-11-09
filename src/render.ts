@@ -24,34 +24,44 @@ const popEnd = 340;
 const stepStart = 260;
 export type View = {
   camera: Point;
+  screen: Screen;
   path: Point[];
   flash?: Point;
   effects: Effect[];
   time: number;
 };
 type Size = Pick<Game, 'width' | 'height'>;
+// The board in CSS pixels, and how far the HUD bars reach in from its top and bottom.
+export type Screen = { width: number; height: number; top: number; bottom: number };
 
 // Screen pixels per tile: about nine tiles across the short side of the screen.
 function tileSize(width: number, height: number): number {
   return Math.round(Math.min(64, Math.max(36, Math.min(width, height) / 9)));
 }
-// Follow the player, but stop at the map edges. A map smaller than the screen sits centered.
-export function cameraTarget(map: Size, player: Point, width: number, height: number): Point {
-  const tile = tileSize(width, height);
+// Follow the player, but stop where the map's edges meet the HUD bars.
+// A map smaller than the space between the bars sits centered in it.
+export function cameraTarget(map: Size, player: Point, screen: Screen): Point {
+  const tile = tileSize(screen.width, screen.height);
   const axis = (position: number, mapSize: number, visible: number) =>
     mapSize <= visible
       ? mapSize / 2
       : Math.min(Math.max(position + 0.5, visible / 2), mapSize - visible / 2);
   return {
-    x: axis(player.x, map.width, width / tile),
-    y: axis(player.y, map.height, height / tile),
+    x: axis(player.x, map.width, screen.width / tile),
+    y: axis(player.y, map.height, clearHeight(screen) / tile),
   };
 }
-// The camera is the map position, in tiles, shown at the center of the screen.
-export function layout(camera: Point, width: number, height: number) {
-  const tile = tileSize(width, height);
-  return { tile, left: width / 2 - camera.x * tile, top: height / 2 - camera.y * tile };
+// The camera is the map position, in tiles, shown at the center of the space between the bars.
+// The map still fills the whole screen, under the HUD too.
+export function layout(camera: Point, screen: Screen) {
+  const tile = tileSize(screen.width, screen.height);
+  return {
+    tile,
+    left: screen.width / 2 - camera.x * tile,
+    top: screen.top + clearHeight(screen) / 2 - camera.y * tile,
+  };
 }
+const clearHeight = (screen: Screen) => screen.height - screen.top - screen.bottom;
 const colors = ['#687b73', '#88c8b1', '#e2c477', '#ed9b78', '#ce9bdb', '#ed7382'];
 
 function sprite(
@@ -1109,7 +1119,7 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
   ctx.setTransform(1, 0, 0, 1, 0, 0);
   ctx.fillStyle = '#101a17';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  const { tile: size, left, top } = layout(view.camera, width, height);
+  const { tile: size, left, top } = layout(view.camera, view.screen);
   const scale = (size / TILE_SIZE) * ratio;
   // Whole device pixels keep tile edges crisp while the camera glides.
   ctx.setTransform(scale, 0, 0, scale, Math.round(left * ratio), Math.round(top * ratio));

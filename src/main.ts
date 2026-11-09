@@ -42,6 +42,7 @@ import {
   icon,
   itemGetImage,
   layout,
+  type Screen,
 } from './render';
 
 const app = element<HTMLElement>('#app');
@@ -110,8 +111,25 @@ let flash: Point | undefined;
 let flashUntil = 0;
 let lastWalk = 0;
 let lastFrame = 0;
-const settledCamera = () =>
-  cameraTarget(game, game.player, canvas.clientWidth, canvas.clientHeight);
+const statsPanel = element<HTMLElement>('.stats');
+const menuButton = element<HTMLButtonElement>('#menu');
+const notesBar = element<HTMLElement>('.notes');
+// The board fills the screen. The camera keeps the map's edges a little clear of the HUD bars.
+function screen(): Screen {
+  const board = canvas.getBoundingClientRect();
+  const gap = 8;
+  const hudTop = Math.max(
+    statsPanel.getBoundingClientRect().bottom,
+    menuButton.getBoundingClientRect().bottom,
+  );
+  return {
+    width: board.width,
+    height: board.height,
+    top: hudTop - board.top + gap,
+    bottom: board.bottom - notesBar.getBoundingClientRect().top + gap,
+  };
+}
+const settledCamera = () => cameraTarget(game, game.player, screen());
 let camera = settledCamera();
 let keyboardTimer: ReturnType<typeof setTimeout> | undefined;
 let pendingChord = false;
@@ -433,7 +451,7 @@ function activate(target: Point, keepTool = false): void {
 }
 function pointFromPointer(event: PointerEvent | MouseEvent): Point | undefined {
   const bounds = canvas.getBoundingClientRect();
-  const { tile, left, top } = layout(camera, bounds.width, bounds.height);
+  const { tile, left, top } = layout(camera, screen());
   const point = {
     x: Math.floor((event.clientX - bounds.left - left) / tile),
     y: Math.floor((event.clientY - bounds.top - top) / tile),
@@ -661,7 +679,7 @@ function showQuests(): void {
     <h3>Active</h3><ul class="quests">${active.join('') || '<li class="none">None</li>'}</ul>
     <h3>Completed</h3><ul class="quests done">${done.join('') || '<li class="none">None</li>'}</ul>`;
 }
-element('#menu').addEventListener('click', () => {
+menuButton.addEventListener('click', () => {
   turnPage(-page);
   openDialog('#menu-dialog');
 });
@@ -843,7 +861,7 @@ function frame(time: number): void {
     y: camera.y + (target.y - camera.y) * ease,
   };
   lastFrame = time;
-  draw(canvas, game, { camera, path, flash, effects, time });
+  draw(canvas, game, { camera, screen: screen(), path, flash, effects, time });
   requestAnimationFrame(frame);
 }
 updateHud();

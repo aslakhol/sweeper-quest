@@ -23,12 +23,18 @@ async function tile(page: Page, x: number, y: number) {
   const player = { x: Number(column) - 1, y: Number(row) - 1 };
   const box = await page.locator('canvas').boundingBox();
   if (!box) throw new Error('Board is not visible');
-  const { tile, left, top } = layout(
-    cameraTarget(maps[area], player, box.width, box.height),
-    box.width,
-    box.height,
-  );
-  return { x: box.x + left + (x + 0.5) * tile, y: box.y + top + (y + 0.5) * tile };
+  // Mirrors the game's screen(): the HUD bars, plus a small gap, are kept clear of map edges.
+  const { top, bottom } = await page.evaluate(() => {
+    const edge = (selector: string, side: 'top' | 'bottom') =>
+      document.querySelector(selector)?.getBoundingClientRect()[side] ?? 0;
+    return {
+      top: Math.max(edge('.stats', 'bottom'), edge('#menu', 'bottom')) + 8,
+      bottom: window.innerHeight - edge('.notes', 'top') + 8,
+    };
+  });
+  const screen = { width: box.width, height: box.height, top, bottom };
+  const { tile, left, top: mapTop } = layout(cameraTarget(maps[area], player, screen), screen);
+  return { x: box.x + left + (x + 0.5) * tile, y: box.y + mapTop + (y + 0.5) * tile };
 }
 async function tap(page: Page, x: number, y: number, touch: boolean) {
   const point = await tile(page, x, y);
