@@ -415,6 +415,19 @@ describe('routes and notes', () => {
     expect(heal(game)).toEqual([]);
     expect(step(game, p(1, 0))).toEqual([{ type: 'talk', person: mum, lines: ['Not a scratch'] }]);
   });
+  it('reminds you about the dojo until you have a sword', () => {
+    const mum = {
+      name: 'Mum',
+      lines: ['Eat up'],
+      colors: { hair: '#000', shirt: '#fff' },
+      untrainedLines: ['Go to the dojo'],
+    };
+    const game = createGame('@ m', { legend: { people: { m: mum } } });
+    game.hero.sword = false;
+    expect(step(game, p(1, 0))).toEqual([{ type: 'talk', person: mum, lines: ['Go to the dojo'] }]);
+    game.hero.sword = true;
+    expect(step(game, p(1, 0))).toEqual([{ type: 'talk', person: mum, lines: ['Eat up'] }]);
+  });
   it('does not route through a visible living monster', () => {
     const game = createGame('@ s .');
     for (const tile of game.tiles) tile.revealed = true;

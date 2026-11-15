@@ -78,6 +78,10 @@ export const areas = {
           'Morning, sleepyhead.',
           'Doctor Madeleine sent word. She wants you at her dojo.',
         ],
+        untrainedLines: [
+          'Doctor Madeleine is waiting for you.',
+          'Her dojo is the house furthest south in the village.',
+        ],
         wakeLines: [
           'You are awake! They carried you back half dead.',
           'Be more careful out there. Please.',

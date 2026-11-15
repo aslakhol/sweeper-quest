@@ -67,6 +67,8 @@ export type Person = {
   fullHealthLines?: readonly string[];
   // What they say when you wake up at the start of a new game.
   introLines?: readonly string[];
+  // What they say until Doctor Madeleine has handed you a sword.
+  untrainedLines?: readonly string[];
   // What they say when you wake up after a defeat.
   wakeLines?: readonly string[];
   // They hand over a reward, once, for the keepsake they lost.
@@ -468,6 +470,8 @@ function talk(game: Game, at: Point, person: Person): GameEvent[] {
     ];
   }
   if (quest && !hero.asked.includes(quest.wants)) hero.asked.push(quest.wants);
+  if (person.untrainedLines && !hero.sword)
+    return [{ type: 'talk', person, lines: person.untrainedLines }];
   if (person.fullHealthLines && hero.health === hero.maxHealth)
     return [{ type: 'talk', person, lines: person.fullHealthLines }];
   if (quest && hero.returned.includes(quest.wants))
