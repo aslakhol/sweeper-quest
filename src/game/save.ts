@@ -111,6 +111,8 @@ export function deserialize(text: string): World | undefined {
       game.tiles.forEach((tile, index) => {
         const { revealed, note, find, alive } = saved.tiles[index];
         Object.assign(tile, { revealed, note, find });
+        // Saves keep only the find, so a chest without one has been opened.
+        if (tile.chest && !find) tile.chest = 'open';
         if (tile.monster && alive !== undefined) tile.monster.alive = alive;
       });
       world.visited.set(saved.area, game);

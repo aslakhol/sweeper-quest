@@ -1165,7 +1165,7 @@ export function draw(canvas: HTMLCanvasElement, game: Game, view: View): void {
       continue;
     }
     if (tile.monster) drawMonster(ctx, tile.monster, x, y, { remains: true });
-    if (tile.chest) drawChest(ctx, !tile.find, x, y);
+    if (tile.chest) drawChest(ctx, tile.chest === 'open', x, y);
     else if (tile.find) drawFind(ctx, tile.find, x, y);
     const number = numberAt(game, tile);
     if (number) {

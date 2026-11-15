@@ -48,9 +48,9 @@ export type Tile = Point & {
   monster?: Monster;
   // Lies hidden on the tile until someone walks onto it, unless it is in a chest.
   find?: Find;
-  // Holds its find, if not yet opened. A chest never hides a monster and blocks walking.
+  // A closed chest holds its find, never hides a monster and blocks walking; an open one is walked over.
   // Stepping into a hidden one only uncovers it, so it is always seen before it is opened.
-  chest?: boolean;
+  chest?: 'closed' | 'open';
   // A find on display that walking up to offers to sell.
   price?: number;
   // The map that stepping onto this tile leads to.
@@ -264,7 +264,7 @@ export function createGame(
           look: legend.floor ?? 'grass',
           revealed: false,
           find,
-          chest: find !== 'coin',
+          chest: find === 'coin' ? undefined : 'closed',
         };
       if (symbol === '.' && legend.floor)
         return { x, y, terrain: 'floor', look: legend.floor, revealed: false };
@@ -508,6 +508,7 @@ function openChest(game: Game, at: Point, chest: Tile): GameEvent[] {
   if (!chest.find) return [];
   const events = collect(game, at, chest.find);
   delete chest.find;
+  chest.chest = 'open';
   return events;
 }
 // Hidden stronger monsters hurt and reveal themselves; known ones block without a fight.
@@ -522,7 +523,7 @@ export function step(game: Game, target: Point): GameEvent[] {
   if (!tile.revealed && tile.note && (tile.note === 'danger' || tile.note > game.hero.power))
     return [{ type: 'blocked', at: target }];
   if (tile.person) return talk(game, target, tile.person);
-  if (tile.chest) return openChest(game, { x: target.x, y: target.y }, tile);
+  if (tile.chest === 'closed') return openChest(game, { x: target.x, y: target.y }, tile);
   const events: GameEvent[] = [];
   if (tile.monster?.alive) {
     if (tile.revealed && tile.monster.level > game.hero.power)
@@ -588,7 +589,7 @@ export function planWalk(game: Game, target: Point): Point[] | null {
     if (
       ware
         ? distance(current, target) === 1
-        : (!targetTile.revealed || targetTile.person || targetTile.chest) &&
+        : (!targetTile.revealed || targetTile.person || targetTile.chest === 'closed') &&
           canStep(game, current, target)
     ) {
       closest = current;
@@ -607,7 +608,7 @@ export function planWalk(game: Game, target: Point): Point[] | null {
         !next.revealed ||
         next.monster?.alive ||
         next.person ||
-        next.chest ||
+        next.chest === 'closed' ||
         // Walking over an exit would leave the map partway.
         (next.exit && !same(next, target))
       )

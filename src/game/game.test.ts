@@ -190,10 +190,15 @@ describe('combat and progression', () => {
     const game = createGame('@ * .\ns # #');
     expect(step(game, p(1, 0))).toEqual([{ type: 'uncover', at: p(1, 0) }]);
     expect(tileAt(game, p(1, 0))?.revealed).toBe(true);
-    expect(step(game, p(1, 0))).toEqual([{ type: 'find', at: p(1, 0), find: 'whetstone' }]);
-    expect(step(game, p(1, 0))).toEqual([]);
-    expect(game.player).toEqual(p(0, 0));
     expect(planWalk(game, p(2, 0))).toBeNull();
+    expect(step(game, p(1, 0))).toEqual([{ type: 'find', at: p(1, 0), find: 'whetstone' }]);
+    expect(game.player).toEqual(p(0, 0));
+  });
+  it('lets you walk over a chest once it is opened', () => {
+    const game = createGame('@ * .\ns # #');
+    step(game, p(1, 0));
+    step(game, p(1, 0));
+    expect(planWalk(game, p(2, 0))).toEqual([p(1, 0), p(2, 0)]);
   });
   it('walks up to a distant chest and uncovers it', () => {
     const game = createGame('@ , , *');
@@ -218,10 +223,10 @@ describe('combat and progression', () => {
   it('adds a filled heart on the fourth heart piece', () => {
     const game = createGame('+ + +\n+ @ ,');
     game.hero.health = 1;
-    const open = (at: Point) => [...step(game, at), ...step(game, at)];
-    for (const at of [p(0, 0), p(1, 0), p(2, 0)]) open(at);
+    // The start floods every chest into view, so one tap opens each.
+    for (const at of [p(0, 0), p(1, 0), p(2, 0)]) step(game, at);
     expect(game.hero.health).toBe(1);
-    expect(open(p(0, 1))).toContainEqual({ type: 'heartUp', at: p(0, 1), maxHealth: 4 });
+    expect(step(game, p(0, 1))).toContainEqual({ type: 'heartUp', at: p(0, 1), maxHealth: 4 });
     expect([game.hero.health, game.hero.maxHealth]).toEqual([4, 4]);
   });
   it('keeps pieces towards the next upgrade when a chief drops a whole one', () => {

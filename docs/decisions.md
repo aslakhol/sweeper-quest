@@ -74,7 +74,7 @@ Items scattered on the ground did not feel like rewards. Whetstones, heart piece
 - **You always see a chest before opening it.** Stepping into a hidden chest uncovers its tile, which can flood like any reveal, but you stay where you are. Tapping it again opens it. A distant chest is walked up to like a person.
 - **Prefer chests revealed from elsewhere**, by a flood or a free kill, so the player spots one and walks over to it.
 - **A chest never hides a monster**, but the solver gets no hint about that: a hidden chest is an unknown tile until uncovered.
-- **Chests block walking**, opened or not. Maps must not place one where it cuts off a route.
+- **Chests block walking until opened.** An opened chest stays in view and can be walked over. Maps must not place one where it cuts off a route.
 - **Coins stay loose.** They start hidden and are picked up by walking onto them. Reveal a coin from another tile before pickup where possible.
 
 ## Deferred
