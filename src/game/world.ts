@@ -58,6 +58,7 @@ export function lessonWon({ area, game }: World): boolean {
 }
 
 // Winning puts you back beside Doctor Madeleine, who goes on to the next lesson.
+// After the last one she does not offer to start over until you talk to her again.
 export function finishLesson(world: World): GameEvent[] {
   if (!lessonWon(world)) return [];
   const teacher = areas.dojo.people.d;
@@ -68,5 +69,5 @@ export function finishLesson(world: World): GameEvent[] {
   const at = world.game.tiles.find((tile) => tile.person === teacher);
   if (!at) throw new Error('Doctor Madeleine is missing from the dojo.');
   world.game.player = { x: at.x, y: at.y + 1 };
-  return step(world.game, at);
+  return step(world.game, at).filter((event) => event.type !== 'ask');
 }

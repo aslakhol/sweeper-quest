@@ -90,6 +90,8 @@ export type Training = {
   lessons: readonly { area: string; lines: readonly string[] }[];
   // What they say once every lesson is won, instead of their usual lines.
   after: readonly string[];
+  // Asked whenever you talk to them after the lessons, to take them all again.
+  repeat: string;
   // Coming back with every chief defeated earns a Bachelor of Fighting and completes the game.
   graduation: { quest: string; chiefs: number; lines: readonly string[]; after: readonly string[] };
 };
@@ -456,8 +458,10 @@ function talk(game: Game, at: Point, person: Person): GameEvent[] {
     const lesson = training.lessons[hero.lessons];
     if (!lesson) {
       const { graduation } = training;
-      if (hero.diploma) return [{ type: 'talk', person, lines: graduation.after }];
-      if (hero.chiefs < graduation.chiefs) return [{ type: 'talk', person, lines: training.after }];
+      const repeat = { type: 'ask', at, person, question: training.repeat } as const;
+      if (hero.diploma) return [{ type: 'talk', person, lines: graduation.after }, repeat];
+      if (hero.chiefs < graduation.chiefs)
+        return [{ type: 'talk', person, lines: training.after }, repeat];
       return [
         { type: 'talk', person, lines: graduation.lines },
         ...collect(game, at, 'diploma'),
@@ -483,9 +487,16 @@ function talk(game: Game, at: Point, person: Person): GameEvent[] {
   return [{ type: 'talk', person, lines: quest.thanks }, ...collect(game, at, quest.reward)];
 }
 // Agreeing to train hands over a sword, and the first lesson follows.
+// Once the lessons are won, agreeing takes them again from the first.
 export function answer(game: Game, at: Point, person: Person, yes: boolean): GameEvent[] {
   const { training } = person;
-  if (!training || game.hero.sword) return [];
+  const { hero } = game;
+  if (!training) return [];
+  if (hero.sword) {
+    if (!yes || hero.lessons < training.lessons.length) return [];
+    hero.lessons = 0;
+    return talk(game, at, person);
+  }
   if (!yes) return [{ type: 'talk', person, lines: training.declined }];
   return [
     { type: 'talk', person, lines: training.accepted },

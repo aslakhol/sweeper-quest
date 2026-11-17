@@ -268,6 +268,7 @@ describe('training', () => {
           declined: ['Pity.'],
           lessons: [{ area: 'yard', lines: ['In you go.'] }],
           after: ['Go.'],
+          repeat: 'Again?',
           graduation: { quest: 'Win.', chiefs: 2, lines: ['Well done.'], after: ['Bachelor.'] },
         },
       },
@@ -289,7 +290,21 @@ describe('training', () => {
     ]);
     expect(answer(game, ask.at, ask.person, true)).toEqual([]);
     game.hero.lessons = 1;
-    expect(step(game, p(1, 0))).toMatchObject([{ type: 'talk', lines: ['Go.'] }]);
+    expect(step(game, p(1, 0))).toMatchObject([{ type: 'talk', lines: ['Go.'] }, { type: 'ask' }]);
+  });
+  it('offers the lessons again once they are won', () => {
+    const hero = { ...createHero(), sword: true, power: 1, lessons: 1 };
+    const game = createGame('@ d', { legend, hero });
+    const [, ask] = step(game, p(1, 0));
+    expect(ask).toMatchObject({ type: 'ask', question: 'Again?' });
+    if (ask.type !== 'ask') throw new Error('Expected a question.');
+    expect(answer(game, ask.at, ask.person, false)).toEqual([]);
+    expect(hero.lessons).toBe(1);
+    expect(answer(game, ask.at, ask.person, true)).toMatchObject([
+      { type: 'talk', lines: ['In you go.'] },
+      { type: 'lesson', area: 'yard' },
+    ]);
+    expect(hero.lessons).toBe(0);
   });
   it('awards a Bachelor of Fighting once, after every chief is defeated', () => {
     const hero = { ...createHero(), sword: true, power: 3, lessons: 1, chiefs: 1 };
@@ -303,7 +318,10 @@ describe('training', () => {
       { type: 'complete' },
     ]);
     expect(hero.diploma).toBe(true);
-    expect(step(game, p(1, 0))).toMatchObject([{ type: 'talk', lines: ['Bachelor.'] }]);
+    expect(step(game, p(1, 0))).toMatchObject([
+      { type: 'talk', lines: ['Bachelor.'] },
+      { type: 'ask' },
+    ]);
   });
 });
 

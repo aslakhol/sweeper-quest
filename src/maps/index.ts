@@ -189,6 +189,7 @@ export const areas = {
             'You can collect whetstones to grow in power.',
             'Defeat the three goblin chiefs, then come back to me.',
           ],
+          repeat: 'Do you want to go through the lessons again?',
           graduation: {
             quest: 'Defeat the three goblin chiefs',
             chiefs: 3,
